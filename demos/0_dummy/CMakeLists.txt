@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.1)
 project(0_dummy)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../../cmake)
 set(CMAKE_CXX_FLAGS "-Wall")
 
 # libigl
@@ -31,11 +31,11 @@ endif()
 
 # Add your project files
 file(GLOB SRCFILES *.cpp)
-file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/../include/*.cpp)
+file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/../../include/*.cpp)
 file(GLOB HFILES *.h)
-file(GLOB H_FILES ${PROJECT_SOURCE_DIR}/../include/*.h)
+file(GLOB H_FILES ${PROJECT_SOURCE_DIR}/../../include/*.h)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../include)
 
 add_definitions(-DIGL_VIEWER_VIEWER_QUIET)
 add_executable(${PROJECT_NAME} ${SRCFILES} ${SRC_FILES} ${HFILES} ${H_FILES})

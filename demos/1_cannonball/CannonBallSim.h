@@ -56,6 +56,8 @@ class CannonBallSim : public Simulation {
         igl::opengl::glfw::Viewer &viewer) override {
         viewer.data().set_mesh(m_renderV, m_renderF);
 
+        viewer.data().point_size = 5;
+
         for (size_t trajectory = 0; trajectory < m_trajectories.size();
              trajectory++) {
             for (size_t point = 0; point < m_trajectories[trajectory].size();

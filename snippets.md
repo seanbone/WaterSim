@@ -8,3 +8,5 @@ Use an `igl::opengl::glfw::Viewer::data()` to add point coordinates and set poin
     
     viewer.data().point_size = 5;
 
+# Marching cubes
+`libigl` has a marching cubes implementation, see `lib/libigl/include/igl/copyleft/marching_cubes.h`.

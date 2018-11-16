@@ -37,22 +37,22 @@ struct Particle {
 	~Particle() {}
 	
 	// Setters
-	void set_Positions( const double x,
+	void set_position( const double x,
 						const double y,
 						const double z );
 						
-	void set_Positions( const Eigen::Vector3d& pos );
+	void set_position( const Eigen::Vector3d& pos );
 	
-	void set_Velocities( const double u,
+	void set_velocity( const double u,
 						 const double v,
 						 const double w );
 						
-	void set_Velocities( const Eigen::Vector3d& vel );
+	void set_velocity( const Eigen::Vector3d& vel );
 						 
 	// Getters
-	Eigen::Vector3d get_Positions();
+	Eigen::Vector3d get_position();
 	
-	Eigen::Vector3d get_Velocities();
+	Eigen::Vector3d get_velocity();
 	
 };
 

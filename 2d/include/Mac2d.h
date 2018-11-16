@@ -3,8 +3,8 @@
 
 #include <Eigen/Sparse>
 
-using Triplet = Eigen::Triplet<double>; 
-using Pair = std::pair<int, int>;
+using Triplet_t = Eigen::Triplet<double>; 
+using Pair_t = std::pair<int, int>;
 
 class Mac2d{
 	private:
@@ -17,7 +17,7 @@ class Mac2d{
 		double* ppressure_;		//pointer to array for the pressure
 		double* pu_;			//pointer to array for the velocities in x-direction
 		double* pv_;			//pointer to array for the velocities in y-direction
-		Triplet* pA_diag_		//sparse matrix which contains the data for the pressure equations
+		Triplet_t* pA_diag_		//sparse matrix which contains the data for the pressure equations
 		bool* psolid_; 			//pointer to array for specifing if a cell is solid (1) or not(0)
 		
 	public:
@@ -27,6 +27,6 @@ class Mac2d{
 		double get_v(const int i, const int j);					//Get the y-velocity in the mathematical point (i,j-1/2)
 		double get_pressure(const int i, const int j);			//Get the pressure in the mathematical point(i,j)
 		bool is_solid(const int i, const int j);				//Return if the cell with center (i,j) is a solid cell
-		Pair index_from_coord(const double x, const double y);	//Return a pair with the grid-coordinates (i,j) given a spatial coordinate(x,y)	
+		Pair_t index_from_coord(const double x, const double y);	//Return a pair with the grid-coordinates (i,j) given a spatial coordinate(x,y)	
 };
 #endif

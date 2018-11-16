@@ -16,19 +16,32 @@ class WaterSim : public Simulation {
 		WaterSim() : Simulation() { init(); }
 		
 		virtual void init() override {
-			// create a cube on [-1,1]^3
-			// vertices
-			m_V.resize(8, 3);
-			m_V << -1, -1, -1, 1, -1, -1, -1, 1, -1, 1, 1, -1, -1, -1, 1, 1, -1, 1,
-			    -1, 1, 1, 1, 1, 1;
+			// Create a plane spanning [-1,-1,0]x[1,1,0]
+			// Vertices
+			m_V.resize(9, 3);
+			m_V << -1, -1, 0,
+					0, -1, 0, 
+					1, -1, 0, 
+				   -1,  0, 0, 
+					0,  0, 0, 
+					1,  0, 0,
+				   -1,  1, 0,
+					0,  1, 0, 
+					1,  1, 0;
 			
-			// faces
-			m_F.resize(12, 3);
-			m_F << 0, 2, 1, 2, 3, 1, 1, 3, 5, 3, 7, 5, 2, 6, 3, 6, 7, 3, 5, 7, 4, 7,
-			    6, 4, 4, 6, 0, 6, 2, 0, 0, 4, 1, 4, 5, 1;
+			// Faces
+			m_F.resize(8, 3);
+			m_F << 0, 1, 3,
+				   3, 1, 4,
+				   1, 2, 4,
+				   4, 2, 5,
+				   3, 4, 6,
+				   6, 4, 7,
+				   4, 5, 7,
+				   7, 5, 8;
 			
 			// face colors
-			m_C.resize(12, 3);
+			m_C.resize(8, 3);
 			
 			reset();
 		}

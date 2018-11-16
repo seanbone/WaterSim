@@ -12,4 +12,4 @@ Use an `igl::opengl::glfw::Viewer::data()` to add point coordinates and set poin
 `libigl` has a marching cubes implementation, see `lib/libigl/include/igl/copyleft/marching_cubes.h`.
 
 # References
-- Flip Paper: http://www.danenglesson.com/
+- FLIP Paper: http://www.danenglesson.com/

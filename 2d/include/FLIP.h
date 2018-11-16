@@ -12,13 +12,14 @@ class FLIP {
 	public:
 	
 	// Default Constructor
+	// TODO
 	FLIP() {}
 	
 	// Copy Constructor
 	//~ TODO
 	
 	// Init-Constructor
-	FLIP( Particle* particles, Mac2d MACGrid, SparseMat_t& A ) {}
+	FLIP( Particle* particles, Mac2d MACGrid, SparseMat_t& A );
 	
 	// Forward Euler
 	// - Use velocity = particle.get_Velocties()

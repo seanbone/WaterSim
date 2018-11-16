@@ -9,7 +9,7 @@ void Particle::set_Positions( const double x,
 	z_ = z;
 }
 
-void set_Positions( const Eigen::Vector3d& pos ){
+void Particle::set_Positions( const Eigen::Vector3d& pos ){
 	x_ = pos(0);
 	y_ = pos(1);
 	z_ = pos(2);
@@ -24,7 +24,7 @@ void Particle::set_Velocities( const double u,
 	w_ = w;
 }
 
-void set_Velocities( const Eigen::Vector3d& vel ){
+void Particle::set_Velocities( const Eigen::Vector3d& vel ){
 	u_ = vel(0);
 	v_ = vel(1);
 	w_ = vel(2);

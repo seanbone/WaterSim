@@ -4,6 +4,18 @@
 #include <Eigen/Dense>
 
 struct Particle {
+	private:
+	
+	// Store the position for every coordinate 
+	double x_;
+	double y_;
+	double z_;
+	
+	// Store the velocity for every coordinate
+	double u_;
+	double v_;
+	double w_;
+
 	public:	
 	
 	// Default Constructor
@@ -42,17 +54,6 @@ struct Particle {
 	
 	Eigen::Vector3d get_Velocities();
 	
-	private:
-	
-	// Store the position for every coordinate 
-	double x_;
-	double y_;
-	double z_;
-	
-	// Store the velocity for every coordinate
-	double u_;
-	double v_;
-	double w_;
 };
 
 #endif

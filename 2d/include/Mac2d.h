@@ -17,7 +17,7 @@ class Mac2d{
 		double* ppressure_;		//pointer to array for the pressure
 		double* pu_;			//pointer to array for the velocities in x-direction
 		double* pv_;			//pointer to array for the velocities in y-direction
-		Triplet_t* pA_diag_		//sparse matrix which contains the data for the pressure equations
+		Triplet_t* pA_diag_;		//sparse matrix which contains the data for the pressure equations
 		bool* psolid_; 			//pointer to array for specifing if a cell is solid (1) or not(0)
 		
 	public:

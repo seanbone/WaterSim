@@ -8,8 +8,17 @@ Use an `igl::opengl::glfw::Viewer::data()` to add point coordinates and set poin
     
     viewer.data().point_size = 5;
 
+# Plotting segments
+See `Gui::drawArrow`:
+
+    m_viewer.data_list[0].add_edges(arrow.start, arrow.end, arrow.color);
+
+Use `m_viewer.append_mesh()` to add a new mesh.
+
 # Marching cubes
 `libigl` has a marching cubes implementation, see `lib/libigl/include/igl/copyleft/marching_cubes.h`.
 
 # References
-- FLIP Paper: http://www.danenglesson.com/
+- FLIP explanation: [http://www.danenglesson.com/](http://www.danenglesson.com/)
+- [Libigl tutorial](https://libigl.github.io/tutorial/)
+- 

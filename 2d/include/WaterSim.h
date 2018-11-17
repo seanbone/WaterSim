@@ -9,15 +9,13 @@ class WaterSim : public Simulation {
 	
 	// Initialize the grid and the particle positions and velocities
 	// for the FLIP algorithm
-	//~ TODO: use the FLIP constructor in a 
-	//~ 	  modified (inheritance) Simulation::init()?
-	// WaterSim currently is a copy of DummySim from 0_dummy
+	//~ TODO: connect to FLIP algorithm
 	
 	using viewer_t = igl::opengl::glfw::Viewer;
 	public:
 		WaterSim(viewer_t& viewer) : Simulation() { init(viewer); }
 		
-		virtual void init(viewer_t) {
+		virtual void init(viewer_t& viewer) {
 			// Create a plane spanning [-1,-1,0]x[1,1,0]
 			// Vertices
 			m_V.resize(9, 3);
@@ -46,16 +44,19 @@ class WaterSim : public Simulation {
 			m_C.resize(8, 3);
 
 			// Create some dummy particles for rendering
-			//m_V.resize(9, 3);
-			//m_V << -1, -1, 0,
-			//		0, -1, 0, 
-			//		1, -1, 0, 
-			//	   -1,  0, 0, 
-			//		0,  0, 0, 
-			//		1,  0, 0,
-			//	   -1,  1, 0,
-			//		0,  1, 0, 
-			//		1,  1, 0;
+			m_particles.resize(9, 3);
+			m_particles << -0.5, -1, 0,
+					0.5, -1, 0, 
+					0.5, -.5, 0, 
+				   -0.5,  0, 0, 
+					0.5,  0, 0, 
+					0.5, .5, 0,
+				   -0.5,  1, 0,
+					0.5,  1, 0, 
+					0.5, .5, 0;
+			m_particle_colors.resize(9, 3);
+
+			m_particles_data_idx = viewer.append_mesh();
 			
 			reset();
 		}
@@ -66,6 +67,8 @@ class WaterSim : public Simulation {
 		virtual void resetMembers() override {
 			m_C.setZero();
 			m_C.col(0).setOnes();
+			m_particle_colors.setZero();
+			m_particle_colors.col(2).setOnes();
 		}
 		
 		/*
@@ -78,6 +81,7 @@ class WaterSim : public Simulation {
 			m_renderV = m_V;
 			m_renderF = m_F;
 			m_renderC = m_C;
+			// TODO: import particle positions from simulation (FLIP)
 		}
 		
 		/*
@@ -115,6 +119,8 @@ class WaterSim : public Simulation {
 
 			viewer.data().set_mesh(m_renderV, m_renderF);
 			viewer.data().set_colors(m_renderC);
+			viewer.data_list[m_particles_data_idx].add_points(m_particles, m_particle_colors);
+			viewer.data_list[m_particles_data_idx].point_size = 5;
 		}
 		
 	private:
@@ -135,4 +141,4 @@ class WaterSim : public Simulation {
 		Eigen::MatrixXd m_renderC;  // colors per face for rendering
 };
 
-#endif
+#endif // WATERSIM_H

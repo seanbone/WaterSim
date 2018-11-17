@@ -12,10 +12,12 @@ class WaterSim : public Simulation {
 	//~ TODO: use the FLIP constructor in a 
 	//~ 	  modified (inheritance) Simulation::init()?
 	// WaterSim currently is a copy of DummySim from 0_dummy
+	
+	using viewer_t = igl::opengl::glfw::Viewer;
 	public:
-		WaterSim() : Simulation() { init(); }
+		WaterSim(viewer_t& viewer) : Simulation() { init(viewer); }
 		
-		virtual void init() override {
+		virtual void init(viewer_t) {
 			// Create a plane spanning [-1,-1,0]x[1,1,0]
 			// Vertices
 			m_V.resize(9, 3);
@@ -42,6 +44,18 @@ class WaterSim : public Simulation {
 			
 			// face colors
 			m_C.resize(8, 3);
+
+			// Create some dummy particles for rendering
+			//m_V.resize(9, 3);
+			//m_V << -1, -1, 0,
+			//		0, -1, 0, 
+			//		1, -1, 0, 
+			//	   -1,  0, 0, 
+			//		0,  0, 0, 
+			//		1,  0, 0,
+			//	   -1,  1, 0,
+			//		0,  1, 0, 
+			//		1,  1, 0;
 			
 			reset();
 		}
@@ -97,12 +111,21 @@ class WaterSim : public Simulation {
 		 * the simulation itself is in its own thread.)
 		 */
 		virtual void renderRenderGeometry(
-			igl::opengl::glfw::Viewer &viewer) override {
+					igl::opengl::glfw::Viewer &viewer) override {
+
 			viewer.data().set_mesh(m_renderV, m_renderF);
 			viewer.data().set_colors(m_renderC);
 		}
 		
 	private:
+		
+		// Index of the ViewerData object containing particles for rendering
+		//  in viewer.data_list
+		unsigned int m_particles_data_idx;
+
+		Eigen::MatrixXd m_particles; // Particle positions for rendering, Nx3
+		Eigen::MatrixXd m_particle_colors; // Particle colours, Nx3
+
 		Eigen::MatrixXd m_V;  // vertex positions, Nx3 for N vertices
 		Eigen::MatrixXi m_F;  // face indices
 		Eigen::MatrixXd m_C;  // colors per face

@@ -10,6 +10,7 @@
  */
 class WaterGui : public Gui {
    private:
+      // Simulation parameters
       bool m_export_meshes = false;
       int m_export_fps = 30;
 
@@ -19,12 +20,14 @@ class WaterGui : public Gui {
       int m_grid_res_x = 100; // Number of cells on X axis
       int m_grid_res_y = 100; // Number of cells on Y axis
 
+      // Other members
+
    public:
       WaterSim *p_waterSim = NULL;  // pointer to the simulation
 
       WaterGui() {
          // create a new simulation instance
-         p_waterSim = new WaterSim();
+         p_waterSim = new WaterSim(m_viewer);
 
          // set this simulation as the simulation that is running in our GUI
          setSimulation(p_waterSim);

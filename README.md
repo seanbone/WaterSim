@@ -11,7 +11,7 @@ This Git repository has a submodule for libigl. To clone it correctly use either
     git clone --recurse-submodules https://gitlab.ethz.ch/bones/meteor_pbs18.git
 
 # TODO
- - [ ] Set up 2D visualization for FLIP particles & cells
+ - [X] Set up 2D visualization for FLIP particles & cells
  - [ ] 2D FLIP working correctly
    - [ ] MAC2D data structure
    - [ ] 2D FLIP updates

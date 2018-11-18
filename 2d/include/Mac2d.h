@@ -71,17 +71,43 @@ class Mac2d{
 			}
 			
 			//Initialization of the diagonal of A
-			int min_dimension = std::min(N_,M_);
-			for(int index = 0; index < min_dimension; ++index){
-				int count = 0;
-				if (index == 0){
-					count = !is_solid(index,index+1) + !is_solid(index+1,index);
-				}
-				else if (index == min_dimension - 1){
-					count = !is_solid(index,index-1) + !is_solid(index-1,index);
-				}
-				else{
-					count = !is_solid(index,index+1) + !is_solid(index+1,index) + !is_solid(index,index-1) + !is_solid(index-1,index);
+			for(int i = 0; i < N_; ++i){
+				for(int j = 0; j < M_; ++j){
+					int index = N_ * j + i;
+					int count = 0;
+					if (i == 0){
+						if (j == 0){
+							count = !is_solid(i+1,j) + !is_solid(i,j+1);
+						}
+						else if (j == M_ - 1){
+							count = !is_solid(i+1,j) + !is_solid(i,j-1);
+						}
+						else{
+							count = !is_solid(i+1,j) + !is_solid(i,j-1) + !is_solid(i,j+1);
+						}
+					}
+					else if (i == N_ - 1){
+						if (j == 0){
+							count = !is_solid(i-1,j) + !is_solid(i,j+1);
+						}
+						else if (j == M_ - 1){
+							count = !is_solid(i-1,j) + !is_solid(i,j-1);
+						}
+						else{
+							count = !is_solid(i-1,j) + !is_solid(i,j-1) + !is_solid(i,j+1);
+						}
+					}
+					else {
+						if (j == 0){
+							count = !is_solid(i+1,j) + !is_solid(i-1,j) + !is_solid(i,j+1);
+						}
+						else if (j == M_ - 1){
+							count = !is_solid(i+1,j) + !is_solid(i-1,j) + !is_solid(i,j-1);
+						}
+						else{
+							count = !is_solid(i-1,j) + !is_solid(i+1,j) + !is_solid(i,j-1) + !is_solid(i,j+1);
+						}						
+					}
 				}
 				A_diag_.push_back(Triplet_t(index, index, count));
 			}

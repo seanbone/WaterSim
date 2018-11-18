@@ -118,8 +118,6 @@ class Gui {
                        igl::opengl::glfw::imgui::ImGuiMenu &menu, int button,
                        int modifier);
 
-    igl::opengl::glfw::Viewer m_viewer;
-
     Simulator *p_simulator = NULL;
     bool m_request_clear = false;
     int m_simSpeed = 60;
@@ -141,6 +139,10 @@ class Gui {
     int m_maxSteps = -1;
 
     int m_numRecords = 100;  // number of records to keep
+
+   protected:
+    igl::opengl::glfw::Viewer m_viewer;
+
 };
 
 #endif

@@ -1,2 +1,4 @@
 **/build/*
 *.o
+*.vim
+compile_commands.json

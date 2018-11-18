@@ -237,6 +237,7 @@ bool Gui::keyCallback(igl::opengl::glfw::Viewer &viewer, unsigned int key,
         case 'a':
         case 'A':
             singleStep();
+            return true;
         case 'c':
         case 'C':
             clearScreen();
@@ -263,6 +264,10 @@ bool Gui::mouseCallback(igl::opengl::glfw::Viewer &viewer,
     int vertex = -1;
     int object = -1;
     for (size_t i = 0; i < viewer.data_list.size(); i++) {
+        // edge case: ViewerData has no mesh vertices (e.g. only points)
+        if (viewer.data_list[i].V.rows() == 0)
+          continue;
+
         Eigen::MatrixXf Vf = viewer.data_list[i].V.cast<float>();
         Eigen::MatrixXf projections;
         igl::project(Vf, viewer.core.view, viewer.core.proj,
@@ -286,6 +291,7 @@ bool Gui::mouseCallback(igl::opengl::glfw::Viewer &viewer,
         // only select vertex if user clicked "close"
         m_clickedVertex = vertex;
         m_clickedObject = object;
+
         showVertexArrow();
     }
     return false;

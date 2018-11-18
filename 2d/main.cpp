@@ -1,38 +1,36 @@
 #include <igl/writeOFF.h>
 #include <thread>
-#include "DummySim.h"
+#include "WaterSim.h"
 #include "Gui.h"
 #include "Simulator.h"
 
 /*
- * This class is a GUI for our dummy simulation. It extends the basic GUI
- * defined in Gui.h. We could add more controls and visuals here, but we don't
- * need any additional functionality for this dummy simulation.
+ * This class is a GUI for our water simulation. It extends the basic GUI
+ * defined in Gui.h.
  */
-class DummyGui : public Gui {
+class WaterGui : public Gui {
    public:
-    DummySim *p_dummySim = NULL;  // pointer to the dummy simulation
+      WaterSim *p_waterSim = NULL;  // pointer to the simulation
 
-    DummyGui() {
-        // create a new dummy simulation
-        p_dummySim = new DummySim();
+      WaterGui() {
+         // create a new simulation instance
+         p_waterSim = new WaterSim();
 
-        // set this simulation as the simulation that is running in our GUI
-        setSimulation(p_dummySim);
+         // set this simulation as the simulation that is running in our GUI
+         setSimulation(p_waterSim);
 
-        // start the GUI
-        start();
-    }
+         // start the GUI
+         start();
+      }
 
-    virtual void updateSimulationParameters() override{
-        // We don't have any simulation parameters to update periodically so we
-        // don't need to do anything here
-    };
+      virtual void updateSimulationParameters() override{
+         // TODO: add simulation parameters to GUI
+      };
 };
 
-int main(int argc, char *argv[]) {
-    // create a new instance of the GUI for the dummy simulation
-    new DummyGui();
+int main() { //int argc, char *argv[]) {
+   // Create a new instance of the GUI for the simulation
+   new WaterGui();
 
-    return 0;
+   return 0;
 }

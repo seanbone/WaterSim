@@ -14,23 +14,35 @@ using Pair_t = std::pair<int, int>; //To access the component of the Pair use th
 class Mac2d{
 	private:
 		//PARAMETER for the grid
-		const int N_; 					//number of cells in x
-		const int M_; 					//number of cells in y
-		const double sizex_; 			//size (in meter) of the grid in x-direction
-		const double sizey_; 			//size (in meter) of the grid in y-direction
-		const double cell_sizex_; 		//size (in meter) of one cell in x-direction
-		const double cell_sizey_; 		//size (in meter) of one cell in x-direction
+		//number of cells in x
+		const int N_; 
+		//number of cells in y
+		const int M_;
+		//size (in meter) of the grid in x-direction
+		const double sizex_;
+		//size (in meter) of the grid in y-direction
+		const double sizey_;
+		//size (in meter) of one cell in x-direction
+		const double cell_sizex_; 
+		//size (in meter) of one cell in x-direction
+		const double cell_sizey_;
 		
 		//PHYSICAL VALUES objects
-		double* ppressure_;				//pointer to array for the pressure
-		double* pu_;					//pointer to array for the velocities in x-direction
-		double* pv_;					//pointer to array for the velocities in y-direction
-		bool* psolid_; 					//pointer to array for specifing if a cell is solid (1) or not(0)
-		std::vector<Triplet_t> A_diag_; //pointer to a std::vector which contians the triplets for the diagonal of the matrix A, used to solve the pressures
+		//pointer to array for the pressure
+		double* ppressure_;
+		//pointer to array for the velocities in x-direction
+		double* pu_;
+		//pointer to array for the velocities in y-direction
+		double* pv_;
+		//pointer to array for specifing if a cell is solid (1) or not(0)
+		bool* psolid_;
+		//pointer to a std::vector which contians the triplets for
+		//   the diagonal of the matrix A, used to solve the pressures
+		std::vector<Triplet_t> A_diag_; 
 		
 
 	public:
-		//CONSTRUCTORS		
+		//CONSTRUCTORS
 		//Default constructor
 		Mac2d()
 			: N_(0), M_(0), sizex_(0), sizey_(0), cell_sizex_(0), cell_sizey_(0){}
@@ -57,7 +69,7 @@ class Mac2d{
 					count = !is_solid(index,index+1) + !is_solid(index+1,index) + !is_solid(index,index-1) + !is_solid(index-1,index);
 				}
 				A_diag_.push_back(Triplet_t(index, index, count));
-			}	
+			}
 		}
 		
 		//Destructor
@@ -66,21 +78,31 @@ class Mac2d{
 			delete pu_;
 			delete pv_;
 			delete psolid_;
-		}	
-									
+		}
+		
 		//GETS
-		double get_u(const int i, const int j);								//Get the x-velocity in the mathematical point (i-1/2,j) 
-		double get_v(const int i, const int j);								//Get the y-velocity in the mathematical point (i,j-1/2)
-		double get_pressure(const int i, const int j);						//Get the pressure in the mathematical point(i,j)
-		bool is_solid(const int i, const int j);							//Return if the cell with center (i,j) is a solid cell
+		//Get the x-velocity in the mathematical point (i-1/2,j) 
+		double get_u(const int i, const int j);
+		//Get the y-velocity in the mathematical point (i,j-1/2)
+		double get_v(const int i, const int j);
+		//Get the pressure in the mathematical point(i,j)
+		double get_pressure(const int i, const int j);
+		//Return if the cell with center (i,j) is a solid cell
+		bool is_solid(const int i, const int j);
 		
-		//SETS
-		void set_u(const int i, const int j, double value);					//Set the x-velocity in the mathematical point (i-1/2,j) 
-		void set_v(const int i, const int j, double value);					//Set the y-velocity in the mathematical point (i,j-1/2)
-		void set_pressure(const int i, const int j, double value);			//Set the pressure in the mathematical point(i,j)
-		void set_solid(const int i, const int j);							//Set the cell with center (i,j) as a solid cell
+		//SETTERS
+		//Set the x-velocity in the mathematical point (i-1/2,j)
+		void set_u(const int i, const int j, double value); 
+		//Set the y-velocity in the mathematical point (i,j-1/2)
+		void set_v(const int i, const int j, double value);
+		//Set the pressure in the mathematical point(i,j)
+		void set_pressure(const int i, const int j, double value);
 		
+		//Set the cell with center (i,j) as a solid cell
+		void set_solid(const int i, const int j);
+
 		//USEFUL FUNCTIONS
-		Pair_t index_from_coord(const double x, const double y); 			//Return a pair with the grid-coordinates (i,j) given a spatial coordinate(x,y)	
+		//Return a pair with the grid-coordinates (i,j) given a spatial coordinate(x,y)
+		Pair_t index_from_coord(const double x, const double y);
 };
 #endif

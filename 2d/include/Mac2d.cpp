@@ -16,6 +16,22 @@ bool Mac2d::is_solid(const int i, const int j){
 	return *(psolid_ + N_*j + i);
 }
 
+unsigned Mac2d::get_num_cells_x() {
+	return N_;
+}
+
+unsigned Mac2d::get_num_cells_y() {
+	return M_;
+}
+
+double Mac2d::get_cell_sizex() {
+	return cell_sizex_;
+}
+
+double Mac2d::get_cell_sizey() {
+	return cell_sizey_;
+}
+
 
 void Mac2d::set_u(const int i, const int j, double value){
 	*(pu_ + (N_+1)*j + i) = value;

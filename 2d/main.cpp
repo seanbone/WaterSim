@@ -14,20 +14,24 @@ class WaterGui : public Gui {
       bool m_export_meshes = false;
       int m_export_fps = 30;
 
-      double m_system_size_x = 10; // X dimension of system in m
-      double m_system_size_y = 10; // Y dimension of system in m
+      double m_system_size_x = 30; // X dimension of system in m
+      double m_system_size_y = 30; // Y dimension of system in m
 
-      int m_grid_res_x = 100; // Number of cells on X axis
-      int m_grid_res_y = 100; // Number of cells on Y axis
+      int m_grid_res_x = 50; // Number of cells on X axis
+      int m_grid_res_y = 50; // Number of cells on Y axis
 
       // Other members
+      bool m_display_grid = true;
+      int m_cells_x;
+      int m_cells_y;
 
    public:
       WaterSim *p_waterSim = NULL;  // pointer to the simulation
 
       WaterGui() {
          // create a new simulation instance
-         p_waterSim = new WaterSim(m_viewer);
+         //WaterSim(viewer_t& viewer, const int res_x, const int res_y, const double len_x, const double len_y);
+         p_waterSim = new WaterSim(m_viewer, m_grid_res_x, m_grid_res_y, m_system_size_x, m_system_size_y);
 
          // set this simulation as the simulation that is running in our GUI
          setSimulation(p_waterSim);
@@ -40,6 +44,7 @@ class WaterGui : public Gui {
        * Update the Simulation class with the parameters input to the GUI
        */
       virtual void updateSimulationParameters() override {
+         // TODO
          std::cout << "\n*********\n Simulation Parameters:\n\n";
          std::cout << "Export meshes:\t" << m_export_meshes << std::endl;
          std::cout << "Export freq.:\t" << m_export_fps << std::endl;
@@ -54,21 +59,13 @@ class WaterGui : public Gui {
        * Add parameter controls to the GUI
        */
       virtual void drawSimulationParameterMenu() override {
-//            if (ImGui::Button("Export Trajectories", ImVec2(-1, 0))) {
-//               exportTrajectories();
-//            }
-//            ImGui::SliderAngle("Angle", &m_angle, -180.0f, 180.0f);
-//            ImGui::InputFloat("Force", &m_force, 0, 0);
-//            ImGui::InputFloat("Mass", &m_mass, 0, 0);
-//            ImGui::InputFloat("dt", &m_dt, 0, 0);
-//            ImGui::Combo("Integrator", &m_selected_integrator, m_integrators.data(),
-//                         m_integrators.size());
             ImGui::Checkbox("Export meshes", &m_export_meshes);
             ImGui::InputInt("Export FPS", &m_export_fps, 0, 0);
             ImGui::InputDouble("X Size [m]", &m_system_size_x, 0, 0);
             ImGui::InputDouble("Y Size [m]", &m_system_size_y, 0, 0);
             ImGui::InputInt("Grid resolution X", &m_grid_res_x, 0, 0);
             ImGui::InputInt("Grid resolution Y", &m_grid_res_y, 0, 0);
+            ImGui::Checkbox("Display grid", &m_display_grid);
       }
 };
 
@@ -78,3 +75,4 @@ int main() { //int argc, char *argv[]) {
 
    return 0;
 }
+

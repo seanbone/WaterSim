@@ -47,13 +47,28 @@ class Mac2d{
 		Mac2d()
 			: N_(0), M_(0), sizex_(0), sizey_(0), cell_sizex_(0), cell_sizey_(0){}
 		
-		//Constructor with the number of cells (in both directions) and the length of the cells (in both directions)
+		//Constructor with the number of cells (in both directions) and the length of the box (in metres)
 		Mac2d(const int n, const int m, const double dx, const double dy)
-			: N_(n), M_(m), sizex_(dx), sizey_(dy), cell_sizex_(sizex_/(1.*N_)), cell_sizey_(sizex_/(1.*N_)){
+			: N_(n), M_(m), sizex_(dx), sizey_(dy), cell_sizex_(sizex_/(1.*N_)), cell_sizey_(sizey_/(1.*M_)){
 			ppressure_ = new double[N_*M_];
 			pu_ = new double[(N_+1)*M_];
 			pv_ = new double[N_*(M_+1)];
 			psolid_ = new bool[N_*M_];
+
+			// Initialize solid cells as a "box"
+			//  Top & bottom
+			for (int i = 0; i < N_; i++) {
+				psolid_[i] = true;
+				psolid_[i + (M_ - 1)*N_] = true;
+			}
+			// Sides
+			for (int i = 1; i < M_ - 1; i++) {
+				psolid_[N_*i] = true;
+				for (int j = 1; j < N_ - 1; j++) {
+					psolid_[j + N_*i] = false;
+				}
+				psolid_[N_-1 + N_*i] = true;
+			}
 			
 			//Initialization of the diagonal of A
 			int min_dimension = std::min(N_,M_);
@@ -89,6 +104,12 @@ class Mac2d{
 		double get_pressure(const int i, const int j);
 		//Return if the cell with center (i,j) is a solid cell
 		bool is_solid(const int i, const int j);
+		// Grid dimensions in #cells
+		unsigned get_num_cells_x();
+		unsigned get_num_cells_y();
+		// Cell dimensions in metres
+		double get_cell_sizex();
+		double get_cell_sizey();
 		
 		//SETTERS
 		//Set the x-velocity in the mathematical point (i-1/2,j)

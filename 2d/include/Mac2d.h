@@ -106,10 +106,10 @@ class Mac2d{
 						}
 						else{
 							count = !is_solid(i-1,j) + !is_solid(i+1,j) + !is_solid(i,j-1) + !is_solid(i,j+1);
-						}						
+						}
 					}
+					A_diag_.push_back(Triplet_t(index, index, count));
 				}
-				A_diag_.push_back(Triplet_t(index, index, count));
 			}
 		}
 		

@@ -15,6 +15,8 @@ class WaterSim : public Simulation {
 	public:
 		WaterSim(viewer_t& viewer) : Simulation() { init(viewer); }
 		
+		using Simulation::init;
+
 		virtual void init(viewer_t& viewer) {
 			// Create a plane spanning [-1,-1,0]x[1,1,0]
 			// Vertices
@@ -45,16 +47,21 @@ class WaterSim : public Simulation {
 
 			// Create some dummy particles for rendering
 			m_particles.resize(9, 3);
-			m_particles << -0.5, -1, 0,
-					0.5, -1, 0, 
+			m_particles << 0, -.5, 0,
+					0, 0, 0, 
 					0.5, -.5, 0, 
 				   -0.5,  0, 0, 
 					0.5,  0, 0, 
 					0.5, .5, 0,
-				   -0.5,  1, 0,
-					0.5,  1, 0, 
-					0.5, .5, 0;
-			m_particle_colors.resize(9, 3);
+				   -0.5,-.5, 0,
+					  0, .5, 0, 
+				   -0.5, .5, 0;
+
+			m_num_particles = m_particles.rows();
+
+			m_particle_colors.resize(m_num_particles, 3);
+			m_particle_colors.setZero();
+			m_particle_colors.col(2).setOnes();
 
 			m_particles_data_idx = viewer.append_mesh();
 			
@@ -67,6 +74,7 @@ class WaterSim : public Simulation {
 		virtual void resetMembers() override {
 			m_C.setZero();
 			m_C.col(0).setOnes();
+			m_C.col(1).setOnes();
 			m_particle_colors.setZero();
 			m_particle_colors.col(2).setOnes();
 		}
@@ -92,18 +100,28 @@ class WaterSim : public Simulation {
 		 * simulation.
 		 */
 		virtual bool advance() override {
-			// do next step of some color animation
-			int speed = 60;
-			int decColor = (m_step / speed) % 3;
-			int incColor = (decColor + 1) % 3;
-			
-			for (int i = 0; i < m_C.rows(); i++) {
-				m_C(i, decColor) = (m_C(i, decColor) * speed - 1) / speed;
-				m_C(i, incColor) = (m_C(i, incColor) * speed + 1) / speed;
-			}
+//			// do next step of some color animation
+//			int speed = 60;
+//			int decColor = (m_step / speed) % 3;
+//			int incColor = (decColor + 1) % 3;
+//			
+//			for (int i = 0; i < m_C.rows(); i++) {
+//				m_C(i, decColor) = (m_C(i, decColor) * speed - 1) / speed;
+//				m_C(i, incColor) = (m_C(i, incColor) * speed + 1) / speed;
+//			}
+
+
+			Eigen::MatrixXd delta;
+			delta.resize(m_num_particles, 3);
+			delta.col(0).setRandom();
+			delta.col(1).setRandom();
+			delta.col(2).setZero();
+
+			m_particles += 0.01 * delta;
 			
 			// advance step
 			m_step++;
+			m_time += m_dt;
 			return false;
 		}
 		
@@ -119,7 +137,7 @@ class WaterSim : public Simulation {
 
 			viewer.data().set_mesh(m_renderV, m_renderF);
 			viewer.data().set_colors(m_renderC);
-			viewer.data_list[m_particles_data_idx].add_points(m_particles, m_particle_colors);
+			viewer.data_list[m_particles_data_idx].set_points(m_particles, m_particle_colors);
 			viewer.data_list[m_particles_data_idx].point_size = 5;
 		}
 		
@@ -129,6 +147,7 @@ class WaterSim : public Simulation {
 		//  in viewer.data_list
 		unsigned int m_particles_data_idx;
 
+		unsigned int m_num_particles;
 		Eigen::MatrixXd m_particles; // Particle positions for rendering, Nx3
 		Eigen::MatrixXd m_particle_colors; // Particle colours, Nx3
 

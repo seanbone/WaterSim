@@ -25,15 +25,49 @@ class Mac2d{
 		double* ppressure_;				//pointer to array for the pressure
 		double* pu_;					//pointer to array for the velocities in x-direction
 		double* pv_;					//pointer to array for the velocities in y-direction
-		std::vector<Triplet_t> pA_diag_;//pointer to a std::vector which contians the triplets for the diagonal of the matrix A, used to solve the pressures
 		bool* psolid_; 					//pointer to array for specifing if a cell is solid (1) or not(0)
+		std::vector<Triplet_t> A_diag_; //pointer to a std::vector which contians the triplets for the diagonal of the matrix A, used to solve the pressures
+		
 
 	public:
-		//CONSTRUCTORS
-		Mac2d(){}															//Default constructor
-		Mac2d(const int n, const int m, const double dx, const double dy);	//Constructor with the number of cells (in both directions) and the length of the cells (in both directions)
-		~Mac2d();															//Destructor								
+		//CONSTRUCTORS		
+		//Default constructor
+		Mac2d()
+			: N_(0), M_(0), sizex_(0), sizey_(0), cell_sizex_(0), cell_sizey_(0){}
 		
+		//Constructor with the number of cells (in both directions) and the length of the cells (in both directions)
+		Mac2d(const int n, const int m, const double dx, const double dy)
+			: N_(n), M_(m), sizex_(dx), sizey_(dy), cell_sizex_(sizex_/(1.*N_)), cell_sizey_(sizex_/(1.*N_)){
+			ppressure_ = new double[N_*M_];
+			pu_ = new double[(N_+1)*M_];
+			pv_ = new double[N_*(M_+1)];
+			psolid_ = new bool[N_*M_];
+			
+			//Initialization of the diagonal of A
+			int min_dimension = std::min(N_,M_);
+			for(int index = 0; index < min_dimension; ++index){
+				int count = 0;
+				if (index == 0){
+					count = !is_solid(index,index+1) + !is_solid(index+1,index);
+				}
+				else if (index == min_dimension - 1){
+					count = !is_solid(index,index-1) + !is_solid(index-1,index);
+				}
+				else{
+					count = !is_solid(index,index+1) + !is_solid(index+1,index) + !is_solid(index,index-1) + !is_solid(index-1,index);
+				}
+				A_diag_.push_back(Triplet_t(index, index, count));
+			}	
+		}
+		
+		//Destructor
+		~Mac2d(){
+			delete ppressure_;
+			delete pu_;
+			delete pv_;
+			delete psolid_;
+		}	
+									
 		//GETS
 		double get_u(const int i, const int j);								//Get the x-velocity in the mathematical point (i-1/2,j) 
 		double get_v(const int i, const int j);								//Get the y-velocity in the mathematical point (i,j-1/2)
@@ -47,7 +81,6 @@ class Mac2d{
 		void set_solid(const int i, const int j);							//Set the cell with center (i,j) as a solid cell
 		
 		//USEFUL FUNCTIONS
-		std::ostream& operator<< (std::ostream& out, double* list);			//Operator<< overloading to print an array pointed by list
 		Pair_t index_from_coord(const double x, const double y); 			//Return a pair with the grid-coordinates (i,j) given a spatial coordinate(x,y)	
 };
 #endif

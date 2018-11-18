@@ -11,22 +11,18 @@ using Triplet_t = Eigen::Triplet<double>;
 class FLIP {
 	public:
 	
-	// Default Constructor
-	// TODO
-	FLIP() {}
-	
-	// Copy Constructor
-	//~ TODO
-	
 	// Init-Constructor
-	FLIP( Particle* particles, Mac2d MACGrid, SparseMat_t& A );
+	FLIP(Particle* particles, Mac2d& MACGrid);
 	
 	// Forward Euler
 	// - Use velocity = particle.get_Velocties()
 	// - For gravity use ext_forces = (0, 0, -9.81)
-	void fwd_Euler( Eigen::Vector3d& velocity,
-					const Eigen::Vector3d& ext_forces,
-					const double dt);
+	//void fwd_Euler( Eigen::Vector3d& velocity,
+	//				const Eigen::Vector3d& ext_forces,
+	//				const double dt);
+	
+	// Perform one FLIP step
+	void step_FLIP(double dt, double time, unsigned long step);
 	
 	// Transfer particle velocities to grid
 	// and save a copy of the grid velocities
@@ -49,9 +45,6 @@ class FLIP {
 	// Update particle velocities by mixing FLIP and PIC
 	//~ TODO: void update_ParticleVelocities();
 	
-	// Perform one FLIP step
-	//~ TODO: void step_FLIP();
-	
 	private:
 	
 	// Array of all particles
@@ -62,6 +55,19 @@ class FLIP {
 	
 	// Pressure-Matrix
 	SparseMat_t A;
+
+	// Apply forward euler or RK2 to update particle positions
+	void advance_particles();
+	// Transfer particle velocities to MAC grid
+	void particle_to_grid();
+	// Apply external forces (gravity) to velocities on grid
+	void apply_forces();
+	// Calculate new pressures in MAC grid
+	void update_pressures();
+	// Update grid velocities with pressure gradients
+	void apply_pressure_gradients();
+	// transfer grid velocities to particles
+	void grid_to_particle();
 };
 
 #endif

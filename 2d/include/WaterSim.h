@@ -5,6 +5,16 @@
 #include "FLIP.h"
 //~ #include "MarchCubes.h"
 
+/**
+ * This class manages the water simulation.
+ * It:
+ * - Initializes a MAC grid in the right configuration
+ * - Initializes the list of particles
+ * - Initializes a FLIP object to handle updating the state
+ * - Calls the update method on FLIP at each step
+ * - Uses an Exporter object to export meshes at each step
+ * - Handles rendering of the visualization (particles & grid)
+ */
 class WaterSim : public Simulation {
 	
 	// Initialize the grid and the particle positions and velocities

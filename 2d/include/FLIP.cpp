@@ -1,83 +1,76 @@
 #include "FLIP.h"
 
-FLIP::FLIP(Particle* particles, Mac2d& MACGrid) {
+FLIP::FLIP(Particle* particles, const unsigned num_particles, Mac2d* MACGrid) 
+	: particles_(particles), num_particles_(num_particles), MACGrid_(MACGrid) {
 	
 }
 
 /**
  * Advance FLIP simulation by one frame
  */
-void FLIP::step_FLIP(double dt, double time, unsigned long step) {
+void FLIP::step_FLIP(const double dt, const double time, const unsigned long step) {
 	/** One FLIP step:
-	 * 1. Forward Euler (/RK2) to update particle positions
-	 * 2. Transfer particle velocities to grid $\rightarrow u^*$ & save copy
-	 * 3. Apply external forces (gravity etc) with Forward Euler: $u^* += \vec g\Delta t$
-	 * 4. Construct pressure matrix $A$
-	 * 5. Compute right-hand side (divergence) $d$
-	 * 6. Solve $Ap = d$ with MICCG(0)
-	 * 7. Update grid velocities with pressure gradients $\rightarrow u^{n+1}$
-	 * 8. Update particle velocities by mixing FLIP and PIC
+	 * 1. Compute velocity field (particle-to-grid transfer)
+	 *    - Particle-to-grid transfer
+	 *    - Classify cells (fluid/air)
+	 *    - Extrapolate velocity field into air region
+	 * 2. Apply external forces (fwd euler on field)
+	 * 3. Compute & apply pressure gradients
+	 * 4. Update particle velocities
+	 * 8. Update particle positions
 	 */
 
+	// TODO: subsample time interval to satisfy CFL condition
+	double cur_time = time;
+
 	// 1.
-	advance_particles();
+	compute_velocity_field();
 
 	// 2.
-	particle_to_grid();
-
-	// 3.
 	apply_forces();
 
-	// 4. to 6.
-	update_pressures();
+	// 3.
+	do_pressures();
 
-	// 7.
-	apply_pressure_gradients();
-
-	// 8.
+	// 4.
 	grid_to_particle();
 
+	// 5.
+	advance_particles();
 }
 
-void FLIP::advance_particles() {
-	// TODO: forward euler to update particle positions
-}
-
-void FLIP::particle_to_grid() {
-	// TODO: particle to grid transfer of velocities
+void FLIP::compute_velocity_field() {
+	// TODO: 1. Compute the velocity field (velocities on grid)
+	//  1a. particle-to-grid transfer
+	//  1b. classify nonsolid cells as fluid or air
+	//  1c. extrapolate velocity field to air cells
+	//    -> see SIGGRAPH §6.3
 }
 
 void FLIP::apply_forces() {
-	// TODO: apply external forces to velocities on grid via forward euler
+	// TODO: compute&apply external forces (gravity, vorticity confinement, ...) 
+	// Apply them to the velocity field via forward euler
+	// Only worry about gravity for now
 }
 
-void FLIP::update_pressures() {
-	// TODO: construct and solve LSE for new pressures on grid
-}
-
-void FLIP::apply_pressure_gradients() {
-	// TODO: update velocities on grid 
+void FLIP::do_pressures() {
+	// TODO: 3. Compute & apply pressure gradients to field
+	//   3a. Compute A matrix
+	//   3b. Compute rhs d
+	//   3c. Solve for p: Ap = d (MICCG(0))
+	//   3d. Apply pressure gradients to velocity field
+	//     -> see SIGGRAPH §4
+	// Note: boundary conditions are handles here by setting the pressures
+	//    such that no particle exits the system.
 }
 
 void FLIP::grid_to_particle() {
 	// TODO: FLIP grid to particle transfer
+	//  -> See slides Fluids II, FLIP_explained.pdf
 }
 
-//void FLIP::fwd_Euler( Eigen::Vector3d& velocity,
-//					  const Eigen::Vector3d& ext_forces,
-//					  const double dt)
-//{
-//	//~ TODO
-//}
+void FLIP::advance_particles() {
+	// TODO: update particle positions 
+	//  - Use RK2 interpolator
+}
 
-//~ void FLIP::transfer_Velocities(){}
-
-//~ void FLIP::construct_A(){}
-
-//~ void FLIP::compute_Rhs(){}
-
-//~ void FLIP::solve_MICCG(){}
-
-//~ void FLIP::update_GridVelocities(){}
-
-//~ void FLIP::update_ParticleVelocities(){}

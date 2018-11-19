@@ -44,7 +44,7 @@ class WaterGui : public Gui {
        * Update the Simulation class with the parameters input to the GUI
        */
       virtual void updateSimulationParameters() override {
-         // TODO
+         // TODO: copy GUI inputs to WaterSim
          std::cout << "\n*********\n Simulation Parameters:\n\n";
          std::cout << "Export meshes:\t" << m_export_meshes << std::endl;
          std::cout << "Export freq.:\t" << m_export_fps << std::endl;

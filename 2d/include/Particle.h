@@ -22,7 +22,7 @@ struct Particle {
 	Particle() {}
 	
 	// Copy Constructor
-	//~ TODO
+	//~ TODO: Particle copy constructor
 	
 	// Initialize positions and velocities (zero by default)
 	Particle( const double x, 

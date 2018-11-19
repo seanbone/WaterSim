@@ -3,7 +3,6 @@
 
 #include "Simulation.h"
 #include "FLIP.h"
-//~ #include "MarchCubes.h"
 
 /**
  * This class manages the water simulation.
@@ -16,10 +15,6 @@
  * - Handles rendering of the visualization (particles & grid)
  */
 class WaterSim : public Simulation {
-
-	// Initialize the grid and the particle positions and velocities
-	// for the FLIP algorithm
-	//~ TODO: connect to FLIP algorithm
 
 	private:
 		

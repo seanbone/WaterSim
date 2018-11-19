@@ -41,6 +41,9 @@ void WaterSim::init(WaterSim::viewer_t& viewer) {
             idx += 4;
         }
     }
+
+    // Initialize FLIP object
+    p_flip = new FLIP(flip_particles, m_num_particles, p_mac_grid);
     
     
     // Index of ViewerData instance dedicated to particles
@@ -136,13 +139,8 @@ void WaterSim::updateRenderGeometry() {
 
 
 bool WaterSim::advance() {
-    Eigen::MatrixXd delta;
-    delta.resize(m_num_particles, 3);
-    delta.col(0).setRandom();
-    delta.col(1).setRandom();
-    delta.col(2).setZero();
-    
-    m_particles += 0.01 * delta;
+    // Perform a FLIP step
+    p_flip->step_FLIP(m_dt, m_time, m_step);
     
     // advance step
     m_step++;

@@ -20,6 +20,10 @@ bool Mac2d::is_fluid(const int i, const int j){
 	return *(pfluid_ + N_*j + i);
 }
 
+bool Mac2d::is_empty(const int i, const int j){
+	return (!is_fluid(i,j) && !is_solid(i,j));
+}
+
 unsigned Mac2d::get_num_cells_x() {
 	return N_;
 }

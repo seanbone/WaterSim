@@ -157,6 +157,8 @@ class Mac2d{
 		void set_v(const int i, const int j, double value);
 		//Set the pressure in the mathematical point(i,j)
 		void set_pressure(const int i, const int j, double value);
+		// Reset all pressures
+		void set_pressure(const Eigen::VectorXd& p);
 		
 		//Set the cell with center (i,j) as a solid cell
 		void set_solid(const int i, const int j);

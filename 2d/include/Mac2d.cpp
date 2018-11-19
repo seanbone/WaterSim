@@ -61,6 +61,10 @@ void Mac2d::set_pressure(const int i, const int j, double value){
 	*(ppressure_ + N_*j + i) = value;
 }
 
+void Mac2d::set_pressure(const Eigen::VectorXd& p) {
+	std::copy(p.data(), p.data()+p.size(), ppressure_);
+}
+
 void Mac2d::set_solid(const int i, const int j){
 	*(psolid_ + N_*j + i) = true;
 }

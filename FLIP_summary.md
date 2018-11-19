@@ -24,6 +24,22 @@ Program pipeline:
 
 
 # FLIP algorithm
+New order:
+	/** One FLIP step:
+	 * 1. Compute velocity field (particle-to-grid transfer)
+	 *    - Particle-to-grid transfer
+	 *    - Classify cells (fluid/air)
+	 *    - Extrapolate velocity field into air region
+	 * 2. Apply external forces (fwd euler on field)
+	 * 3. Compute & apply pressure gradients
+	 * 4. Update particle velocities
+	 * 8. Update particle positions
+	 */
+
+
+
+
+Old version:
 In each iteration:
 1. Forward Euler (/RK2) to update particle positions
 2. Transfer particle velocities to grid $\rightarrow u^*$ & save copy

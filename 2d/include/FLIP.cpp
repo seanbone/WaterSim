@@ -93,6 +93,7 @@ void FLIP::compute_pressure_matrix() {
 	unsigned nx = MACGrid_->get_cell_sizex();
 	unsigned ny = MACGrid_->get_cell_sizey();
 
+	// *TODO: reduce matrix size from (N*M)x(N*M) to (#fluidcells)x(#fluidcells)
 	for (unsigned j = 0; j < ny; j++) {
 		for (unsigned i = 0; i < nx; i++) {
 			if (MACGrid_->is_fluid(i, j)) {
@@ -130,46 +131,68 @@ void FLIP::compute_pressure_rhs(const double dt) {
 	// Alias for MAC grid
 	auto& g = MACGrid_;
 
+	// *TODO: reduce vector size from (N*M) to (#fluidcells)
 	unsigned idx = 0;
 	for (unsigned j = 0; j < ny; j++) {
 		for (unsigned i = 0; i < nx; i++) {
-			// get_u(i,j) = u_{ (i-1/2, j) }
-			double d_ij = -(g->get_u(i+1,j) - g->get_u(i,j));
-			d_ij -= g->get_v(i,j+1) - g->get_v(i,j);
-
-			// Note: u_{solid} = 0
-			// (i+1, j)
-			if ((i < (nx-1) && g->is_solid(i+1,j)) || i == nx-1) {
-				d_ij += g->get_u(i+1,j);
+			if (g->is_fluid(i,j)) {
+				// get_u(i,j) = u_{ (i-1/2, j) }
+				double d_ij = -(g->get_u(i+1,j) - g->get_u(i,j));
+				d_ij -= g->get_v(i,j+1) - g->get_v(i,j);
+	
+				// Note: u_{solid} = 0
+				// (i+1, j)
+				if ((i < (nx-1) && g->is_solid(i+1,j)) || i == nx-1) {
+					d_ij += g->get_u(i+1,j);
+				}
+				// (i-1, j)
+				if ((i > 0 && g->is_solid(i-1,j)) || i == 0) {
+					d_ij += g->get_u(i-1,j);
+				}
+	
+				// (i, j+1)
+				if ((j < (ny-1) && g->is_solid(i,j+1)) || j == ny-1) {
+					d_ij += g->get_v(i,j+1);
+				}
+				// (i, j-1)
+				if ((j > 0 && g->is_solid(i,j-1)) || j == 0) {
+					d_ij += g->get_v(i,j-1);
+				}
+	
+				// *TODO: cell x and y size should always be the same -> enforce via sim params?
+				d_(idx) = fluid_density_ * dt * d_ij / g->get_cell_sizex();
+			} else {
+				d_(idx) = 0;
 			}
-			// (i-1, j)
-			if ((i > 0 && g->is_solid(i-1,j)) || i == 0) {
-				d_ij += g->get_u(i-1,j);
-			}
-
-			// (i, j+1)
-			if ((j < (ny-1) && g->is_solid(i,j+1)) || j == ny-1) {
-				d_ij += g->get_v(i,j+1);
-			}
-			// (i, j-1)
-			if ((j > 0 && g->is_solid(i,j-1)) || j == 0) {
-				d_ij += g->get_v(i,j-1);
-			}
-
-			// *TODO: cell x and y size should always be the same -> enforce via sim params?
-			d_(idx) = fluid_density_ * dt * d_ij / g->get_cell_sizex();
 			idx++;
 		}
 	}
 }
 
 void FLIP::apply_pressure_gradients(const double dt) {
-	// TODO: apply pressure gradients to velocity field
+	// Apply pressure gradients to velocity field
 	unsigned nx = MACGrid_->get_cell_sizex();
 	unsigned ny = MACGrid_->get_cell_sizey();
-	for (unsigned j = 1; j < ny; j++) {
-		for (unsigned i = 1; i < nx; i++) {
-			
+	// MACGrid alias
+	auto& g = MACGrid_;
+	// *TODO: correct cell dimensions
+	double dx = g->get_cell_sizex();
+	for (unsigned j = 0; j < ny; j++) {
+		for (unsigned i = 0; i < nx; i++) {
+			if (i != 0) {
+				// get_u(i,j) = u_{ (i-1/2, j) }
+				// See SIGGRAPH eq. (4.4)
+				double du = (g->get_pressure(i,j) - g->get_pressure(i-1,j));
+				du *= (dt/(dx*fluid_density_));
+				g->set_u(i,j, g->get_u(i,j) + du);
+			}
+			if (j != 0) {
+				// get_v(i,j) = v_{ (i, j-1/2) }
+				// See SIGGRAPH eq. (4.5)
+				double dv = (g->get_pressure(i,j) - g->get_pressure(i,j-1));
+				dv *= (dt/(dx*fluid_density_));
+				g->set_v(i,j, g->get_v(i,j) + dv);
+			}
 		}
 	}
 }

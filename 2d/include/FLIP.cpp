@@ -227,14 +227,14 @@ void FLIP::apply_forces(const double dt) {
 	// Compute&apply external forces (gravity, vorticity confinement, ...) 
 	// Apply them to the velocity field via forward euler
 	// Only worry about gravity for now
-	//auto& g = MACGrid_;
-	const unsigned N = MACGrid_->get_num_cells_x();
-	const unsigned M = MACGrid_->get_num_cells_y();
+	auto& g = MACGrid_;
+	const unsigned N = g->get_num_cells_x();
+	const unsigned M = g->get_num_cells_y();
 	
 	// Iterate over cells & update: dv = dt*g
 	for (unsigned j = 0; j <= M; j++) {
 		for (unsigned i = 0; i < N; i++) {
-			MACGrid_->set_v(i, j, MACGrid_->get_v(i,j) + dt*gravity_mag_);
+			g->set_v(i, j, g->get_v(i,j) + dt*gravity_mag_);
 		}
 	}
 }

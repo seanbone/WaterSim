@@ -1,8 +1,8 @@
 #include "Particle.h"
 
 void Particle::set_position( const double x,
-							  const double y,
-							  const double z )
+							 const double y,
+							 const double z )
 {
 	x_ = x;
 	y_ = y;
@@ -16,8 +16,8 @@ void Particle::set_position( const Eigen::Vector3d& pos ){
 }
 
 void Particle::set_velocity( const double u,
-							   const double v,
-							   const double w )
+							 const double v,
+							 const double w )
 {
 	u_ = u;
 	v_ = v;

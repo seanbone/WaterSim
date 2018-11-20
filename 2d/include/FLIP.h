@@ -4,6 +4,8 @@
 #include "Particle.h"
 #include "Mac2d.h"
 #include <Eigen/Sparse>
+#include <Eigen/Dense>
+#include <cmath>
 
 using SparseMat_t = Eigen::SparseMatrix<double>;
 using Triplet_t = Eigen::Triplet<double>;
@@ -43,7 +45,40 @@ class FLIP {
 	// Compute velocity field by particle-to-grid transfer
 	//   and extrapolating into air region
 	void compute_velocity_field();
-
+	
+	// Check the distance between a particle and a point on the MACGrid
+	bool check_threshold( const Eigen::Vector3d& particle_coord, 
+						  const Eigen::Vector3d& grid_coord, 
+						  const double h );
+	
+	// Compute the weight using the SPH Kernels multiplied by
+	// the norm ||x_p - x_uij||
+	double compute_weight( const Eigen::Vector3d& particle_coord, 
+						const Eigen::Vector3d& grid_coord, 
+						const double h );
+	
+	// Accumulate velocities and weights for u					
+	void accumulate_u( const Eigen::Vector3d& pos,
+					   const Eigen::Vector3d& vel,
+					   const Eigen::Vector3d& grid_coord,
+					   const double h,
+					   const int i,
+					   const int j );
+	
+	// Accumulate velocities and weights for v
+	void accumulate_v( const Eigen::Vector3d& pos,
+					   const Eigen::Vector3d& vel,
+					   const Eigen::Vector3d& grid_coord,
+					   const double h,
+					   const int i,
+					   const int j );
+					   
+	// Normalize accumulated horizontal velocities
+	void normalize_accumulated_u();
+	
+	// Normalize accumulated vertical velocities
+	void normalize_accumulated_v();
+	
 	// Apply external forces to velocities on grid
 	void apply_forces();
 

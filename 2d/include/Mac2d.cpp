@@ -32,6 +32,13 @@ double Mac2d::get_cell_sizey() {
 	return cell_sizey_;
 }
 
+double Mac2d::get_weights_u(const int i, const int j){
+	return *(pweights_u_ + (N_+1)*j + i);
+}
+
+double Mac2d::get_weights_v(const int i, const int j){
+	return *(pweights_v_ + N_*j + i);
+}
 
 void Mac2d::set_u(const int i, const int j, double value){
 	*(pu_ + (N_+1)*j + i) = value;
@@ -43,6 +50,32 @@ void Mac2d::set_v(const int i, const int j, double value){
 
 void Mac2d::set_pressure(const int i, const int j, double value){
 	*(ppressure_ + N_*j + i) = value;
+}
+
+void Mac2d::set_weights_u(const int i, const int j, double value){
+	*(pweights_u_ + (N_+1)*j + i) = value;
+}
+
+void Mac2d::set_weights_v(const int i, const int j, double value){
+	*(pweights_v_ + N_*j + i) = value;
+}
+
+void Mac2d::set_velocities_to_zero(){
+	for( int j = 0; j < M_; ++j ){
+		for( int i = 0; i < N_; ++i ){
+			set_u(i, j, 0.);
+			set_v(i, j, 0.);
+		}	
+	}
+}
+
+void Mac2d::set_weights_to_zero(){
+	for( int j = 0; j < M_+1; ++j ){
+		for( int i = 0; i < N_+1; ++i ){
+			set_weights_u(i, j, 0.);
+			set_weights_v(i, j, 0.);
+		}	
+	}
 }
 
 void Mac2d::set_solid(const int i, const int j){

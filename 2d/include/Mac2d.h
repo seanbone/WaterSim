@@ -38,8 +38,13 @@ class Mac2d{
 		bool* psolid_;
 		//pointer to a std::vector which contians the triplets for
 		//   the diagonal of the matrix A, used to solve the pressures
-		std::vector<Triplet_t> A_diag_; 
+		std::vector<Triplet_t> A_diag_;
 		
+		// Weights for particle-to-grid for u
+		double* pweights_u_;
+		
+		// Weights for particle-to-grid for v
+		double* pweights_v_;
 
 	public:
 		//CONSTRUCTORS
@@ -137,6 +142,11 @@ class Mac2d{
 		double get_cell_sizex();
 		double get_cell_sizey();
 		
+		//Get the weights for u in the mathematical point (i-1/2,j) 
+		double get_weights_u(const int i, const int j);
+		//Get the weights for v in the mathematical point (i,j-1/2)
+		double get_weights_v(const int i, const int j);
+				
 		//SETTERS
 		//Set the x-velocity in the mathematical point (i-1/2,j)
 		void set_u(const int i, const int j, double value); 
@@ -144,6 +154,17 @@ class Mac2d{
 		void set_v(const int i, const int j, double value);
 		//Set the pressure in the mathematical point(i,j)
 		void set_pressure(const int i, const int j, double value);
+		
+		//Set the weights for u in the mathematical point (i-1/2,j) 
+		void set_weights_u(const int i, const int j, double value);
+		//Set the weights for v in the mathematical point (i,j-1/2)
+		void set_weights_v(const int i, const int j, double value);
+		
+		// Set all grid velocities to zero for particle-to-grid transfer
+		void set_velocities_to_zero();
+		
+		// Set all weights to zero for particle-to-grid transfer
+		void set_weights_to_zero();
 		
 		//Set the cell with center (i,j) as a solid cell
 		void set_solid(const int i, const int j);

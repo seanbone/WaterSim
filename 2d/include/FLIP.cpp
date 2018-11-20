@@ -218,14 +218,14 @@ void FLIP::apply_forces(const double dt) {
 	// Compute&apply external forces (gravity, vorticity confinement, ...) 
 	// Apply them to the velocity field via forward euler
 	// Only worry about gravity for now
-	auto& g = MACGrid_;
-	const unsigned N = g->get_num_cells_x();
-	const unsigned M = g->get_num_cells_y();
+	//auto& g = MACGrid_;
+	const unsigned N = MACGrid_->get_num_cells_x();
+	const unsigned M = MACGrid_->get_num_cells_y();
 	
 	// Iterate over cells & update: dv = dt*g
 	for (unsigned j = 0; j <= M; j++) {
 		for (unsigned i = 0; i < N; i++) {
-			g->set_v(i, j, g->get_v(i,j) + dt*gravity_mag_);
+			MACGrid_->set_v(i, j, MACGrid_->get_v(i,j) + dt*gravity_mag_);
 		}
 	}
 }
@@ -378,17 +378,23 @@ void FLIP::apply_pressure_gradients(const double dt) {
 void FLIP::grid_to_particle(){
 	// FLIP grid to particle transfer
 	//  -> See slides Fluids II, FLIP_explained.pdf
-	double alpha = 0.00;
+	double alpha = 0.05;
 	
 	for(int i = 0; i < num_particles_; ++i){
 		//Store the initial positions and velocities of the particles
 		Eigen::Vector3d initial_position = (particles_+i)->get_position();
 		Eigen::Vector3d initial_velocity = (particles_+i)->get_velocity();
 		
+		if (i == 0) std::cout << initial_position << std::endl;
+		if (i == 0) std::cout << initial_velocity << std::endl;
+
 		//Initialization of the variables
 		Eigen::Vector3d interp_u_star;
+		interp_u_star.setZero();
 		Eigen::Vector3d interp_u_n1;
+		interp_u_n1.setZero();
 		Eigen::Vector3d u_update;
+		u_update.setZero();
 		double x = initial_position[0];
 		double y = initial_position[1];
 		Mac2d::Pair_t indices = MACGrid_->index_from_coord(x,y);
@@ -417,7 +423,7 @@ void FLIP::grid_to_particle(){
 							+ (MACGrid_->get_u(x1,y2))*(x2 - x)*(y-y1) 
 							+ (MACGrid_->get_u(x2,y2))*(x - x1)*(y-y1));
 		
-		//Update the v-velocity (bilinear interpolation)	
+		//Update the v-velocity (bilinear interpolation)
 		y1 = indices.second;
 		y2 = y1 + 1;
 		if(x > (indices.first + 0.5)){
@@ -437,10 +443,15 @@ void FLIP::grid_to_particle(){
 							+ (MACGrid_->get_v(x1,y2))*(x2 - x)*(y-y1) 
 							+ (MACGrid_->get_v(x2,y2))*(x - x1)*(y-y1));
 		
-		//Update the final velocity of the particles					
-		u_update = 	initial_velocity + interp_u_n1 + interp_u_star*(alpha - 1);	
-		(particles_ + i)->set_velocity(u_update);	
+		if (i == 0) std::cout << interp_u_star << std::endl;
+		if (i == 0) std::cout << interp_u_n1 << std::endl;
+
+		//Update the final velocity of the particles
+		u_update = initial_velocity + interp_u_n1 + interp_u_star*(alpha - 1);
+		(particles_ + i)->set_velocity(u_update);
+		if (i == 0) std::cout << u_update << std::endl;
 	}
+	std::cout << MACGrid_->get_v(10, 45) << "\n----\n";
 }
 
 

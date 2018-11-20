@@ -16,6 +16,9 @@ class WaterGui : public Gui {
 
       double m_system_size_x = 30; // X dimension of system in m
       double m_system_size_y = 30; // Y dimension of system in m
+      
+      // TODO: proper input
+      double m_dt = 1e-2;
 
       int m_grid_res_x = 50; // Number of cells on X axis
       int m_grid_res_y = 50; // Number of cells on Y axis
@@ -53,6 +56,7 @@ class WaterGui : public Gui {
          std::cout << "Resolution X:\t" << m_grid_res_x << std::endl;
          std::cout << "Resolution Y:\t" << m_grid_res_y << std::endl;
          std::cout << "\n*********\n";
+         p_waterSim->setTimestep(m_dt);
       };
 
       /**

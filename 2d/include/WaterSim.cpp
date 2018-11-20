@@ -129,8 +129,11 @@ void WaterSim::updateRenderGeometry() {
     // Copy particle positions from FLIP's data structure
     m_particles.resize(m_num_particles, 3);
     for (unsigned i = 0; i < m_num_particles; i++) {
-        m_particles.row(i) = flip_particles[i].get_position().transpose();
+        m_particles.row(i) = flip_particles[i].get_position();//.transpose();
     }
+    //std::cout << flip_particles[0].get_velocity() << std::endl;
+//    std::cout << m_particles(0, 1) << std::endl;
+    //std::cout << "-------------------" << std::endl;
 
     m_particle_colors.resize(m_num_particles, 3);
     m_particle_colors.setZero();

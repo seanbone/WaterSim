@@ -34,7 +34,7 @@ void FLIP::step_FLIP(const double dt, const double time, const unsigned long ste
 	MACGrid_->set_uv_star();
 
 	// 3.
-	do_pressures(dt);
+	//do_pressures(dt);
 
 	// 4.
 	grid_to_particle();
@@ -399,6 +399,8 @@ void FLIP::grid_to_particle(){
 		double y = initial_position[1];
 		Mac2d::Pair_t indices = MACGrid_->index_from_coord(x,y);
 		int x1, x2, y1, y2;
+		double u11, u12, u21, u22;
+		double v11, v12, v21, v22;
 		
 		//With u* and v* we can make the interpolation interp(u*, x_p),
 		//with the new u and v we can make the interpolation interp(u_n1, x_p)
@@ -414,14 +416,23 @@ void FLIP::grid_to_particle(){
 			y2 = indices.second;
 			y1 = y2 - 1;
 		}
-		interp_u_star[0] = 1/((x2 - x)*(y2-y))*((MACGrid_->get_u_star(x1,y1))*(x2 - x)*(y2-y) 
-							+ (MACGrid_->get_u_star(x2,y1))*(x - x)*(y2-y) 
-							+ (MACGrid_->get_u_star(x1,y2))*(x2 - x)*(y-y1) 
-							+ (MACGrid_->get_u_star(x2,y2))*(x - x1)*(y-y1));
-		interp_u_n1[0] = 1/((x2 - x)*(y2-y))*((MACGrid_->get_u(x1,y1))*(x2 - x)*(y2-y) 
-							+ (MACGrid_->get_u(x2,y1))*(x - x)*(y2-y) 
-							+ (MACGrid_->get_u(x1,y2))*(x2 - x)*(y-y1) 
-							+ (MACGrid_->get_u(x2,y2))*(x - x1)*(y-y1));
+		u11 = MACGrid_->get_u_star(x1,y1);
+		u12 = MACGrid_->get_u_star(x1,y2);
+		u21 = MACGrid_->get_u_star(x2,y1);
+		u22 = MACGrid_->get_u_star(x2,y2);
+		interp_u_star[0] = 1/((x2 - x1)*(y2-y1))*(u11*(x2 - x)*(y2-y) 
+							+ u21*(x - x1)*(y2-y) 
+							+ u12*(x2 - x)*(y-y1) 
+							+ u22*(x - x1)*(y-y1));
+		
+		u11 = MACGrid_->get_u(x1,y1);
+		u12 = MACGrid_->get_u(x1,y2);
+		u21 = MACGrid_->get_u(x2,y1);
+		u22 = MACGrid_->get_u(x2,y2);
+		interp_u_n1[0] = 1/((x2 - x1)*(y2-y1))*(u11*(x2 - x)*(y2-y) 
+							+ u21*(x - x1)*(y2-y) 
+							+ u12*(x2 - x)*(y-y1) 
+							+ u22*(x - x1)*(y-y1));
 		
 		//Update the v-velocity (bilinear interpolation)
 		y1 = indices.second;
@@ -434,14 +445,23 @@ void FLIP::grid_to_particle(){
 			x2 = indices.first;
 			x1 = x2 - 1;
 		}
-		interp_u_star[1] = 1/((x2 - x)*(y2-y))*((MACGrid_->get_v_star(x1,y1))*(x2 - x)*(y2-y) 
-							+ (MACGrid_->get_v_star(x2,y1))*(x - x)*(y2-y) 
-							+ (MACGrid_->get_v_star(x1,y2))*(x2 - x)*(y-y1) 
-							+ (MACGrid_->get_v_star(x2,y2))*(x - x1)*(y-y1));
-		interp_u_n1[1] = 1/((x2 - x)*(y2-y))*((MACGrid_->get_v(x1,y1))*(x2 - x)*(y2-y) 
-							+ (MACGrid_->get_v(x2,y1))*(x - x)*(y2-y) 
-							+ (MACGrid_->get_v(x1,y2))*(x2 - x)*(y-y1) 
-							+ (MACGrid_->get_v(x2,y2))*(x - x1)*(y-y1));
+		
+		v11 = MACGrid_->get_v_star(x1,y1);
+		v12 = MACGrid_->get_v_star(x1,y2);
+		v21 = MACGrid_->get_v_star(x2,y1);
+		v22 = MACGrid_->get_v_star(x2,y2);
+		interp_u_star[1] = 1/((x2 - x1)*(y2-y1))*(v11*(x2 - x)*(y2-y) 
+							+ v21*(x - x1)*(y2-y) 
+							+ v12*(x2 - x)*(y-y1) 
+							+ v22*(x - x1)*(y-y1));
+		v11 = MACGrid_->get_v(x1,y1);
+		v12 = MACGrid_->get_v(x1,y2);
+		v21 = MACGrid_->get_v(x2,y1);
+		v22 = MACGrid_->get_v(x2,y2);
+		interp_u_n1[1] = 1/((x2 - x1)*(y2-y1))*(v11*(x2 - x)*(y2-y) 
+							+ v21*(x - x1)*(y2-y) 
+							+ v12*(x2 - x)*(y-y1) 
+							+ v22*(x - x1)*(y-y1));
 		
 		if (i == 0) std::cout << interp_u_star << std::endl;
 		if (i == 0) std::cout << interp_u_n1 << std::endl;

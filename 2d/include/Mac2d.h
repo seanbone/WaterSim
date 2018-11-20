@@ -7,11 +7,13 @@
 #include <iomanip>		//used for input and output
 #include <Eigen/Sparse>	//used for the matrix A
 #include <vector>		//used for std::vector
-
-using Triplet_t = Eigen::Triplet<double>; 
-using Pair_t = std::pair<int, int>; //To access the component of the Pair use the methods "first" and "second"
+#include <algorithm>	// std::fill
 
 class Mac2d{
+	public:
+		using Triplet_t = Eigen::Triplet<double>; 
+		using Pair_t = std::pair<int, int>; //To access the component of the Pair use the methods "first" and "second"
+
 	private:
 		//PARAMETER for the grid
 		//number of cells in x
@@ -36,6 +38,8 @@ class Mac2d{
 		double* pv_;
 		//pointer to array for specifing if a cell is solid (1) or not(0)
 		bool* psolid_;
+		//pointer to array for specifing if a cell contains fluid (1) or not(0)
+		bool* pfluid_;
 		//pointer to a std::vector which contians the triplets for
 		//   the diagonal of the matrix A, used to solve the pressures
 		std::vector<Triplet_t> A_diag_;
@@ -124,6 +128,7 @@ class Mac2d{
 			delete pu_;
 			delete pv_;
 			delete psolid_;
+			delete pfluid_;
 		}
 		
 		//GETS
@@ -135,12 +140,20 @@ class Mac2d{
 		double get_pressure(const int i, const int j);
 		//Return if the cell with center (i,j) is a solid cell
 		bool is_solid(const int i, const int j);
+		//Return if the cell with center (i,j) is a fluid cell
+		bool is_fluid(const int i, const int j);
+		//Return if the cell with center (i,j) is empty (not solid && not fluid)
+		bool is_empty(const int i, const int j);
+
 		// Grid dimensions in #cells
 		unsigned get_num_cells_x();
 		unsigned get_num_cells_y();
+		unsigned get_num_cells();
 		// Cell dimensions in metres
 		double get_cell_sizex();
 		double get_cell_sizey();
+		// Get const-reference to A diagonal
+		const std::vector< Triplet_t >& get_a_diag();
 		
 		//Get the weights for u in the mathematical point (i-1/2,j) 
 		double get_weights_u(const int i, const int j);
@@ -154,6 +167,8 @@ class Mac2d{
 		void set_v(const int i, const int j, double value);
 		//Set the pressure in the mathematical point(i,j)
 		void set_pressure(const int i, const int j, double value);
+		// Reset all pressures
+		void set_pressure(const Eigen::VectorXd& p);
 		
 		//Set the weights for u in the mathematical point (i-1/2,j) 
 		void set_weights_u(const int i, const int j, double value);
@@ -168,6 +183,10 @@ class Mac2d{
 		
 		//Set the cell with center (i,j) as a solid cell
 		void set_solid(const int i, const int j);
+		//Set the cell with center (i,j) as a fluid cell
+		void set_fluid(const int i, const int j);
+		// Reset all cells to not contain any fluid
+		void reset_fluid();
 
 		//USEFUL FUNCTIONS
 		//Return a pair with the grid-coordinates (i,j) given a spatial coordinate(x,y)

@@ -6,13 +6,15 @@
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
 #include <cmath>
-
-using SparseMat_t = Eigen::SparseMatrix<double>;
-using Triplet_t = Eigen::Triplet<double>;
+#include <algorithm> // std::copy
+#include <Eigen/IterativeLinearSolvers> // solve sparse systems
 
 class FLIP {
 	public:
 	
+	using SparseMat_t = Eigen::SparseMatrix<double>;
+	using Triplet_t = Eigen::Triplet<double>;
+
 	/** Constructor
 	 * Params:
 	 * - particles is a list of length num_particles containing all particles
@@ -35,12 +37,16 @@ class FLIP {
 	// Array of all particles
 	Particle* particles_;
 	const unsigned num_particles_;
+	// TODO: pass as sim parameter
+	const double fluid_density_ = 1.;
 	
 	// MAC Grid
 	Mac2d* MACGrid_;
 	
 	// Pressure-Matrix
-	SparseMat_t A;
+	SparseMat_t A_;
+	// RHS of pressure LSE
+	Eigen::VectorXd d_;
 
 	// Compute velocity field by particle-to-grid transfer
 	//   and extrapolating into air region
@@ -83,13 +89,16 @@ class FLIP {
 	void apply_forces();
 
 	// Compute and apply pressures on velocity field
-	void do_pressures();
+	void do_pressures(const double dt);
+	void compute_pressure_matrix();
+	void compute_pressure_rhs(const double dt);
+	void apply_pressure_gradients(const double dt);
 
 	// transfer grid velocities to particles
 	void grid_to_particle();
 
 	// Apply forward euler or RK2 to update particle positions
-	void advance_particles();
+	void advance_particles(const double dt);
 };
 
 #endif

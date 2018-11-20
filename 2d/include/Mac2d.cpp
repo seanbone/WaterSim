@@ -1,26 +1,32 @@
 #include "Mac2d.h"
 
 double Mac2d::get_u(const int i, const int j){
+	assert(i < (N_+1) && j < (M_) && "Index out of bounds!");
 	return *(pu_ + (N_+1)*j + i);
 }
 
 double Mac2d::get_v(const int i, const int j){
+	assert(i < (N_) && j < (M_+1) && "Index out of bounds!");
 	return *(pv_ + N_*j + i);
 }
 
 double Mac2d::get_pressure(const int i, const int j){
+	assert(i < N_ && j < M_ && "Index out of bounds!");
 	return *(ppressure_ + N_*j + i);
 }
 
 bool Mac2d::is_solid(const int i, const int j){
+	assert(i < N_ && j < M_ && "Index out of bounds!");
 	return *(psolid_ + N_*j + i);
 }
 
 bool Mac2d::is_fluid(const int i, const int j){
+	assert(i < N_ && j < M_ && "Index out of bounds!");
 	return *(pfluid_ + N_*j + i);
 }
 
 bool Mac2d::is_empty(const int i, const int j){
+	assert(i < N_ && j < M_ && "Index out of bounds!");
 	return (!is_fluid(i,j) && !is_solid(i,j));
 }
 
@@ -45,10 +51,12 @@ double Mac2d::get_cell_sizey() {
 }
 
 double Mac2d::get_weights_u(const int i, const int j){
+	assert(i < (N_+1) && j < (M_) && "Index out of bounds!");
 	return *(pweights_u_ + (N_+1)*j + i);
 }
 
 double Mac2d::get_weights_v(const int i, const int j){
+	assert(i < (N_) && j < (M_+1) && "Index out of bounds!");
 	return *(pweights_v_ + N_*j + i);
 }
 
@@ -57,22 +65,27 @@ const std::vector< Mac2d::Triplet_t >& Mac2d::get_a_diag() {
 }
 
 void Mac2d::set_u(const int i, const int j, double value){
+	assert(i < (N_+1) && j < (M_) && "Index out of bounds!");
 	*(pu_ + (N_+1)*j + i) = value;
 }
 
 void Mac2d::set_v(const int i, const int j, double value){
+	assert(i < (N_) && j < (M_+1) && "Index out of bounds!");
 	*(pv_ + N_*j + i) = value;
 }
 
 void Mac2d::set_pressure(const int i, const int j, double value){
+	assert(i < N_ && j < M_ && "Index out of bounds!");
 	*(ppressure_ + N_*j + i) = value;
 }
 
 void Mac2d::set_weights_u(const int i, const int j, double value){
+	assert(i < (N_+1) && j < (M_) && "Index out of bounds!");
 	*(pweights_u_ + (N_+1)*j + i) = value;
 }
 
 void Mac2d::set_weights_v(const int i, const int j, double value){
+	assert(i < (N_) && j < (M_+1) && "Index out of bounds!");
 	*(pweights_v_ + N_*j + i) = value;
 }
 
@@ -99,10 +112,12 @@ void Mac2d::set_pressure(const Eigen::VectorXd& p) {
 }
 
 void Mac2d::set_solid(const int i, const int j){
+	assert(i < N_ && j < M_ && "Index out of bounds!");
 	*(psolid_ + N_*j + i) = true;
 }
 
 void Mac2d::set_fluid(const int i, const int j){
+	assert(i < N_ && j < M_ && "Index out of bounds!");
 	*(pfluid_ + N_*j + i) = true;
 }
 
@@ -111,8 +126,8 @@ void Mac2d::reset_fluid() {
 }
 
 Mac2d::Pair_t Mac2d::index_from_coord(const double x, const double y){
-	if (x > sizex_ || y > sizey_ || x < 0 || y < 0)
-		std::cout << "Attention: out of the grid!" << std::endl;
+	assert((x > sizex_ || y > sizey_ || x < 0 || y < 0)
+			&& "Attention: out of the grid!");
 	return Pair_t(int(x), int(y));
 }
 

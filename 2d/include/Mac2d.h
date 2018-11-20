@@ -8,6 +8,7 @@
 #include <Eigen/Sparse>	//used for the matrix A
 #include <vector>		//used for std::vector
 #include <algorithm>	// std::fill
+#include <cassert>
 
 class Mac2d{
 	public:
@@ -63,6 +64,9 @@ class Mac2d{
 			pu_ = new double[(N_+1)*M_];
 			pv_ = new double[N_*(M_+1)];
 			psolid_ = new bool[N_*M_];
+			pfluid_ = new bool[N_*M_];
+			pweights_u_ = new double[(N_+1)*M_];
+			pweights_v_ = new double[N_*(M_+1)];
 
 			// Initialize solid cells as a "box"
 			//  Top & bottom

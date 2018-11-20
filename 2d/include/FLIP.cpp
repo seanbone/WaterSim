@@ -71,6 +71,9 @@ void FLIP::compute_velocity_field() {
 	int h_scaledx = h/cell_sizex;
 	int h_scaledy = h/cell_sizey;
 	
+	// Reset all fluid flags
+	MACGrid_->reset_fluid();
+	
 	// Iterate over all particles and add weighted particles velocities
 	// to grid points within a threshold h (in this case equal to the 
 	// length of an edge of a cell)
@@ -80,6 +83,11 @@ void FLIP::compute_velocity_field() {
 		
 		Mac2d::Pair_t tmp = MACGrid_->index_from_coord(pos(0), pos(1));
 		cell_coord << tmp.first, tmp.second, 0;
+		
+		// Set the cell of the current particle to a fluid-cell
+		if ( !(MACGrid_->is_fluid(cell_coord(0), cell_coord(1))) and !(MACGrid_->is_solid(cell_coord(0), cell_coord(1))) ){
+			MACGrid_->set_fluid(cell_coord(0), cell_coord(1));
+		}
 		
 		// Coordinates of the points on the grid edges
 		Eigen::Vector3d grid_coord;
@@ -102,8 +110,6 @@ void FLIP::compute_velocity_field() {
 			}
 		}
 	}
-	
-	
 }
 
 bool FLIP::check_threshold( const Eigen::Vector3d& particle_coord, 

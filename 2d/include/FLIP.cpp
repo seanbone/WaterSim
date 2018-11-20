@@ -471,7 +471,7 @@ void FLIP::grid_to_particle(){
 		if (i == 0) std::cout << interp_u_n1 << std::endl;
 
 		//Update the final velocity of the particles
-		u_update = initial_velocity + interp_u_n1 + interp_u_star*(alpha - 1);
+		u_update = initial_velocity*(1 - alpha) + interp_u_n1 + interp_u_star*(alpha - 1);
 		(particles_ + i)->set_velocity(u_update);
 		if (i == 0) std::cout << u_update << std::endl;
 	}
@@ -480,12 +480,33 @@ void FLIP::grid_to_particle(){
 
 
 void FLIP::advance_particles(const double dt) {
+	//Se una particles esce dal sistema o entra in un solido, rispingerla dentro.
 	// TODO: update particle positions 
 	//  - Use RK2 interpolator	
 	for(unsigned i = 0; i < num_particles_; ++i){
 		Eigen::Vector3d temp1 = (particles_ + i)->get_position();
 		Eigen::Vector3d temp2 = (particles_ + i)->get_velocity();
 		Eigen::Vector3d temp3 = temp1 + dt*temp2;
+		double x = temp3[0];
+		double y = temp3[1];
+		//Check if the particle exits the grid
+		double size_x = MACGrid_->get_cell_sizex() * MACGrid_->get_num_cells_x();
+		double size_y = MACGrid_->get_cell_sizey() * MACGrid_->get_num_cells_y();
+		if(x < 0)
+			temp3[0] = 0;
+		if(x > size_x)
+			temp3[0] = size_x;
+		if(y < 0)
+			temp3[1] = 0;
+		if(y > size_y)
+			temp3[1] = size_y;
+			
+		//Check if the particle enters in a solid
+		/*Mac2d::Pair_t indices = MACGrid->index_from_coord(x,y);
+		if(MACGrid->is_solid(indices.first, indices.second){
+			temp3[0] = int(temp1[0]);
+			temp3[1] = int(temp1[1]);
+		}*/		
 		(particles_ + i)->set_position(temp3);
 	}
 }

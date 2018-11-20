@@ -27,16 +27,18 @@ void WaterSim::init(WaterSim::viewer_t& viewer) {
     m_num_particles = 4 * (nx/2 - 1) * (ny/2 - 1);
     flip_particles = new Particle[m_num_particles];
 
+    Eigen::VectorXd rnd = Eigen::VectorXd::Random(2*m_num_particles);
+
     for (unsigned x = 3; x < (nx/2)+2; x++) {
         for (unsigned y = ny-(ny/2); y < ny-1; y++) {
             // Populate cell (x,y)
             double cx = x * sx;
             double cy = y * sy;
 
-            flip_particles[idx]     = Particle(cx - sx/4., cy - sy/4., 0.);
-            flip_particles[idx + 1] = Particle(cx + sx/4., cy - sy/4., 0.);
-            flip_particles[idx + 2] = Particle(cx - sx/4., cy + sy/4., 0.);
-            flip_particles[idx + 3] = Particle(cx + sx/4., cy + sy/4., 0.);
+            flip_particles[idx]     = Particle(cx - sx/4. + sx*rnd(idx  )/8., cy - sy/4. + sy*rnd(idx+1)/8., 0.);
+            flip_particles[idx + 1] = Particle(cx + sx/4. + sx*rnd(idx+2)/8., cy - sy/4. + sy*rnd(idx+3)/8., 0.);
+            flip_particles[idx + 2] = Particle(cx - sx/4. + sx*rnd(idx+4)/8., cy + sy/4. + sy*rnd(idx+5)/8., 0.);
+            flip_particles[idx + 3] = Particle(cx + sx/4. + sx*rnd(idx+6)/8., cy + sy/4. + sy*rnd(idx+7)/8., 0.);
 
             idx += 4;
         }
@@ -138,6 +140,19 @@ void WaterSim::updateRenderGeometry() {
     m_particle_colors.resize(m_num_particles, 3);
     m_particle_colors.setZero();
     m_particle_colors.col(2).setOnes();
+
+    // Render pressure as a scalar field
+    unsigned nx = p_mac_grid->get_num_cells_x();
+    unsigned ny = p_mac_grid->get_num_cells_y();
+    Eigen::VectorXd pressures(2*nx*ny);
+    for (unsigned j = 0; j < nx; j++) {
+        for (unsigned i = 0; i < ny; i++) {
+            pressures(2*(i + j*ny)) = p_mac_grid->get_pressure(i, j);
+            pressures(2*(i + j*ny) + 1) = p_mac_grid->get_pressure(i, j);
+        }
+    }
+
+    igl::jet(pressures, true, m_renderC);
 }
 
 

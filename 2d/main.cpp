@@ -18,10 +18,10 @@ class WaterGui : public Gui {
       double m_system_size_y = 30; // Y dimension of system in m
       
       // TODO: proper input
-      double m_dt = 1e-1;
+      double m_dt = 4e-2;
 
-      int m_grid_res_x = 50; // Number of cells on X axis
-      int m_grid_res_y = 50; // Number of cells on Y axis
+      int m_grid_res_x = 15; // Number of cells on X axis
+      int m_grid_res_y = 15; // Number of cells on Y axis
 
       // Other members
       bool m_display_grid = true;

@@ -96,20 +96,23 @@ void FLIP::compute_velocity_field() {
 		// Coordinates of the points on the grid edges
 		Eigen::Vector3d grid_coord;
 		grid_coord << 0, 0, 0;
-		
 		for( int j = cell_coord(1) - h_scaledy; j < cell_coord(1) + h_scaledy + 1; ++j ){
 			for( int i = cell_coord(0) - h_scaledx; i < cell_coord(0) + h_scaledx + 1; ++i ){
-				if ( ( i >= 0 and j >= 0 ) and ( i <= MACGrid_->get_num_cells_x() and j <= MACGrid_->get_num_cells_y() ) ){
+				if ( ( i >= 0 and j >= 0 ) ){
+					if ( ( i <= MACGrid_->get_num_cells_x() and j < MACGrid_->get_num_cells_y() ) ){
 					
-					// Left edge
-					grid_coord(0) = i * cell_sizex;
-					grid_coord(1) = (j + 0.5) * cell_sizey;
-					accumulate_u(pos, vel, grid_coord, h, i, j);
+						// Left edge
+						grid_coord(0) = i * cell_sizex;
+						grid_coord(1) = (j + 0.5) * cell_sizey;
+						accumulate_u(pos, vel, grid_coord, h, i, j);
+					}
 					
-					// Lower edge
-					grid_coord(0) += 0.5 * cell_sizex;
-					grid_coord(1) -= 0.5 * cell_sizey;
-					accumulate_v(pos, vel, grid_coord, h, i, j);
+					if ( ( i < MACGrid_->get_num_cells_x() and j <= MACGrid_->get_num_cells_y() ) ){
+						// Lower edge
+						grid_coord(0) += 0.5 * cell_sizex;
+						grid_coord(1) -= 0.5 * cell_sizey;
+						accumulate_v(pos, vel, grid_coord, h, i, j);
+					}
 				}
 			}
 		}
@@ -372,35 +375,32 @@ void FLIP::apply_pressure_gradients(const double dt) {
 
 
 /*** UPDATE PARTICLE VELOCITIES & MOVE PARTICLES ***/
-void FLIP::grid_to_particle() {
-	// TODO: store & use intermediate velocity u^*
+void FLIP::grid_to_particle(){
 	// FLIP grid to particle transfer
 	//  -> See slides Fluids II, FLIP_explained.pdf
 	double alpha = 0.00;
 	
-	//Store the initial positions of the particles
-	std::vector<Eigen::Vector3d> initial_positions(num_particles_);
-	std::vector<Eigen::Vector3d> initial_velocities(num_particles_);
-	for(unsigned i = 0; i < num_particles_; ++i){
-		initial_positions[i] = (particles_+i)->get_position();
-		initial_velocities[i] = (particles_+i)->get_velocity();
-	}
-	
-	//Applying the forces we can compute u* and already make the interpolation interp(u*, x_p)
-	//apply_forces();
-	std::vector<Eigen::Vector3d> interp_u_star(num_particles_);
-	for(unsigned i = 0; i < num_particles_; ++i){
-		Eigen::Vector3d temp1 = initial_positions[i];
-		double x = temp1[0];
-		double y = temp1[1];
+	for(int i = 0; i < num_particles_; ++i){
+		//Store the initial positions and velocities of the particles
+		Eigen::Vector3d initial_position = (particles_+i)->get_position();
+		Eigen::Vector3d initial_velocity = (particles_+i)->get_velocity();
+		
+		//Initialization of the variables
+		Eigen::Vector3d interp_u_star;
+		Eigen::Vector3d interp_u_n1;
+		Eigen::Vector3d u_update;
+		double x = initial_position[0];
+		double y = initial_position[1];
 		Mac2d::Pair_t indices = MACGrid_->index_from_coord(x,y);
 		int x1, x2, y1, y2;
-		Eigen::Vector3d& temp2 = interp_u_star[i];
 		
-		//Update the u-velocity
+		//With u* and v* we can make the interpolation interp(u*, x_p),
+		//with the new u and v we can make the interpolation interp(u_n1, x_p)
+		
+		//Update the u-velocity (bilinear interpolation)
 		x1 = indices.first;
 		x2 = x1 + 1;
-		if(y > indices.second + 0.5){
+		if(y > (indices.second + 0.5)){
 			y1 = indices.second;
 			y2 = y1 + 1;
 		}
@@ -408,59 +408,19 @@ void FLIP::grid_to_particle() {
 			y2 = indices.second;
 			y1 = y2 - 1;
 		}
-		temp2[0] = 1/((x2 - x)*(y2-y))*((MACGrid_->get_u(x1,y1))*(x2 - x)*(y2-y) 
+		interp_u_star[0] = 1/((x2 - x)*(y2-y))*((MACGrid_->get_u_star(x1,y1))*(x2 - x)*(y2-y) 
+							+ (MACGrid_->get_u_star(x2,y1))*(x - x)*(y2-y) 
+							+ (MACGrid_->get_u_star(x1,y2))*(x2 - x)*(y-y1) 
+							+ (MACGrid_->get_u_star(x2,y2))*(x - x1)*(y-y1));
+		interp_u_n1[0] = 1/((x2 - x)*(y2-y))*((MACGrid_->get_u(x1,y1))*(x2 - x)*(y2-y) 
 							+ (MACGrid_->get_u(x2,y1))*(x - x)*(y2-y) 
 							+ (MACGrid_->get_u(x1,y2))*(x2 - x)*(y-y1) 
 							+ (MACGrid_->get_u(x2,y2))*(x - x1)*(y-y1));
-							
-		//Update the v-velocity
-		y1 = indices.second;
-		y2 = y1 + 1;
-		if(x > indices.first + 0.5){
-			x1 = indices.first;
-			x2 = x1 + 1;
-		}
-		else{
-			x2 = indices.first;
-			x1 = x2 - 1;
-		}
-		temp2[1] = 1/((x2 - x)*(y2-y))*((MACGrid_->get_u(x1,y1))*(x2 - x)*(y2-y) 
-							+ (MACGrid_->get_u(x2,y1))*(x - x)*(y2-y) 
-							+ (MACGrid_->get_u(x1,y2))*(x2 - x)*(y-y1) 
-							+ (MACGrid_->get_u(x2,y2))*(x - x1)*(y-y1));	
-	}
-	
-	//Applying the pressures we can compute u^n+1 and make the interpolation interp(u^n+1, x_p)
-	//do_pressures();
-	std::vector<Eigen::Vector3d> interp_u_n1(num_particles_);
-	for(unsigned i = 0; i < num_particles_; ++i){
-		Eigen::Vector3d temp1 = initial_positions[i];
-		double x = temp1[0];
-		double y = temp1[1];
-		Mac2d::Pair_t indices = MACGrid_->index_from_coord(x,y);
-		int x1, x2, y1, y2;
-		Eigen::Vector3d& temp2 = interp_u_n1[i];
 		
-		//Update the u-velocity
-		x1 = indices.first;
-		x2 = x1 + 1;
-		if(y > indices.second + 0.5){
-			y1 = indices.second;
-			y2 = y1 + 1;
-		}
-		else{
-			y2 = indices.second;
-			y1 = y2 - 1;
-		}
-		temp2[0] = 1/((x2 - x)*(y2-y))*((MACGrid_->get_u(x1,y1))*(x2 - x)*(y2-y) 
-							+ (MACGrid_->get_u(x2,y1))*(x - x)*(y2-y) 
-							+ (MACGrid_->get_u(x1,y2))*(x2 - x)*(y-y1) 
-							+ (MACGrid_->get_u(x2,y2))*(x - x1)*(y-y1));
-							
-		//Update the v-velocity
+		//Update the v-velocity (bilinear interpolation)	
 		y1 = indices.second;
 		y2 = y1 + 1;
-		if(x > indices.first + 0.5){
+		if(x > (indices.first + 0.5)){
 			x1 = indices.first;
 			x2 = x1 + 1;
 		}
@@ -468,18 +428,21 @@ void FLIP::grid_to_particle() {
 			x2 = indices.first;
 			x1 = x2 - 1;
 		}
-		temp2[1] = 1/((x2 - x)*(y2-y))*((MACGrid_->get_u(x1,y1))*(x2 - x)*(y2-y) 
-							+ (MACGrid_->get_u(x2,y1))*(x - x)*(y2-y) 
-							+ (MACGrid_->get_u(x1,y2))*(x2 - x)*(y-y1) 
-							+ (MACGrid_->get_u(x2,y2))*(x - x1)*(y-y1));	
-	}
-	
-	//Compute the updated velocity for every particle
-	for(unsigned i = 0; i < num_particles_; ++i){
-		Eigen::Vector3d temp3 = initial_velocities[i] + interp_u_n1[i] + interp_u_star[1]*(alpha - 1);
-		(particles_ + i)->set_velocity(temp3);
+		interp_u_star[1] = 1/((x2 - x)*(y2-y))*((MACGrid_->get_v_star(x1,y1))*(x2 - x)*(y2-y) 
+							+ (MACGrid_->get_v_star(x2,y1))*(x - x)*(y2-y) 
+							+ (MACGrid_->get_v_star(x1,y2))*(x2 - x)*(y-y1) 
+							+ (MACGrid_->get_v_star(x2,y2))*(x - x1)*(y-y1));
+		interp_u_n1[1] = 1/((x2 - x)*(y2-y))*((MACGrid_->get_v(x1,y1))*(x2 - x)*(y2-y) 
+							+ (MACGrid_->get_v(x2,y1))*(x - x)*(y2-y) 
+							+ (MACGrid_->get_v(x1,y2))*(x2 - x)*(y-y1) 
+							+ (MACGrid_->get_v(x2,y2))*(x - x1)*(y-y1));
+		
+		//Update the final velocity of the particles					
+		u_update = 	initial_velocity + interp_u_n1 + interp_u_star*(alpha - 1);	
+		(particles_ + i)->set_velocity(u_update);	
 	}
 }
+
 
 void FLIP::advance_particles(const double dt) {
 	// TODO: update particle positions 

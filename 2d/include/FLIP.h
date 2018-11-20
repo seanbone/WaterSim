@@ -37,8 +37,9 @@ class FLIP {
 	// Array of all particles
 	Particle* particles_;
 	const unsigned num_particles_;
-	// TODO: pass as sim parameter
+	// *TODO: pass density and gravity as sim parameters
 	const double fluid_density_ = 1.;
+	const double gravity_mag_ = -9.81;
 	
 	// MAC Grid
 	Mac2d* MACGrid_;
@@ -86,7 +87,7 @@ class FLIP {
 	void normalize_accumulated_v();
 	
 	// Apply external forces to velocities on grid
-	void apply_forces();
+	void apply_forces(const double dt);
 
 	// Compute and apply pressures on velocity field
 	void do_pressures(const double dt);

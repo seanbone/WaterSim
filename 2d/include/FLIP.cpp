@@ -28,7 +28,7 @@ void FLIP::step_FLIP(const double dt, const double time, const unsigned long ste
 	compute_velocity_field();
 
 	// 2.
-	apply_forces();
+	apply_forces(dt);
 
 	// 2a.
 	MACGrid_->set_uv_star();
@@ -211,10 +211,20 @@ void FLIP::normalize_accumulated_v(){
 }
 
 /*** APPLY EXTERNAL FORCES ***/
-void FLIP::apply_forces() {
-	// TODO: compute&apply external forces (gravity, vorticity confinement, ...) 
+void FLIP::apply_forces(const double dt) {
+	// Compute&apply external forces (gravity, vorticity confinement, ...) 
 	// Apply them to the velocity field via forward euler
 	// Only worry about gravity for now
+	auto& g = MACGrid_;
+	const unsigned N = g->get_num_cells_x();
+	const unsigned M = g->get_num_cells_y();
+	
+	// Iterate over cells & update: dv = dt*g
+	for (unsigned j = 0; j <= M; j++) {
+		for (unsigned i = 0; i < N; i++) {
+			g->set_v(i, j, g->get_v(i,j) + dt*gravity_mag_);
+		}
+	}
 }
 
 /*** PRESSURE SOLVING ***/

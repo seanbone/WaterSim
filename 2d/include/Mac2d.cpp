@@ -43,6 +43,16 @@ double Mac2d::get_v(const int i, const int j){
 	return *(pv_ + N_*j + i);
 }
 
+double Mac2d::get_u_star(const int i, const int j) {
+	assert(i < (N_+1) && j < (M_) && "Index out of bounds!");
+	return *(pu_star_ + (N_+1)*j + i);
+}
+
+double Mac2d::get_v_star(const int i, const int j) {
+	assert(i < (N_) && j < (M_+1) && "Index out of bounds!");
+	return *(pv_star_ + N_*j + i);
+}
+
 //3. Pressures ---------------------------------------------------------
 double Mac2d::get_pressure(const int i, const int j){
 	assert(i < N_ && j < M_ && "Index out of bounds!");
@@ -109,6 +119,11 @@ void Mac2d::set_v(const int i, const int j, double value){
 	*(pv_ + N_*j + i) = value;
 }
 
+void Mac2d::set_uv_star() {
+	std::copy(pu_, pu_ + (N_+1)*M_, pu_star_);
+	std::copy(pv_, pv_ + N_*(M_+1), pv_star_);
+}
+
 void Mac2d::set_velocities_to_zero(){
 	for( int j = 0; j < M_; ++j ){
 		for( int i = 0; i < N_; ++i ){
@@ -161,20 +176,4 @@ void Mac2d::set_weights_to_zero(){
 			set_weights_v(i, j, 0.);
 		}	
 	}
-}
-
-
-void Mac2d::set_uv_star() {
-	std::copy(pu_, pu_ + (N_+1)*M_, pu_star_);
-	std::copy(pv_, pv_ + N_*(M_+1), pv_star_);
-}
-
-double Mac2d::get_u_star(const int i, const int j) {
-	assert(i < (N_+1) && j < (M_) && "Index out of bounds!");
-	return *(pu_star_ + (N_+1)*j + i);
-}
-
-double Mac2d::get_v_star(const int i, const int j) {
-	assert(i < (N_) && j < (M_+1) && "Index out of bounds!");
-	return *(pv_star_ + N_*j + i);
 }

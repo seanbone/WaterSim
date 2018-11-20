@@ -95,7 +95,7 @@ const std::vector< Mac2d::Triplet_t >& Mac2d::get_a_diag() {
 Mac2d::Pair_t Mac2d::index_from_coord(const double x, const double y){
 	assert((x < sizex_ || y < sizey_ || x > 0 || y > 0)
 			&& "Attention: out of the grid!");
-	return Pair_t(int(x), int(y));
+	return Pair_t(int(x/cell_sizex_), int(y/cell_sizey_));
 }
 
 

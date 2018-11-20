@@ -87,10 +87,10 @@ class Mac2d{
 				}
 				psolid_[N_-1 + N_*i] = true;
 			}
-			
+
 			//Initialization of the diagonal of A
-			for(int i = 0; i < N_; ++i){
-				for(int j = 0; j < M_; ++j){
+			for(int j = 0; j< M_; ++j){
+				for(int i = 0; i < N_; ++i){
 					int index = N_ * j + i;
 					int count = 0;
 					if (i == 0){

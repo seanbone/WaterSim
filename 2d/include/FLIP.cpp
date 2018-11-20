@@ -24,9 +24,13 @@ void FLIP::step_FLIP(const double dt, const double time, const unsigned long ste
 	// TODO: subsample time interval to satisfy CFL condition
 	double cur_time = time;
 
+	//std::cout << MACGrid_->get_v(10, 40) << "\n\n";
 	// 1.
 	compute_velocity_field();
 
+	//std::cout << MACGrid_->get_v(10, 40) << "\n\n";
+	//std::cout << particles_->get_velocity() << std::endl;
+	//std::cout << ".....\n";
 	// 2.
 	apply_forces(dt);
 
@@ -127,8 +131,9 @@ bool FLIP::check_threshold( const Eigen::Vector3d& particle_coord,
 					  const Eigen::Vector3d& grid_coord, 
 					  const double h )
 {
-	if ( (particle_coord - grid_coord).norm() < h )
+	if ( (particle_coord - grid_coord).norm() < h ) {
 		return true;
+	}
 	
 	return false;
 }
@@ -389,9 +394,6 @@ void FLIP::grid_to_particle(){
 		Eigen::Vector3d initial_position = (particles_+i)->get_position();
 		Eigen::Vector3d initial_velocity = (particles_+i)->get_velocity();
 		
-		if (i == 0) std::cout << initial_position << std::endl;
-		if (i == 0) std::cout << initial_velocity << std::endl;
-
 		//Initialization of the variables
 		Eigen::Vector3d interp_u_star;
 		interp_u_star.setZero();
@@ -467,15 +469,10 @@ void FLIP::grid_to_particle(){
 							+ v12*(x2 - x)*(y-y1) 
 							+ v22*(x - x1)*(y-y1));
 		
-		if (i == 0) std::cout << interp_u_star << std::endl;
-		if (i == 0) std::cout << interp_u_n1 << std::endl;
-
 		//Update the final velocity of the particles
 		u_update = initial_velocity*(1 - alpha) + interp_u_n1 + interp_u_star*(alpha - 1);
 		(particles_ + i)->set_velocity(u_update);
-		if (i == 0) std::cout << u_update << std::endl;
 	}
-	std::cout << MACGrid_->get_v(10, 45) << "\n----\n";
 }
 
 

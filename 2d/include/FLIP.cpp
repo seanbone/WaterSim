@@ -83,17 +83,19 @@ void FLIP::compute_velocity_field() {
 		
 		for( int j = cell_coord(1) - h_scaledy; j < cell_coord(1) + h_scaledy; ++j ){
 			for( int i = cell_coord(0) - h_scaledx; i < cell_coord(0) + h_scaledx; ++i ){
-				// Coordinates of the points on the grid edges
-				Eigen::Vector3d grid_coord;
-				
-				// Left edge
-				grid_coord << cell_coord(0)*cell_sizex, (cell_coord(1) + 0.5)*cell_sizey, 0;
-				accumulate_u(pos, vel, grid_coord, h, i, j);
-				
-				// Lower edge
-				grid_coord(1) -= 0.5 * cell_sizey;
-				grid_coord(0) += 0.5 * cell_sizex;
-				accumulate_v(pos, vel, grid_coord, h, i, j);
+				if ( ( ( i >= 0 and j >= 0 ) and ( i < MACGrid_->get_num_cells_x() and j < MACGrid_->get_num_cells_y() ) and !(MACGrid_->is_solid(i, j)) ) or ( i == MACGrid_->get_num_cells_x() or j < MACGrid_->get_num_cells_y() ) ){
+					// Coordinates of the points on the grid edges
+					Eigen::Vector3d grid_coord;
+					
+					// Left edge
+					grid_coord << cell_coord(0)*cell_sizex, (cell_coord(1) + 0.5)*cell_sizey, 0;
+					accumulate_u(pos, vel, grid_coord, h, i, j);
+					
+					// Lower edge
+					grid_coord(1) -= 0.5 * cell_sizey;
+					grid_coord(0) += 0.5 * cell_sizex;
+					accumulate_v(pos, vel, grid_coord, h, i, j);
+				}
 			}
 		}
 	}

@@ -15,9 +15,10 @@ void FLIP::step_FLIP(const double dt, const double time, const unsigned long ste
 	 *    - Classify cells (fluid/air)
 	 *    - Extrapolate velocity field into air region
 	 * 2. Apply external forces (fwd euler on field)
+	 * 2a. Copy velocity field to intermediate velocity field u^*
 	 * 3. Compute & apply pressure gradients
 	 * 4. Update particle velocities
-	 * 8. Update particle positions
+	 * 5. Update particle positions
 	 */
 
 	// TODO: subsample time interval to satisfy CFL condition
@@ -28,6 +29,9 @@ void FLIP::step_FLIP(const double dt, const double time, const unsigned long ste
 
 	// 2.
 	apply_forces();
+
+	// 2a.
+	MACGrid_->set_uv_star();
 
 	// 3.
 	do_pressures(dt);

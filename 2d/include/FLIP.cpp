@@ -531,11 +531,20 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 			pos_next(1) = size_y;
 			
 		//Check if the particle enters in a solid
-		/*Mac2d::Pair_t indices = MACGrid->index_from_coord(x,y);
-		if(MACGrid->is_solid(indices.first, indices.second){
-			temp3[0] = int(temp1[0]);
-			temp3[1] = int(temp1[1]);
-		}*/		
+		/*Mac2d::Pair_t indices0 = MACGrid_->index_from_coord(pos_curr[0], pos_curr[1]);
+		Mac2d::Pair_t indices1 = MACGrid_->index_from_coord(pos_next[0], pos_next[1]);	
+		if(MACGrid_->is_solid(pos_next[0], pos_next[1])){
+			if(indices0.first > indices1.first)
+				pos_next[0] = indices0.first * MACGrid_->get_cell_sizex();
+			else
+				pos_next[0] = indices1.first * MACGrid_->get_cell_sizex();
+			if(indices0.second > indices1.second)
+				pos_next[1] = indices0.second * MACGrid_->get_cell_sizey();
+			else
+				pos_next[1] = indices1.second * MACGrid_->get_cell_sizey();
+		}*/
+			
+		//Update the position
 		(particles_ + n)->set_position(pos_next);
 	}
 }

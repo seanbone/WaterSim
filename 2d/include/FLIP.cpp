@@ -36,7 +36,7 @@ void FLIP::step_FLIP(const double dt, const double time, const unsigned long ste
 	grid_to_particle();
 
 	// 5.
-	advance_particles();
+	advance_particles(dt);
 }
 
 void FLIP::compute_velocity_field() {
@@ -172,8 +172,14 @@ void FLIP::grid_to_particle() {
 	}
 }
 
-void FLIP::advance_particles() {
+void FLIP::advance_particles(const double dt) {
 	// TODO: update particle positions 
 	//  - Use RK2 interpolator	
+	for(int i = 0; i < num_particles_; ++i){
+		Eigen::Vector3d temp1 = (particles_ + i)->get_position();
+		Eigen::Vector3d temp2 = (particles_ + i)->get_velocity();
+		Eigen::Vector3d temp3 = temp1 + dt*temp2;
+		(particles_ + i)->set_position(temp3);
+	}
 }
 

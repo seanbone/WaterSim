@@ -155,16 +155,16 @@ void FLIP::accumulate_u( const Eigen::Vector3d& pos,
 						 const int j )
 {
 	if ( check_threshold(pos, grid_coord, h) ){
-		double u_pred = MACGrid_->get_u(i, j);
+		double u_prev = MACGrid_->get_u(i, j);
 		double W_u = compute_weight(pos, grid_coord, h);
-		double u_curr = u_pred + (W_u * vel(0));
+		double u_curr = u_prev + (W_u * vel(0));
 		
 		// Accumulate velocities
 		MACGrid_->set_u(i, j, u_curr);
 		
 		// Accumulate weights
-		double W_u_pred = MACGrid_->get_weights_u(i, j);
-		double W_u_curr = W_u_pred + W_u;
+		double W_u_prev = MACGrid_->get_weights_u(i, j);
+		double W_u_curr = W_u_prev + W_u;
 		MACGrid_->set_weights_u(i, j, W_u_curr);
 	}
 }
@@ -178,16 +178,16 @@ void FLIP::accumulate_v( const Eigen::Vector3d& pos,
 						 const int j )
 {
 	if ( check_threshold(pos, grid_coord, h) ){
-		double v_pred = MACGrid_->get_v(i, j);
+		double v_prev = MACGrid_->get_v(i, j);
 		double W_v = compute_weight(pos, grid_coord, h);
-		double v_curr = v_pred + (W_v * vel(1));
+		double v_curr = v_prev + (W_v * vel(1));
 		
 		// Accumulate velocities
 		MACGrid_->set_v(i, j, v_curr);
 		
 		// Accumulate weights
-		double W_v_pred = MACGrid_->get_weights_v(i, j);
-		double W_v_curr = W_v_pred + W_v;
+		double W_v_prev = MACGrid_->get_weights_v(i, j);
+		double W_v_curr = W_v_prev + W_v;
 		MACGrid_->set_weights_v(i, j, W_v_curr);
 	}
 }
@@ -199,8 +199,8 @@ void FLIP::normalize_accumulated_u(){
 		for( unsigned i = 0; i < N+1; ++i ){
 			double W_u = MACGrid_->get_weights_u(i, j);
 			if ( W_u != 0 ){
-				double u_pred = MACGrid_->get_u(i, j);
-				double u_curr = u_pred/W_u;
+				double u_prev = MACGrid_->get_u(i, j);
+				double u_curr = u_prev/W_u;
 				MACGrid_->set_u(i, j, u_curr);
 			}
 		}	
@@ -214,8 +214,8 @@ void FLIP::normalize_accumulated_v(){
 		for( unsigned i = 0; i < N; ++i ){
 			double W_v = MACGrid_->get_weights_v(i, j);
 			if ( W_v != 0 ){
-				double v_pred = MACGrid_->get_v(i, j);
-				double v_curr = v_pred/W_v;
+				double v_prev = MACGrid_->get_v(i, j);
+				double v_curr = v_prev/W_v;
 				MACGrid_->set_v(i, j, v_curr);
 			}
 		}	
@@ -480,23 +480,27 @@ void FLIP::advance_particles(const double dt) {
 	//Se una particles esce dal sistema o entra in un solido, rispingerla dentro.
 	// TODO: update particle positions 
 	//  - Use RK2 interpolator	
-	for(unsigned i = 0; i < num_particles_; ++i){
-		Eigen::Vector3d temp1 = (particles_ + i)->get_position();
-		Eigen::Vector3d temp2 = (particles_ + i)->get_velocity();
-		Eigen::Vector3d temp3 = temp1 + dt*temp2;
-		double x = temp3[0];
-		double y = temp3[1];
+	for(unsigned n = 0; n < num_particles_; ++n){
+		Eigen::Vector3d pos_prev = (particles_ + n)->get_prev_position();
+		Eigen::Vector3d pos_curr = (particles_ + n)->get_position();
+		Eigen::Vector3d vel = (particles_ + n)->get_velocity();
+		
+		// Leapfrog
+		Eigen::Vector3d pos_next = pos_prev + 2*dt*vel;
+		
+		double x = pos_curr(0);
+		double y = pos_curr(1);
 		//Check if the particle exits the grid
 		double size_x = MACGrid_->get_cell_sizex() * MACGrid_->get_num_cells_x();
 		double size_y = MACGrid_->get_cell_sizey() * MACGrid_->get_num_cells_y();
 		if(x < 0)
-			temp3[0] = 0;
+			tmp3(0) = 0;
 		if(x > size_x)
-			temp3[0] = size_x;
+			tmp3(0) = size_x;
 		if(y < 0)
-			temp3[1] = 0;
+			tmp3(1) = 0;
 		if(y > size_y)
-			temp3[1] = size_y;
+			tmp3(1) = size_y;
 			
 		//Check if the particle enters in a solid
 		/*Mac2d::Pair_t indices = MACGrid->index_from_coord(x,y);

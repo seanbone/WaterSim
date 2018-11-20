@@ -125,12 +125,8 @@ void Mac2d::set_uv_star() {
 }
 
 void Mac2d::set_velocities_to_zero(){
-	for( int j = 0; j < M_; ++j ){
-		for( int i = 0; i < N_; ++i ){
-			set_u(i, j, 0.);
-			set_v(i, j, 0.);
-		}	
-	}
+	std::fill(pu_, pu_ + (N_+1)*M_, 0);
+	std::fill(pv_, pv_ + (M_+1)*N_, 0);
 }
 
 //2. Pressures ---------------------------------------------------------
@@ -170,10 +166,6 @@ void Mac2d::set_weights_v(const int i, const int j, double value){
 }
 
 void Mac2d::set_weights_to_zero(){
-	for( int j = 0; j < M_+1; ++j ){
-		for( int i = 0; i < N_+1; ++i ){
-			set_weights_u(i, j, 0.);
-			set_weights_v(i, j, 0.);
-		}	
-	}
+	std::fill(pweights_u_, pweights_u_ + (N_+1)*M_, 0);
+	std::fill(pweights_v_, pweights_v_ + (M_+1)*N_, 0);
 }

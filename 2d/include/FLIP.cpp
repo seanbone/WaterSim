@@ -117,6 +117,10 @@ void FLIP::compute_velocity_field() {
 			}
 		}
 	}
+	
+	// Normalize grid-velocities
+	normalize_accumulated_u();
+	normalize_accumulated_v();
 }
 
 bool FLIP::check_threshold( const Eigen::Vector3d& particle_coord, 
@@ -134,7 +138,7 @@ double FLIP::compute_weight( const Eigen::Vector3d& particle_coord,
 							 const double h )
 {
 	double r = (particle_coord - grid_coord).norm();
-	return ( (315/(64 * M_PI * pow(h, 9))) * (pow(h, 2) - pow(r, 2)) ) * r;
+	return ( (315/(64 * M_PI * pow(h, 9))) * (pow(h, 2) - pow(r, 2)) );
 }
 
 // Accumulate velocities and weights for u					
@@ -186,7 +190,7 @@ void FLIP::accumulate_v( const Eigen::Vector3d& pos,
 void FLIP::normalize_accumulated_u(){
 	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned N = MACGrid_->get_num_cells_x();
-	for( unsigned j = 0; j < M+1; ++j ){
+	for( unsigned j = 0; j < M; ++j ){
 		for( unsigned i = 0; i < N+1; ++i ){
 			double W_u = MACGrid_->get_weights_u(i, j);
 			if ( W_u != 0 ){
@@ -202,7 +206,7 @@ void FLIP::normalize_accumulated_v(){
 	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned N = MACGrid_->get_num_cells_x();
 	for( unsigned j = 0; j < M+1; ++j ){
-		for( unsigned i = 0; i < N+1; ++i ){
+		for( unsigned i = 0; i < N; ++i ){
 			double W_v = MACGrid_->get_weights_v(i, j);
 			if ( W_v != 0 ){
 				double v_pred = MACGrid_->get_v(i, j);

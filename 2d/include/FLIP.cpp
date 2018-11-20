@@ -81,19 +81,22 @@ void FLIP::compute_velocity_field() {
 		Mac2d::Pair_t tmp = MACGrid_->index_from_coord(pos(0), pos(1));
 		cell_coord << tmp.first, tmp.second, 0;
 		
-		for( int j = cell_coord(1) - h_scaledy; j < cell_coord(1) + h_scaledy; ++j ){
-			for( int i = cell_coord(0) - h_scaledx; i < cell_coord(0) + h_scaledx; ++i ){
-				if ( ( ( i >= 0 and j >= 0 ) and ( i < MACGrid_->get_num_cells_x() and j < MACGrid_->get_num_cells_y() ) and !(MACGrid_->is_solid(i, j)) ) or ( i == MACGrid_->get_num_cells_x() or j < MACGrid_->get_num_cells_y() ) ){
-					// Coordinates of the points on the grid edges
-					Eigen::Vector3d grid_coord;
+		// Coordinates of the points on the grid edges
+		Eigen::Vector3d grid_coord;
+		grid_coord << 0, 0, 0;
+		
+		for( int j = cell_coord(1) - h_scaledy; j < cell_coord(1) + h_scaledy + 1; ++j ){
+			for( int i = cell_coord(0) - h_scaledx; i < cell_coord(0) + h_scaledx + 1; ++i ){
+				if ( ( i >= 0 and j >= 0 ) and ( i <= MACGrid_->get_num_cells_x() and j <= MACGrid_->get_num_cells_y() ) ){
 					
 					// Left edge
-					grid_coord << cell_coord(0)*cell_sizex, (cell_coord(1) + 0.5)*cell_sizey, 0;
+					grid_coord(0) = i * cell_sizex;
+					grid_coord(1) = (j + 0.5) * cell_sizey;
 					accumulate_u(pos, vel, grid_coord, h, i, j);
 					
 					// Lower edge
-					grid_coord(1) -= 0.5 * cell_sizey;
 					grid_coord(0) += 0.5 * cell_sizex;
+					grid_coord(1) -= 0.5 * cell_sizey;
 					accumulate_v(pos, vel, grid_coord, h, i, j);
 				}
 			}

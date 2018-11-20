@@ -99,7 +99,7 @@ class FLIP {
 	void grid_to_particle();
 
 	// Apply forward euler or RK2 to update particle positions
-	void advance_particles(const double dt);
+	void advance_particles(const double dt, const unsigned step);
 };
 
 #endif

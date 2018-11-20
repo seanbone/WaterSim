@@ -27,7 +27,7 @@ void WaterSim::init(WaterSim::viewer_t& viewer) {
     m_num_particles = 4 * (nx/2 - 1) * (ny/2 - 1);
     flip_particles = new Particle[m_num_particles];
 
-    for (unsigned x = 1; x < (nx/2); x++) {
+    for (unsigned x = 3; x < (nx/2)+2; x++) {
         for (unsigned y = ny-(ny/2); y < ny-1; y++) {
             // Populate cell (x,y)
             double cx = x * sx;

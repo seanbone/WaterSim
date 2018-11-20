@@ -38,13 +38,13 @@ void FLIP::step_FLIP(const double dt, const double time, const unsigned long ste
 	apply_forces(dt);
 
 	// 3.
-	//do_pressures(dt);
+	do_pressures(dt);
 
 	// 4.
 	grid_to_particle();
 
 	// 5.
-	advance_particles(dt);
+	advance_particles(dt, step);
 }
 
 /*** COMPUTE VELOCITY FIELD ***/
@@ -355,8 +355,8 @@ void FLIP::compute_pressure_rhs(const double dt) {
 
 void FLIP::apply_pressure_gradients(const double dt) {
 	// Apply pressure gradients to velocity field
-	unsigned nx = MACGrid_->get_cell_sizex();
-	unsigned ny = MACGrid_->get_cell_sizey();
+	unsigned nx = MACGrid_->get_num_cells_x();
+	unsigned ny = MACGrid_->get_num_cells_y();
 	// MACGrid alias
 	auto& g = MACGrid_;
 	// *TODO: correct cell dimensions
@@ -387,7 +387,8 @@ void FLIP::apply_pressure_gradients(const double dt) {
 void FLIP::grid_to_particle(){
 	// FLIP grid to particle transfer
 	//  -> See slides Fluids II, FLIP_explained.pdf
-	double alpha = 0.05;
+	//  Pure PIC:
+	double alpha = 1.;
 	
 	for(int i = 0; i < num_particles_; ++i){
 		//Store the initial positions and velocities of the particles
@@ -401,10 +402,14 @@ void FLIP::grid_to_particle(){
 		interp_u_n1.setZero();
 		Eigen::Vector3d u_update;
 		u_update.setZero();
+
 		double x = initial_position[0];
 		double y = initial_position[1];
+		double sx = MACGrid_->get_cell_sizex();
+		double sy = MACGrid_->get_cell_sizex();
 		Mac2d::Pair_t indices = MACGrid_->index_from_coord(x,y);
-		int x1, x2, y1, y2;
+		double x1, x2, y1, y2;
+		int ix1, ix2, iy1, iy2;
 		double u11, u12, u21, u22;
 		double v11, v12, v21, v22;
 		
@@ -412,58 +417,68 @@ void FLIP::grid_to_particle(){
 		//with the new u and v we can make the interpolation interp(u_n1, x_p)
 		
 		//Update the u-velocity (bilinear interpolation)
-		x1 = indices.first;
-		x2 = x1 + 1;
-		if(y > (indices.second + 0.5)){
-			y1 = indices.second;
-			y2 = y1 + 1;
+		ix1 = indices.first;
+		ix2 = ix1 + 1;
+		if(y > (indices.second + 0.5) * sy){
+			iy1 = indices.second;
+			iy2 = iy1 + 1;
 		}
 		else{
-			y2 = indices.second;
-			y1 = y2 - 1;
+			iy2 = indices.second;
+			iy1 = iy2 - 1;
 		}
-		u11 = MACGrid_->get_u_star(x1,y1);
-		u12 = MACGrid_->get_u_star(x1,y2);
-		u21 = MACGrid_->get_u_star(x2,y1);
-		u22 = MACGrid_->get_u_star(x2,y2);
+		x1 = ix1 * sx;
+		x2 = ix2 * sx;
+		y1 = iy1 * sy;
+		y2 = iy2 * sy;
+
+		u11 = MACGrid_->get_u_star(ix1,iy1);
+		u12 = MACGrid_->get_u_star(ix1,iy2);
+		u21 = MACGrid_->get_u_star(ix2,iy1);
+		u22 = MACGrid_->get_u_star(ix2,iy2);
 		interp_u_star[0] = 1/((x2 - x1)*(y2-y1))*(u11*(x2 - x)*(y2-y) 
 							+ u21*(x - x1)*(y2-y) 
 							+ u12*(x2 - x)*(y-y1) 
 							+ u22*(x - x1)*(y-y1));
 		
-		u11 = MACGrid_->get_u(x1,y1);
-		u12 = MACGrid_->get_u(x1,y2);
-		u21 = MACGrid_->get_u(x2,y1);
-		u22 = MACGrid_->get_u(x2,y2);
+		u11 = MACGrid_->get_u(ix1,iy1);
+		u12 = MACGrid_->get_u(ix1,iy2);
+		u21 = MACGrid_->get_u(ix2,iy1);
+		u22 = MACGrid_->get_u(ix2,iy2);
 		interp_u_n1[0] = 1/((x2 - x1)*(y2-y1))*(u11*(x2 - x)*(y2-y) 
 							+ u21*(x - x1)*(y2-y) 
 							+ u12*(x2 - x)*(y-y1) 
 							+ u22*(x - x1)*(y-y1));
 		
 		//Update the v-velocity (bilinear interpolation)
-		y1 = indices.second;
-		y2 = y1 + 1;
-		if(x > (indices.first + 0.5)){
-			x1 = indices.first;
-			x2 = x1 + 1;
+		iy1 = indices.second;
+		iy2 = iy1 + 1;
+		if(x > (indices.first + 0.5) * sx){
+			ix1 = indices.first;
+			ix2 = ix1 + 1;
 		}
 		else{
-			x2 = indices.first;
-			x1 = x2 - 1;
+			ix2 = indices.first;
+			ix1 = ix2 - 1;
 		}
+		x1 = ix1 * sx;
+		x2 = ix2 * sx;
+		y1 = iy1 * sy;
+		y2 = iy2 * sy;
 		
-		v11 = MACGrid_->get_v_star(x1,y1);
-		v12 = MACGrid_->get_v_star(x1,y2);
-		v21 = MACGrid_->get_v_star(x2,y1);
-		v22 = MACGrid_->get_v_star(x2,y2);
+		v11 = MACGrid_->get_v_star(ix1,iy1);
+		v12 = MACGrid_->get_v_star(ix1,iy2);
+		v21 = MACGrid_->get_v_star(ix2,iy1);
+		v22 = MACGrid_->get_v_star(ix2,iy2);
 		interp_u_star[1] = 1/((x2 - x1)*(y2-y1))*(v11*(x2 - x)*(y2-y) 
 							+ v21*(x - x1)*(y2-y) 
 							+ v12*(x2 - x)*(y-y1) 
 							+ v22*(x - x1)*(y-y1));
-		v11 = MACGrid_->get_v(x1,y1);
-		v12 = MACGrid_->get_v(x1,y2);
-		v21 = MACGrid_->get_v(x2,y1);
-		v22 = MACGrid_->get_v(x2,y2);
+
+		v11 = MACGrid_->get_v(ix1,iy1);
+		v12 = MACGrid_->get_v(ix1,iy2);
+		v21 = MACGrid_->get_v(ix2,iy1);
+		v22 = MACGrid_->get_v(ix2,iy2);
 		interp_u_n1[1] = 1/((x2 - x1)*(y2-y1))*(v11*(x2 - x)*(y2-y) 
 							+ v21*(x - x1)*(y2-y) 
 							+ v12*(x2 - x)*(y-y1) 
@@ -476,7 +491,7 @@ void FLIP::grid_to_particle(){
 }
 
 
-void FLIP::advance_particles(const double dt) {
+void FLIP::advance_particles(const double dt, const unsigned step) {
 	//Se una particles esce dal sistema o entra in un solido, rispingerla dentro.
 	// TODO: update particle positions 
 	//  - Use RK2 interpolator	
@@ -485,8 +500,21 @@ void FLIP::advance_particles(const double dt) {
 		Eigen::Vector3d pos_curr = (particles_ + n)->get_position();
 		Eigen::Vector3d vel = (particles_ + n)->get_velocity();
 		
-		// Leapfrog
-		Eigen::Vector3d pos_next = pos_prev + 2*dt*vel;
+		Eigen::Vector3d pos_next;
+		if (step == 0) {
+			// Euler
+			pos_next = pos_curr + dt*vel;
+		} else {
+			// Leapfrog
+			pos_next = pos_prev + 2*dt*vel;
+		}
+		if (n == 0) {
+			std::cout << "pos_prev:\n" << pos_prev;
+			std::cout << "\npos_curr:\n" << pos_curr;
+			std::cout << "\npos_next:\n" << pos_next;
+			std::cout << "\nvel:\n" << vel;
+			std::cout << "\n------------\n";
+		}
 		
 		double x = pos_next(0);
 		double y = pos_next(1);

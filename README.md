@@ -13,7 +13,7 @@ This Git repository has a submodule for libigl. To clone it correctly use either
 # TODO
  - [X] Set up 2D visualization for FLIP particles & cells
  - [ ] 2D FLIP working correctly
-   - [ ] MAC2D data structure
+   - [X] MAC2D data structure
    - [ ] 2D FLIP updates
  
  - [ ] Extend to 3D

@@ -96,20 +96,23 @@ void FLIP::compute_velocity_field() {
 		// Coordinates of the points on the grid edges
 		Eigen::Vector3d grid_coord;
 		grid_coord << 0, 0, 0;
-		
 		for( int j = cell_coord(1) - h_scaledy; j < cell_coord(1) + h_scaledy + 1; ++j ){
 			for( int i = cell_coord(0) - h_scaledx; i < cell_coord(0) + h_scaledx + 1; ++i ){
-				if ( ( i >= 0 and j >= 0 ) and ( i <= MACGrid_->get_num_cells_x() and j <= MACGrid_->get_num_cells_y() ) ){
+				if ( ( i >= 0 and j >= 0 ) ){
+					if ( ( i <= MACGrid_->get_num_cells_x() and j < MACGrid_->get_num_cells_y() ) ){
 					
-					// Left edge
-					grid_coord(0) = i * cell_sizex;
-					grid_coord(1) = (j + 0.5) * cell_sizey;
-					accumulate_u(pos, vel, grid_coord, h, i, j);
+						// Left edge
+						grid_coord(0) = i * cell_sizex;
+						grid_coord(1) = (j + 0.5) * cell_sizey;
+						accumulate_u(pos, vel, grid_coord, h, i, j);
+					}
 					
-					// Lower edge
-					grid_coord(0) += 0.5 * cell_sizex;
-					grid_coord(1) -= 0.5 * cell_sizey;
-					accumulate_v(pos, vel, grid_coord, h, i, j);
+					if ( ( i < MACGrid_->get_num_cells_x() and j <= MACGrid_->get_num_cells_y() ) ){
+						// Lower edge
+						grid_coord(0) += 0.5 * cell_sizex;
+						grid_coord(1) -= 0.5 * cell_sizey;
+						accumulate_v(pos, vel, grid_coord, h, i, j);
+					}
 				}
 			}
 		}

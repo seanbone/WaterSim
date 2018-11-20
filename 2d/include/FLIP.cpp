@@ -14,8 +14,8 @@ void FLIP::step_FLIP(const double dt, const double time, const unsigned long ste
 	 *    - Particle-to-grid transfer
 	 *    - Classify cells (fluid/air)
 	 *    - Extrapolate velocity field into air region
+	 * 1a. Copy velocity field to intermediate velocity field u^*
 	 * 2. Apply external forces (fwd euler on field)
-	 * 2a. Copy velocity field to intermediate velocity field u^*
 	 * 3. Compute & apply pressure gradients
 	 * 4. Update particle velocities
 	 * 5. Update particle positions
@@ -28,14 +28,14 @@ void FLIP::step_FLIP(const double dt, const double time, const unsigned long ste
 	// 1.
 	compute_velocity_field();
 
+	// 1a.
+	MACGrid_->set_uv_star();
+
 	//std::cout << MACGrid_->get_v(10, 40) << "\n\n";
 	//std::cout << particles_->get_velocity() << std::endl;
 	//std::cout << ".....\n";
 	// 2.
 	apply_forces(dt);
-
-	// 2a.
-	MACGrid_->set_uv_star();
 
 	// 3.
 	//do_pressures(dt);

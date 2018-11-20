@@ -488,19 +488,19 @@ void FLIP::advance_particles(const double dt) {
 		// Leapfrog
 		Eigen::Vector3d pos_next = pos_prev + 2*dt*vel;
 		
-		double x = pos_curr(0);
-		double y = pos_curr(1);
+		double x = pos_next(0);
+		double y = pos_next(1);
 		//Check if the particle exits the grid
 		double size_x = MACGrid_->get_cell_sizex() * MACGrid_->get_num_cells_x();
 		double size_y = MACGrid_->get_cell_sizey() * MACGrid_->get_num_cells_y();
 		if(x < 0)
-			tmp3(0) = 0;
+			pos_next(0) = 0;
 		if(x > size_x)
-			tmp3(0) = size_x;
+			pos_next(0) = size_x;
 		if(y < 0)
-			tmp3(1) = 0;
+			pos_next(1) = 0;
 		if(y > size_y)
-			tmp3(1) = size_y;
+			pos_next(1) = size_y;
 			
 		//Check if the particle enters in a solid
 		/*Mac2d::Pair_t indices = MACGrid->index_from_coord(x,y);
@@ -508,7 +508,7 @@ void FLIP::advance_particles(const double dt) {
 			temp3[0] = int(temp1[0]);
 			temp3[1] = int(temp1[1]);
 		}*/		
-		(particles_ + i)->set_position(temp3);
+		(particles_ + n)->set_position(pos_next);
 	}
 }
 

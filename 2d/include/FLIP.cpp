@@ -266,7 +266,11 @@ void FLIP::do_pressures(const double dt) {
 
 	//  3d. Apply pressure gradients to velocity field
 	//     -> see SIGGRAPH §4
+	std::cout << "v before" << std::endl;
+	std::cout << particles_->get_velocity() << std::endl;
 	apply_pressure_gradients(dt);
+	std::cout << "v after" << std::endl;
+	std::cout << particles_->get_velocity() << std::endl;
 
 	// Note: boundary conditions are handles here by setting the pressures
 	//    such that no particle exits the system.

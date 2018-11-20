@@ -27,16 +27,18 @@ void WaterSim::init(WaterSim::viewer_t& viewer) {
     m_num_particles = 4 * (nx/2 - 1) * (ny/2 - 1);
     flip_particles = new Particle[m_num_particles];
 
+    Eigen::VectorXd rnd = Eigen::VectorXd::Random(2*m_num_particles);
+
     for (unsigned x = 3; x < (nx/2)+2; x++) {
         for (unsigned y = ny-(ny/2); y < ny-1; y++) {
             // Populate cell (x,y)
             double cx = x * sx;
             double cy = y * sy;
 
-            flip_particles[idx]     = Particle(cx - sx/4., cy - sy/4., 0.);
-            flip_particles[idx + 1] = Particle(cx + sx/4., cy - sy/4., 0.);
-            flip_particles[idx + 2] = Particle(cx - sx/4., cy + sy/4., 0.);
-            flip_particles[idx + 3] = Particle(cx + sx/4., cy + sy/4., 0.);
+            flip_particles[idx]     = Particle(cx - sx/4. + sx*rnd(idx  )/8., cy - sy/4. + sy*rnd(idx+1)/8., 0.);
+            flip_particles[idx + 1] = Particle(cx + sx/4. + sx*rnd(idx+2)/8., cy - sy/4. + sy*rnd(idx+3)/8., 0.);
+            flip_particles[idx + 2] = Particle(cx - sx/4. + sx*rnd(idx+4)/8., cy + sy/4. + sy*rnd(idx+5)/8., 0.);
+            flip_particles[idx + 3] = Particle(cx + sx/4. + sx*rnd(idx+6)/8., cy + sy/4. + sy*rnd(idx+7)/8., 0.);
 
             idx += 4;
         }

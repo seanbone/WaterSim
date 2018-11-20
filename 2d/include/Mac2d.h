@@ -37,6 +37,9 @@ class Mac2d{
 		double* pu_;
 		//pointer to array for the velocities in y-direction
 		double* pv_;
+		// Temporary copy of velocity field -> u^*, v^*
+		double* pu_star_;
+		double* pv_star_;
 		//pointer to array for specifing if a cell is solid (1) or not(0)
 		bool* psolid_;
 		//pointer to array for specifing if a cell contains fluid (1) or not(0)
@@ -62,7 +65,9 @@ class Mac2d{
 			: N_(n), M_(m), sizex_(dx), sizey_(dy), cell_sizex_(sizex_/(1.*N_)), cell_sizey_(sizey_/(1.*M_)){
 			ppressure_ = new double[N_*M_];
 			pu_ = new double[(N_+1)*M_];
+			pu_star_ = new double[(N_+1)*M_];
 			pv_ = new double[N_*(M_+1)];
+			pv_star_ = new double[N_*(M_+1)];
 			psolid_ = new bool[N_*M_];
 			pfluid_ = new bool[N_*M_];
 			pweights_u_ = new double[(N_+1)*M_];
@@ -128,11 +133,13 @@ class Mac2d{
 		
 		//Destructor
 		~Mac2d(){
-			delete ppressure_;
-			delete pu_;
-			delete pv_;
-			delete psolid_;
-			delete pfluid_;
+			delete[] ppressure_;
+			delete[] pu_;
+			delete[] pv_;
+			delete[] pu_star_;
+			delete[] pv_star_;
+			delete[] psolid_;
+			delete[] pfluid_;
 		}
 		
 		//GETS
@@ -140,6 +147,9 @@ class Mac2d{
 		double get_u(const int i, const int j);
 		//Get the y-velocity in the mathematical point (i,j-1/2)
 		double get_v(const int i, const int j);
+		// Equivalent for intermediate field
+		double get_u_star(const int i, const int j);
+		double get_v_star(const int i, const int j);
 		//Get the pressure in the mathematical point(i,j)
 		double get_pressure(const int i, const int j);
 		//Return if the cell with center (i,j) is a solid cell
@@ -163,12 +173,15 @@ class Mac2d{
 		double get_weights_u(const int i, const int j);
 		//Get the weights for v in the mathematical point (i,j-1/2)
 		double get_weights_v(const int i, const int j);
-				
+
 		//SETTERS
 		//Set the x-velocity in the mathematical point (i-1/2,j)
 		void set_u(const int i, const int j, double value); 
 		//Set the y-velocity in the mathematical point (i,j-1/2)
 		void set_v(const int i, const int j, double value);
+		// Copy velocity field to temporary copy arrays
+		void set_uv_star();
+
 		//Set the pressure in the mathematical point(i,j)
 		void set_pressure(const int i, const int j, double value);
 		// Reset all pressures

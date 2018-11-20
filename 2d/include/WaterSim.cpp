@@ -140,6 +140,19 @@ void WaterSim::updateRenderGeometry() {
     m_particle_colors.resize(m_num_particles, 3);
     m_particle_colors.setZero();
     m_particle_colors.col(2).setOnes();
+
+    // Render pressure as a scalar field
+    unsigned nx = p_mac_grid->get_num_cells_x();
+    unsigned ny = p_mac_grid->get_num_cells_y();
+    Eigen::VectorXd pressures(2*nx*ny);
+    for (unsigned j = 0; j < nx; j++) {
+        for (unsigned i = 0; i < ny; i++) {
+            pressures(2*(i + j*ny)) = p_mac_grid->get_pressure(i, j);
+            pressures(2*(i + j*ny) + 1) = p_mac_grid->get_pressure(i, j);
+        }
+    }
+
+    igl::jet(pressures, true, m_renderC);
 }
 
 

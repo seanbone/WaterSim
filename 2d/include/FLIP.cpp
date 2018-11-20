@@ -550,6 +550,7 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 		Mac2d::Pair_t indices = MACGrid_->index_from_coord(x,y);
 		if (!MACGrid_->is_solid(indices.first, indices.second)) {
 			(particles_ + n)->set_position(pos_next);
+		} else {
 			(particles_ + n)->set_velocity(0, 0, 0);
 		}
 	}

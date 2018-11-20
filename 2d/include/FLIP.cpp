@@ -78,7 +78,7 @@ void FLIP::compute_velocity_field() {
 		pos = (*(particles_ + n)).get_position();
 		vel = (*(particles_ + n)).get_velocity();
 		
-		Pair_t tmp = MACGrid_->index_from_coord(pos(0), pos(1));
+		Mac2d::Pair_t tmp = MACGrid_->index_from_coord(pos(0), pos(1));
 		cell_coord << tmp.first, tmp.second, 0;
 		
 		for( int j = cell_coord(1) - h_scaledy; j < cell_coord(1) + h_scaledy; ++j ){
@@ -166,8 +166,10 @@ void FLIP::accumulate_v( const Eigen::Vector3d& pos,
 }
 
 void FLIP::normalize_accumulated_u(){
-	for( int j = 0; j < M_+1; ++j ){
-		for( int i = 0; i < N_+1; ++i ){
+	unsigned M = MACGrid_->get_num_cells_y();
+	unsigned N = MACGrid_->get_num_cells_x();
+	for( unsigned j = 0; j < M+1; ++j ){
+		for( unsigned i = 0; i < N+1; ++i ){
 			double W_u = MACGrid_->get_weights_u(i, j);
 			if ( W_u != 0 ){
 				double u_pred = MACGrid_->get_u(i, j);
@@ -179,8 +181,10 @@ void FLIP::normalize_accumulated_u(){
 }
 
 void FLIP::normalize_accumulated_v(){
-	for( int j = 0; j < M_+1; ++j ){
-		for( int i = 0; i < N_+1; ++i ){
+	unsigned M = MACGrid_->get_num_cells_y();
+	unsigned N = MACGrid_->get_num_cells_x();
+	for( unsigned j = 0; j < M+1; ++j ){
+		for( unsigned i = 0; i < N+1; ++i ){
 			double W_v = MACGrid_->get_weights_v(i, j);
 			if ( W_v != 0 ){
 				double v_pred = MACGrid_->get_v(i, j);

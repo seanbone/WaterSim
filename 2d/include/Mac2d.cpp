@@ -92,6 +92,7 @@ void Mac2d::set_weights_to_zero(){
 			set_weights_v(i, j, 0.);
 		}	
 	}
+}
 
 void Mac2d::set_pressure(const Eigen::VectorXd& p) {
 	std::copy(p.data(), p.data()+p.size(), ppressure_);

@@ -30,7 +30,7 @@ class FLIP {
 	 * - time is the current time of the simulation
 	 * - step is the number of steps performed
 	 */
-	void step_FLIP(const double dt, const double time, const unsigned long step);
+	void step_FLIP(const double dt, const unsigned long step);
 	
 	private:
 	
@@ -48,6 +48,9 @@ class FLIP {
 	SparseMat_t A_;
 	// RHS of pressure LSE
 	Eigen::VectorXd d_;
+	
+	// Compute timestep to satisfy CFL condition
+	double compute_timestep( const double dt );
 
 	// Compute velocity field by particle-to-grid transfer
 	//   and extrapolating into air region

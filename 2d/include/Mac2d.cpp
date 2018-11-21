@@ -4,7 +4,7 @@
 //***********************************GETTERS******************************************
 //************************************************************************************
 //1) getters for the layout properties of the grid (cell sizes and sizes of the grid);
-//2) getters for the velocities (u, v, u*, v*);
+//2) getters for the velocities (u, v, u*, v* and their interpolation);
 //3) getters for the pressures;
 //4) getters for the physical properties of the cells (solid, liquid, empty);
 //5) getters for the weights for the particle to grid;
@@ -63,6 +63,131 @@ double Mac2d::get_v_star(const unsigned i, const unsigned j) {
 		return *(pv_star_ + N_*j + i);
 	else
 		return 0;
+}
+
+double Mac2d::get_interp_u(double x, double y){
+	Pair_t indices = index_from_coord(x,y);
+	double x1, x2, y1, y2;
+	int ix1, ix2, iy1, iy2;
+	double u11, u12, u21, u22;
+	
+	//Update the u-velocity (bilinear interpolation)
+	ix1 = indices.first;
+	ix2 = ix1 + 1;
+	if(y > (indices.second + 0.5) * cell_sizey_){
+		iy1 = indices.second;
+		iy2 = iy1 + 1;
+	}
+	else{
+		iy2 = indices.second;
+		iy1 = iy2 - 1;
+	}
+	x1 = ix1 * cell_sizex_;
+	x2 = ix2 * cell_sizex_;
+	y1 = iy1 * cell_sizey_;
+	y2 = iy2 * cell_sizey_;
+	
+	u11 = get_u(ix1,iy1);
+	u12 = get_u(ix1,iy2);
+	u21 = get_u(ix2,iy1);
+	u22 = get_u(ix2,iy2);
+	return 1/((x2 - x1)*(y2-y1))*(u11*(x2 - x)*(y2-y) 
+			+ u21*(x - x1)*(y2-y) + u12*(x2 - x)*(y-y1) 
+			+ u22*(x - x1)*(y-y1));
+}
+		
+double Mac2d::get_interp_v(double x, double y){
+	Pair_t indices = index_from_coord(x,y);
+	double x1, x2, y1, y2;
+	int ix1, ix2, iy1, iy2;
+	double v11, v12, v21, v22;
+	
+		//Update the v-velocity (bilinear interpolation)
+		iy1 = indices.second;
+		iy2 = iy1 + 1;
+		if(x > (indices.first + 0.5) * cell_sizex_){
+			ix1 = indices.first;
+			ix2 = ix1 + 1;
+		}
+		else{
+			ix2 = indices.first;
+			ix1 = ix2 - 1;
+		}
+		x1 = ix1 * cell_sizex_;
+		x2 = ix2 * cell_sizex_;
+		y1 = iy1 * cell_sizey_;
+		y2 = iy2 * cell_sizey_;
+		
+		v11 = get_v(ix1,iy1);
+		v12 = get_v(ix1,iy2);
+		v21 = get_v(ix2,iy1);
+		v22 = get_v(ix2,iy2);
+		return 1/((x2 - x1)*(y2-y1))*(v11*(x2 - x)*(y2-y) 
+			   + v21*(x - x1)*(y2-y) + v12*(x2 - x)*(y-y1) 
+			   + v22*(x - x1)*(y-y1));
+	}
+}
+	
+double Mac2d::get_interp_u_star(double x, double y){
+	Pair_t indices = index_from_coord(x,y);
+	double x1, x2, y1, y2;
+	int ix1, ix2, iy1, iy2;
+	double u11, u12, u21, u22;
+	
+	//Update the u*-velocity (bilinear interpolation)
+	ix1 = indices.first;
+	ix2 = ix1 + 1;
+	if(y > (indices.second + 0.5) * cell_sizey_){
+		iy1 = indices.second;
+		iy2 = iy1 + 1;
+	}
+	else{
+		iy2 = indices.second;
+		iy1 = iy2 - 1;
+	}
+	x1 = ix1 * cell_sizex_;
+	x2 = ix2 * cell_sizex_;
+	y1 = iy1 * cell_sizey_;
+	y2 = iy2 * cell_sizey_;
+	
+	u11 = get_u_star(ix1,iy1);
+	u12 = get_u_star(ix1,iy2);
+	u21 = get_u_star(ix2,iy1);
+	u22 = get_u_star(ix2,iy2);
+	return 1/((x2 - x1)*(y2-y1))*(u11*(x2 - x)*(y2-y) 
+			+ u21*(x - x1)*(y2-y) + u12*(x2 - x)*(y-y1) 
+			+ u22*(x - x1)*(y-y1));
+}
+	
+double Mac2d::get_interp_v_star(double x, double y){
+	Pair_t indices = index_from_coord(x,y);
+	double x1, x2, y1, y2;
+	int ix1, ix2, iy1, iy2;
+	double v11, v12, v21, v22;
+	
+	//Update the v*-velocity (bilinear interpolation)
+	iy1 = indices.second;
+	iy2 = iy1 + 1;
+	if(x > (indices.first + 0.5) * cell_sizex_){
+		ix1 = indices.first;
+		ix2 = ix1 + 1;
+	}
+	else{
+		ix2 = indices.first;
+		ix1 = ix2 - 1;
+	}
+	x1 = ix1 * cell_sizex_;
+	x2 = ix2 * cell_sizex_;
+	y1 = iy1 * cell_sizey_;
+	y2 = iy2 * cell_sizey_;
+	
+	v11 = get_v_star(ix1,iy1);
+	v12 = get_v_star(ix1,iy2);
+	v21 = get_v_star(ix2,iy1);
+	v22 = get_v_star(ix2,iy2);
+	return 1/((x2 - x1)*(y2-y1))*(v11*(x2 - x)*(y2-y) 
+		   + v21*(x - x1)*(y2-y) + v12*(x2 - x)*(y-y1) 
+		   + v22*(x - x1)*(y-y1));
 }
 
 //3. Pressures ---------------------------------------------------------

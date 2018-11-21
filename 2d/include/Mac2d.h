@@ -175,6 +175,12 @@ class Mac2d{
 		double get_weights_u(const unsigned i, const unsigned j);
 		//Get the weights for v in the mathematical point (i,j-1/2)
 		double get_weights_v(const unsigned i, const unsigned j);
+		
+		//Getters for the bilinear interpolation of u, v, u*, v* in the point x,y
+		double get_interp_u(double x, double y);		
+		double get_interp_v(double x, double y);		
+		double get_interp_u_star(double x, double y);		
+		double get_interp_v_star(double x, double y);
 
 		//SETTERS
 		//Set the x-velocity in the mathematical point (i-1/2,j)

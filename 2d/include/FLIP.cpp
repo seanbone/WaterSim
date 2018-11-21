@@ -597,84 +597,17 @@ void FLIP::grid_to_particle(){
 
 		double x = initial_position[0];
 		double y = initial_position[1];
-		double sx = MACGrid_->get_cell_sizex();
-		double sy = MACGrid_->get_cell_sizex();
-		Mac2d::Pair_t indices = MACGrid_->index_from_coord(x,y);
-		double x1, x2, y1, y2;
-		int ix1, ix2, iy1, iy2;
-		double u11, u12, u21, u22;
-		double v11, v12, v21, v22;
 		
 		//With u* and v* we can make the interpolation interp(u*, x_p),
 		//with the new u and v we can make the interpolation interp(u_n1, x_p)
 		
 		//Update the u-velocity (bilinear interpolation)
-		ix1 = indices.first;
-		ix2 = ix1 + 1;
-		if(y > (indices.second + 0.5) * sy){
-			iy1 = indices.second;
-			iy2 = iy1 + 1;
-		}
-		else{
-			iy2 = indices.second;
-			iy1 = iy2 - 1;
-		}
-		x1 = ix1 * sx;
-		x2 = ix2 * sx;
-		y1 = iy1 * sy;
-		y2 = iy2 * sy;
-
-		u11 = MACGrid_->get_u_star(ix1,iy1);
-		u12 = MACGrid_->get_u_star(ix1,iy2);
-		u21 = MACGrid_->get_u_star(ix2,iy1);
-		u22 = MACGrid_->get_u_star(ix2,iy2);
-		interp_u_star[0] = 1/((x2 - x1)*(y2-y1))*(u11*(x2 - x)*(y2-y) 
-							+ u21*(x - x1)*(y2-y) 
-							+ u12*(x2 - x)*(y-y1) 
-							+ u22*(x - x1)*(y-y1));
-		
-		u11 = MACGrid_->get_u(ix1,iy1);
-		u12 = MACGrid_->get_u(ix1,iy2);
-		u21 = MACGrid_->get_u(ix2,iy1);
-		u22 = MACGrid_->get_u(ix2,iy2);
-		interp_u_n1[0] = 1/((x2 - x1)*(y2-y1))*(u11*(x2 - x)*(y2-y) 
-							+ u21*(x - x1)*(y2-y) 
-							+ u12*(x2 - x)*(y-y1) 
-							+ u22*(x - x1)*(y-y1));
+		interp_u_star[0] = MACGrid_->get_interp_u_star(x,y);
+		interp_u_n1[0] = MACGrid_->get_interp_u(x,y);
 		
 		//Update the v-velocity (bilinear interpolation)
-		iy1 = indices.second;
-		iy2 = iy1 + 1;
-		if(x > (indices.first + 0.5) * sx){
-			ix1 = indices.first;
-			ix2 = ix1 + 1;
-		}
-		else{
-			ix2 = indices.first;
-			ix1 = ix2 - 1;
-		}
-		x1 = ix1 * sx;
-		x2 = ix2 * sx;
-		y1 = iy1 * sy;
-		y2 = iy2 * sy;
-		
-		v11 = MACGrid_->get_v_star(ix1,iy1);
-		v12 = MACGrid_->get_v_star(ix1,iy2);
-		v21 = MACGrid_->get_v_star(ix2,iy1);
-		v22 = MACGrid_->get_v_star(ix2,iy2);
-		interp_u_star[1] = 1/((x2 - x1)*(y2-y1))*(v11*(x2 - x)*(y2-y) 
-							+ v21*(x - x1)*(y2-y) 
-							+ v12*(x2 - x)*(y-y1) 
-							+ v22*(x - x1)*(y-y1));
-
-		v11 = MACGrid_->get_v(ix1,iy1);
-		v12 = MACGrid_->get_v(ix1,iy2);
-		v21 = MACGrid_->get_v(ix2,iy1);
-		v22 = MACGrid_->get_v(ix2,iy2);
-		interp_u_n1[1] = 1/((x2 - x1)*(y2-y1))*(v11*(x2 - x)*(y2-y) 
-							+ v21*(x - x1)*(y2-y) 
-							+ v12*(x2 - x)*(y-y1) 
-							+ v22*(x - x1)*(y-y1));
+		interp_u_star[1] = MACGrid_->get_interp_v_star(x,y);
+		interp_u_n1[1] = MACGrid_->get_interp_v(x,y);
 		
 		//Update the final velocity of the particles
 		u_update = initial_velocity*(1 - alpha) + interp_u_n1 + interp_u_star*(alpha - 1);

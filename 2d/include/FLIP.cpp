@@ -24,7 +24,7 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 
 	// 0. subsample time interval to satisfy CFL condition
 	double dt_new = compute_timestep(dt);
-	double num_substeps = int((dt/dt_new) + 1);
+	double num_substeps = std::ceil(dt/dt_new);
 	std::cout << num_substeps << "<---------------" << std::endl;
 	for( int s = 0; s < num_substeps ; ++s ){
 		

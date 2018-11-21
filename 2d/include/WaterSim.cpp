@@ -152,7 +152,7 @@ void WaterSim::updateRenderGeometry() {
         }
     }
 
-//    igl::jet(pressures, true, m_renderC);
+    igl::jet(pressures, true, m_renderC);
 
     std::cout << "\n*************\n";
     std::cout << "Pressure at (7, 0): " << p_mac_grid->get_pressure(7, 0) << std::endl;

@@ -38,7 +38,7 @@ void FLIP::step_FLIP(const double dt, const double time, const unsigned long ste
 	apply_forces(dt);
 
 	// 3.
-	//~ do_pressures(dt);
+	do_pressures(dt);
 
 	//~ std::cout << "Pressure for cell (5, 1): " << MACGrid_->get_pressure(5, 1) << std::endl;
 
@@ -565,23 +565,41 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 		//Check if the particle exits the grid
 		double size_x = MACGrid_->get_cell_sizex() * MACGrid_->get_num_cells_x();
 		double size_y = MACGrid_->get_cell_sizey() * MACGrid_->get_num_cells_y();
+		//~ if(x < 0) {
+			//~ pos_next(0) = 0;
+			//~ vel(0) = 0;
+		//~ }
+		//~ if(x > size_x) {
+			//~ pos_next(0) = size_x;
+			//~ vel(0) = 0;
+		//~ }
+		//~ if(y < 0) {
+			//~ pos_next(1) = 0;
+			//~ vel(1) = 0;
+		//~ }
+		//~ if(y > size_y) {
+			//~ pos_next(1) = size_y;
+			//~ vel(1) = 0;
+		//~ }
+		//~ (particles_ + n)->set_velocity(vel);
+		
 		if(x < 0) {
-			pos_next(0) = 0;
+			pos_next(0) = MACGrid_->get_cell_sizex() * 0.25;
 			vel(0) = 0;
 		}
 		if(x > size_x) {
-			pos_next(0) = size_x;
+			pos_next(0) = size_x - MACGrid_->get_cell_sizex() * 0.25;
 			vel(0) = 0;
 		}
 		if(y < 0) {
-			pos_next(1) = 0;
+			pos_next(1) = MACGrid_->get_cell_sizey() * 0.25;
 			vel(1) = 0;
 		}
 		if(y > size_y) {
-			pos_next(1) = size_y;
+			pos_next(1) = size_y - MACGrid_->get_cell_sizey() * 0.25;
 			vel(1) = 0;
 		}
-		//(particles_ + n)->set_velocity(vel);
+		(particles_ + n)->set_velocity(vel);
 		
 		//Check if the particle enters in a solid
 		Mac2d::Pair_t prev_indices = MACGrid_->index_from_coord(pos_curr(0),pos_curr(1));
@@ -600,7 +618,7 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 			else if (prev_indices.second < new_indices.second)
 				pos_next(1) = (prev_indices.second + 0.25) * sy;
 		} else {
-			//(particles_ + n)->set_velocity(vel(0), 0, vel(2));
+			//~ (particles_ + n)->set_velocity(vel(0), 0, vel(2));
 		}
 		(particles_ + n)->set_position(pos_next);
 	}

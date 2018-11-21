@@ -102,30 +102,30 @@ double Mac2d::get_interp_v(double x, double y){
 	int ix1, ix2, iy1, iy2;
 	double v11, v12, v21, v22;
 	
-		//Update the v-velocity (bilinear interpolation)
-		iy1 = indices.second;
-		iy2 = iy1 + 1;
-		if(x > (indices.first + 0.5) * cell_sizex_){
-			ix1 = indices.first;
-			ix2 = ix1 + 1;
-		}
-		else{
-			ix2 = indices.first;
-			ix1 = ix2 - 1;
-		}
-		x1 = ix1 * cell_sizex_;
-		x2 = ix2 * cell_sizex_;
-		y1 = iy1 * cell_sizey_;
-		y2 = iy2 * cell_sizey_;
-		
-		v11 = get_v(ix1,iy1);
-		v12 = get_v(ix1,iy2);
-		v21 = get_v(ix2,iy1);
-		v22 = get_v(ix2,iy2);
-		return 1/((x2 - x1)*(y2-y1))*(v11*(x2 - x)*(y2-y) 
-			   + v21*(x - x1)*(y2-y) + v12*(x2 - x)*(y-y1) 
-			   + v22*(x - x1)*(y-y1));
+	//Update the v-velocity (bilinear interpolation)
+	iy1 = indices.second;
+	iy2 = iy1 + 1;
+	if(x > (indices.first + 0.5) * cell_sizex_){
+		ix1 = indices.first;
+		ix2 = ix1 + 1;
 	}
+	else{
+		ix2 = indices.first;
+		ix1 = ix2 - 1;
+	}
+	x1 = ix1 * cell_sizex_;
+	x2 = ix2 * cell_sizex_;
+	y1 = iy1 * cell_sizey_;
+	y2 = iy2 * cell_sizey_;
+	
+	v11 = get_v(ix1,iy1);
+	v12 = get_v(ix1,iy2);
+	v21 = get_v(ix2,iy1);
+	v22 = get_v(ix2,iy2);
+	return 1/((x2 - x1)*(y2-y1))*(v11*(x2 - x)*(y2-y) 
+		   + v21*(x - x1)*(y2-y) + v12*(x2 - x)*(y-y1) 
+		   + v22*(x - x1)*(y-y1));
+	
 }
 	
 double Mac2d::get_interp_u_star(double x, double y){

@@ -16,9 +16,10 @@ void FLIP::step_FLIP(const double dt, const double time, const unsigned long ste
 	 *    - Extrapolate velocity field into air region
 	 * 1a. Copy velocity field to intermediate velocity field u^*
 	 * 2. Apply external forces (fwd euler on field)
-	 * 3. Compute & apply pressure gradients
-	 * 4. Update particle velocities
-	 * 5. Update particle positions
+	 * 3. Enforce boundary conditions for grid & solid boundaries
+	 * 4. Compute & apply pressure gradients
+	 * 5. Update particle velocities
+	 * 6. Update particle positions
 	 */
 
 	// TODO: subsample time interval to satisfy CFL condition
@@ -38,14 +39,17 @@ void FLIP::step_FLIP(const double dt, const double time, const unsigned long ste
 	apply_forces(dt);
 
 	// 3.
+	apply_boundary_conditions();
+
+	// 4.
 	do_pressures(dt);
 
 	//~ std::cout << "Pressure for cell (5, 1): " << MACGrid_->get_pressure(5, 1) << std::endl;
 
-	// 4.
+	// 5.
 	grid_to_particle();
 
-	// 5.
+	// 6.
 	advance_particles(dt, step);
 }
 
@@ -226,6 +230,7 @@ void FLIP::normalize_accumulated_v(){
 	}	
 }
 
+
 /*** APPLY EXTERNAL FORCES ***/
 void FLIP::apply_forces(const double dt) {
 	// Compute&apply external forces (gravity, vorticity confinement, ...) 
@@ -242,6 +247,13 @@ void FLIP::apply_forces(const double dt) {
 		}
 	}
 }
+
+
+/*** BOUNDARY CONDITIONS ***/
+void FLIP::apply_boundary_conditions() {
+	// TODO
+}
+
 
 /*** PRESSURE SOLVING ***/
 void FLIP::do_pressures(const double dt) {

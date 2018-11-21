@@ -89,6 +89,9 @@ class FLIP {
 	// Apply external forces to velocities on grid
 	void apply_forces(const double dt);
 
+	// Enforce boundary conditions for grid & solid boundaries
+	void apply_boundary_conditions();
+
 	// Compute and apply pressures on velocity field
 	void do_pressures(const double dt);
 	void compute_pressure_matrix();

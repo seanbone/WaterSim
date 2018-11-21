@@ -38,9 +38,9 @@ void FLIP::step_FLIP(const double dt, const double time, const unsigned long ste
 	apply_forces(dt);
 
 	// 3.
-	do_pressures(dt);
+	//~ do_pressures(dt);
 
-	std::cout << MACGrid_->get_pressure(10, 0) << std::endl;
+	//~ std::cout << "Pressure for cell (5, 1): " << MACGrid_->get_pressure(5, 1) << std::endl;
 
 	// 4.
 	grid_to_particle();
@@ -262,15 +262,20 @@ void FLIP::do_pressures(const double dt) {
 	VectorXd p = solver.solve(d_);
 
 	// Copy pressures to MAC grid
+	//~ for( int j = 0; j < MACGrid_->get_num_cells_y(); ++j ){
+		//~ for( int i = 0; i < MACGrid_->get_num_cells_x(); ++i ){
+			//~ if ()
 	MACGrid_->set_pressure(p);
+		//~ }
+	//~ }
 
 	//  3d. Apply pressure gradients to velocity field
 	//     -> see SIGGRAPH §4
-	std::cout << "v before" << std::endl;
-	std::cout << particles_->get_velocity() << std::endl;
+	//~ std::cout << "v before" << std::endl;
+	//~ std::cout << particles_->get_velocity() << std::endl;
 	apply_pressure_gradients(dt);
-	std::cout << "v after" << std::endl;
-	std::cout << particles_->get_velocity() << std::endl;
+	//~ std::cout << "v after" << std::endl;
+	//~ std::cout << particles_->get_velocity() << std::endl;
 
 	// Note: boundary conditions are handles here by setting the pressures
 	//    such that no particle exits the system.
@@ -312,7 +317,7 @@ void FLIP::compute_pressure_matrix() {
 	A_.setZero();
 	A_.resize(nx*ny, nx*ny);
 	A_.setFromTriplets(triplets.begin(), triplets.end());
-	std::cout << "nnz: " << A_.nonZeros() << std::endl;
+	//~ std::cout << "nnz: " << A_.nonZeros() << std::endl;
 }
 
 void FLIP::compute_pressure_rhs(const double dt) {

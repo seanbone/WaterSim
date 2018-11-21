@@ -152,7 +152,7 @@ void WaterSim::updateRenderGeometry() {
         }
     }
 
-    igl::jet(pressures, true, m_renderC);
+    //~ igl::jet(pressures, true, m_renderC);
 }
 
 

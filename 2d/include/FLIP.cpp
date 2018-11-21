@@ -601,6 +601,7 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 		}
 		(particles_ + n)->set_velocity(vel);
 		
+
 		//Check if the particle enters in a solid
 		Mac2d::Pair_t prev_indices = MACGrid_->index_from_coord(pos_curr(0),pos_curr(1));
 		Mac2d::Pair_t new_indices = MACGrid_->index_from_coord(pos_next(0), pos_next(1));

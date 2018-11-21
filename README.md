@@ -4,6 +4,8 @@ Meteorite crashing into the sea - Physically-Based Simulation HS18 project.
 
 Authors: Silvia Nauer, Mikael Stellio, Sean Bone.
 
+Slack channel: [https://flippingteamworkspace.slack.com](https://flippingteamworkspace.slack.com)
+
 # Cloning with submodules
 This Git repository has a submodule for libigl. To clone it correctly use either of the following:
 

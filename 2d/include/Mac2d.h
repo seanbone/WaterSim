@@ -75,22 +75,22 @@ class Mac2d{
 
 			// Initialize solid cells as a "box"
 			//  Top & bottom
-			for (int i = 0; i < N_; i++) {
+			for (unsigned i = 0; i < N_; i++) {
 				psolid_[i] = true;
 				psolid_[i + (M_ - 1)*N_] = true;
 			}
 			// Sides
-			for (int i = 1; i < M_ - 1; i++) {
+			for (unsigned i = 1; i < M_ - 1; i++) {
 				psolid_[N_*i] = true;
-				for (int j = 1; j < N_ - 1; j++) {
+				for (unsigned j = 1; j < N_ - 1; j++) {
 					psolid_[j + N_*i] = false;
 				}
 				psolid_[N_-1 + N_*i] = true;
 			}
 
 			//Initialization of the diagonal of A
-			for(int j = 0; j< M_; ++j){
-				for(int i = 0; i < N_; ++i){
+			for(unsigned j = 0; j < M_; ++j){
+				for(unsigned i = 0; i < N_; ++i){
 					int index = N_ * j + i;
 					int count = 0;
 					if (i == 0){

@@ -181,7 +181,7 @@ class Simulator {
                 // don't use to much CPU time
                 std::this_thread::sleep_for(milliseconds(10));
             } else {
-                if (m_maxSteps >= 0 && m_maxSteps <= p_simulation->getStep()) {
+                if (m_maxSteps >= 0 && m_maxSteps <= int(p_simulation->getStep())) {
                     pause();
                     continue;
                 }

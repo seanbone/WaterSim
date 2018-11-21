@@ -102,10 +102,12 @@ void FLIP::compute_velocity_field() {
 		// Coordinates of the points on the grid edges
 		Eigen::Vector3d grid_coord;
 		grid_coord << 0, 0, 0;
+		int nx = MACGrid_->get_num_cells_x();
+		int ny = MACGrid_->get_num_cells_y();
 		for( int j = cell_coord(1) - h_scaledy; j < cell_coord(1) + h_scaledy + 1; ++j ){
 			for( int i = cell_coord(0) - h_scaledx; i < cell_coord(0) + h_scaledx + 1; ++i ){
 				if ( ( i >= 0 and j >= 0 ) ){
-					if ( ( i <= MACGrid_->get_num_cells_x() and j < MACGrid_->get_num_cells_y() ) ){
+					if ( ( i <= nx and j < ny ) ){
 					
 						// Left edge
 						grid_coord(0) = i * cell_sizex;
@@ -113,7 +115,7 @@ void FLIP::compute_velocity_field() {
 						accumulate_u(pos, vel, grid_coord, h, i, j);
 					}
 					
-					if ( ( i < MACGrid_->get_num_cells_x() and j <= MACGrid_->get_num_cells_y() ) ){
+					if ( ( i < nx and j <= ny ) ){
 						// Lower edge
 						grid_coord(0) += 0.5 * cell_sizex;
 						grid_coord(1) -= 0.5 * cell_sizey;
@@ -434,7 +436,7 @@ void FLIP::grid_to_particle(){
 	//  -> See slides Fluids II, FLIP_explained.pdf
 	double alpha = 0.0;
 	
-	for(int i = 0; i < num_particles_; ++i){
+	for(unsigned i = 0; i < num_particles_; ++i){
 		//Store the initial positions and velocities of the particles
 		Eigen::Vector3d initial_position = (particles_+i)->get_position();
 		Eigen::Vector3d initial_velocity = (particles_+i)->get_velocity();

@@ -18,9 +18,9 @@ class Mac2d{
 	private:
 		//PARAMETER for the grid
 		//number of cells in x
-		const int N_; 
+		const unsigned N_; 
 		//number of cells in y
-		const int M_;
+		const unsigned M_;
 		//size (in meter) of the grid in x-direction
 		const double sizex_;
 		//size (in meter) of the grid in y-direction
@@ -61,7 +61,7 @@ class Mac2d{
 			: N_(0), M_(0), sizex_(0), sizey_(0), cell_sizex_(0), cell_sizey_(0){}
 		
 		//Constructor with the number of cells (in both directions) and the length of the box (in metres)
-		Mac2d(const int n, const int m, const double dx, const double dy)
+		Mac2d(const unsigned n, const unsigned m, const double dx, const double dy)
 			: N_(n), M_(m), sizex_(dx), sizey_(dy), cell_sizex_(sizex_/(1.*N_)), cell_sizey_(sizey_/(1.*M_)){
 			ppressure_ = new double[N_*M_];
 			pu_ = new double[(N_+1)*M_];
@@ -144,20 +144,20 @@ class Mac2d{
 		
 		//GETS
 		//Get the x-velocity in the mathematical point (i-1/2,j) 
-		double get_u(const int i, const int j);
+		double get_u(const unsigned i, const unsigned j);
 		//Get the y-velocity in the mathematical point (i,j-1/2)
-		double get_v(const int i, const int j);
+		double get_v(const unsigned i, const unsigned j);
 		// Equivalent for intermediate field
-		double get_u_star(const int i, const int j);
-		double get_v_star(const int i, const int j);
+		double get_u_star(const unsigned i, const unsigned j);
+		double get_v_star(const unsigned i, const unsigned j);
 		//Get the pressure in the mathematical point(i,j)
-		double get_pressure(const int i, const int j);
+		double get_pressure(const unsigned i, const unsigned j);
 		//Return if the cell with center (i,j) is a solid cell
-		bool is_solid(const int i, const int j);
+		bool is_solid(const unsigned i, const unsigned j);
 		//Return if the cell with center (i,j) is a fluid cell
-		bool is_fluid(const int i, const int j);
+		bool is_fluid(const unsigned i, const unsigned j);
 		//Return if the cell with center (i,j) is empty (not solid && not fluid)
-		bool is_empty(const int i, const int j);
+		bool is_empty(const unsigned i, const unsigned j);
 
 		// Grid dimensions in #cells
 		unsigned get_num_cells_x();
@@ -170,27 +170,27 @@ class Mac2d{
 		const std::vector< Triplet_t >& get_a_diag();
 		
 		//Get the weights for u in the mathematical point (i-1/2,j) 
-		double get_weights_u(const int i, const int j);
+		double get_weights_u(const unsigned i, const unsigned j);
 		//Get the weights for v in the mathematical point (i,j-1/2)
-		double get_weights_v(const int i, const int j);
+		double get_weights_v(const unsigned i, const unsigned j);
 
 		//SETTERS
 		//Set the x-velocity in the mathematical point (i-1/2,j)
-		void set_u(const int i, const int j, double value); 
+		void set_u(const unsigned i, const unsigned j, double value); 
 		//Set the y-velocity in the mathematical point (i,j-1/2)
-		void set_v(const int i, const int j, double value);
+		void set_v(const unsigned i, const unsigned j, double value);
 		// Copy velocity field to temporary copy arrays
 		void set_uv_star();
 
 		//Set the pressure in the mathematical point(i,j)
-		void set_pressure(const int i, const int j, double value);
+		void set_pressure(const unsigned i, const unsigned j, double value);
 		// Reset all pressures
 		void set_pressure(const Eigen::VectorXd& p);
 		
 		//Set the weights for u in the mathematical point (i-1/2,j) 
-		void set_weights_u(const int i, const int j, double value);
+		void set_weights_u(const unsigned i, const unsigned j, double value);
 		//Set the weights for v in the mathematical point (i,j-1/2)
-		void set_weights_v(const int i, const int j, double value);
+		void set_weights_v(const unsigned i, const unsigned j, double value);
 		
 		// Set all grid velocities to zero for particle-to-grid transfer
 		void set_velocities_to_zero();
@@ -199,9 +199,9 @@ class Mac2d{
 		void set_weights_to_zero();
 		
 		//Set the cell with center (i,j) as a solid cell
-		void set_solid(const int i, const int j);
+		void set_solid(const unsigned i, const unsigned j);
 		//Set the cell with center (i,j) as a fluid cell
-		void set_fluid(const int i, const int j);
+		void set_fluid(const unsigned i, const unsigned j);
 		// Reset all cells to not contain any fluid
 		void reset_fluid();
 

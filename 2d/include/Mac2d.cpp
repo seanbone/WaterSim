@@ -33,57 +33,78 @@ double Mac2d::get_cell_sizey() {
 }
 
 //2. Velocities --------------------------------------------------------
-double Mac2d::get_u(const int i, const int j){
-	assert(i < (N_+1) && j < (M_) && "Index out of bounds!");
-	return *(pu_ + (N_+1)*j + i);
+double Mac2d::get_u(const unsigned i, const unsigned j){
+	if (i < (N_+1) && j < (M_) && "Index out of bounds!")
+		return *(pu_ + (N_+1)*j + i);
+	else 
+		return 0;
+	
 }
 
-double Mac2d::get_v(const int i, const int j){
-	assert(i < (N_) && j < (M_+1) && "Index out of bounds!");
-	return *(pv_ + N_*j + i);
+double Mac2d::get_v(const unsigned i, const unsigned j){
+	if (i < (N_) && j < (M_+1) && "Index out of bounds!")
+		return *(pv_ + N_*j + i);
+	else 
+		return 0;
 }
 
-double Mac2d::get_u_star(const int i, const int j) {
-	assert(i < (N_+1) && j < (M_) && "Index out of bounds!");
-	return *(pu_star_ + (N_+1)*j + i);
+double Mac2d::get_u_star(const unsigned i, const unsigned j) {
+	if (i < (N_+1) && j < (M_) && "Index out of bounds!")
+		return *(pu_star_ + (N_+1)*j + i);
+	else 
+		return 0;
 }
 
-double Mac2d::get_v_star(const int i, const int j) {
-	assert(i < (N_) && j < (M_+1) && "Index out of bounds!");
-	return *(pv_star_ + N_*j + i);
+double Mac2d::get_v_star(const unsigned i, const unsigned j) {
+	if (i < (N_) && j < (M_+1) && "Index out of bounds!")
+		return *(pv_star_ + N_*j + i);
+	else
+		return 0;
 }
 
 //3. Pressures ---------------------------------------------------------
-double Mac2d::get_pressure(const int i, const int j){
-	assert(i < N_ && j < M_ && "Index out of bounds!");
-	return *(ppressure_ + N_*j + i);
+double Mac2d::get_pressure(const unsigned i, const unsigned j){
+	if (i < N_ && j < M_ && "Index out of bounds!")
+		return *(ppressure_ + N_*j + i);
+	else 
+		return 0;
 }
 
 //4. Physical properties -----------------------------------------------
-bool Mac2d::is_solid(const int i, const int j){
-	assert(i < N_ && j < M_ && "Index out of bounds!");
-	return *(psolid_ + N_*j + i);
+bool Mac2d::is_solid(const unsigned i, const unsigned j){
+	if (i < N_ && j < M_ && "Index out of bounds!")
+		return *(psolid_ + N_*j + i);
+	else 
+		return 0;
 }
 
-bool Mac2d::is_fluid(const int i, const int j){
-	assert(i < N_ && j < M_ && "Index out of bounds!");
-	return *(pfluid_ + N_*j + i);
+bool Mac2d::is_fluid(const unsigned i, const unsigned j){
+	if (i < N_ && j < M_ && "Index out of bounds!")
+		return *(pfluid_ + N_*j + i);
+	else
+		return 0;
 }
 
-bool Mac2d::is_empty(const int i, const int j){
-	assert(i < N_ && j < M_ && "Index out of bounds!");
-	return (!is_fluid(i,j) && !is_solid(i,j));
+bool Mac2d::is_empty(const unsigned i, const unsigned j){
+	if (i < N_ && j < M_ && "Index out of bounds!")
+		return (!is_fluid(i,j) && !is_solid(i,j));
+	else 
+		return 0;
 }
 
 //5. Weights -----------------------------------------------------------
-double Mac2d::get_weights_u(const int i, const int j){
-	assert(i < (N_+1) && j < (M_) && "Index out of bounds!");
-	return *(pweights_u_ + (N_+1)*j + i);
+double Mac2d::get_weights_u(const unsigned i, const unsigned j){
+	if (i < (N_+1) && j < (M_) && "Index out of bounds!")
+		return *(pweights_u_ + (N_+1)*j + i);
+	else 
+		return 0;
 }
 
-double Mac2d::get_weights_v(const int i, const int j){
-	assert(i < (N_) && j < (M_+1) && "Index out of bounds!");
-	return *(pweights_v_ + N_*j + i);
+double Mac2d::get_weights_v(const unsigned i, const unsigned j){
+	if (i < (N_) && j < (M_+1) && "Index out of bounds!")
+		return *(pweights_v_ + N_*j + i);
+	else
+		return 0;
 }
 
 //6. Diagonal of A -----------------------------------------------------
@@ -109,14 +130,14 @@ Mac2d::Pair_t Mac2d::index_from_coord(const double x, const double y){
 //4) setters for the weights for the particle to grid;
 
 //1. Velocities --------------------------------------------------------
-void Mac2d::set_u(const int i, const int j, double value){
-	assert(i < (N_+1) && j < (M_) && "Index out of bounds!");
-	*(pu_ + (N_+1)*j + i) = value;
+void Mac2d::set_u(const unsigned i, const unsigned j, double value){
+	if (i < (N_+1) && j < (M_) && "Index out of bounds!")
+		*(pu_ + (N_+1)*j + i) = value;
 }
 
-void Mac2d::set_v(const int i, const int j, double value){
-	assert(i < (N_) && j < (M_+1) && "Index out of bounds!");
-	*(pv_ + N_*j + i) = value;
+void Mac2d::set_v(const unsigned i, const unsigned j, double value){
+	if (i < (N_) && j < (M_+1) && "Index out of bounds!")
+		*(pv_ + N_*j + i) = value;
 }
 
 void Mac2d::set_uv_star() {
@@ -130,9 +151,9 @@ void Mac2d::set_velocities_to_zero(){
 }
 
 //2. Pressures ---------------------------------------------------------
-void Mac2d::set_pressure(const int i, const int j, double value){
-	assert(i < N_ && j < M_ && "Index out of bounds!");
-	*(ppressure_ + N_*j + i) = value;
+void Mac2d::set_pressure(const unsigned i, const unsigned j, double value){
+	if (i < N_ && j < M_ && "Index out of bounds!")
+		*(ppressure_ + N_*j + i) = value;
 }
 
 void Mac2d::set_pressure(const Eigen::VectorXd& p) {
@@ -140,14 +161,14 @@ void Mac2d::set_pressure(const Eigen::VectorXd& p) {
 }
 
 //3. Physical properties -----------------------------------------------
-void Mac2d::set_solid(const int i, const int j){
-	assert(i < N_ && j < M_ && "Index out of bounds!");
-	*(psolid_ + N_*j + i) = true;
+void Mac2d::set_solid(const unsigned i, const unsigned j){
+	if (i < N_ && j < M_ && "Index out of bounds!")
+		*(psolid_ + N_*j + i) = true;
 }
 
-void Mac2d::set_fluid(const int i, const int j){
-	assert(i < N_ && j < M_ && "Index out of bounds!");
-	*(pfluid_ + N_*j + i) = true;
+void Mac2d::set_fluid(const unsigned i, const unsigned j){
+	if (i < N_ && j < M_ && "Index out of bounds!")
+		*(pfluid_ + N_*j + i) = true;
 }
 
 void Mac2d::reset_fluid() {
@@ -155,17 +176,18 @@ void Mac2d::reset_fluid() {
 }
 
 //4. Weights -----------------------------------------------------------
-void Mac2d::set_weights_u(const int i, const int j, double value){
-	assert(i < (N_+1) && j < (M_) && "Index out of bounds!");
-	*(pweights_u_ + (N_+1)*j + i) = value;
+void Mac2d::set_weights_u(const unsigned i, const unsigned j, double value){
+	if (i < (N_+1) && j < (M_) && "Index out of bounds!")
+		*(pweights_u_ + (N_+1)*j + i) = value;
 }
 
-void Mac2d::set_weights_v(const int i, const int j, double value){
-	assert(i < (N_) && j < (M_+1) && "Index out of bounds!");
-	*(pweights_v_ + N_*j + i) = value;
+void Mac2d::set_weights_v(const unsigned i, const unsigned j, double value){
+	if (i < (N_) && j < (M_+1) && "Index out of bounds!")
+		*(pweights_v_ + N_*j + i) = value;
 }
 
 void Mac2d::set_weights_to_zero(){
 	std::fill(pweights_u_, pweights_u_ + (N_+1)*M_, 0);
 	std::fill(pweights_v_, pweights_v_ + (M_+1)*N_, 0);
 }
+

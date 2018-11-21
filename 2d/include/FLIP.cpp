@@ -151,8 +151,8 @@ void FLIP::compute_velocity_field() {
 					if ( ( i <= nx and j < ny ) ){
 					
 						// Left edge
-						grid_coord(0) = i * cell_sizex;
-						grid_coord(1) = (j + 0.5) * cell_sizey;
+						grid_coord(0) = (i - 0.5) * cell_sizex;
+						grid_coord(1) = j * cell_sizey;
 						accumulate_u(pos, vel, grid_coord, h, i, j);
 					}
 					

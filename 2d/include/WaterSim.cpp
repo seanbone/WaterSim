@@ -30,7 +30,7 @@ void WaterSim::init(WaterSim::viewer_t& viewer) {
     Eigen::VectorXd rnd = Eigen::VectorXd::Random(2*m_num_particles);
 
     for (unsigned x = 3; x < (nx/2)+2; x++) {
-        for (unsigned y = ny-(ny/2); y < ny-1; y++) {
+        for (unsigned y = 1; y < ny/2; y++) {
             // Populate cell (x,y)
             double cx = x * sx;
             double cy = y * sy;
@@ -152,7 +152,7 @@ void WaterSim::updateRenderGeometry() {
         }
     }
 
-    igl::jet(pressures, true, m_renderC);
+    //igl::jet(pressures, true, m_renderC);
 
     std::cout << "\n*************\n";
     std::cout << "Pressure at (7, 0): " << p_mac_grid->get_pressure(7, 0) << std::endl;

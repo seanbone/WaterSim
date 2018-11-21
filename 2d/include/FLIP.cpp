@@ -8,7 +8,7 @@ FLIP::FLIP(Particle* particles, const unsigned num_particles, Mac2d* MACGrid)
 /**
  * Advance FLIP simulation by one frame
  */
-void FLIP::step_FLIP(const double dt, const double time, const unsigned long step) {
+void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	/** One FLIP step:
 	 * 1. Compute velocity field (particle-to-grid transfer)
 	 *    - Particle-to-grid transfer
@@ -22,35 +22,72 @@ void FLIP::step_FLIP(const double dt, const double time, const unsigned long ste
 	 * 6. Update particle positions
 	 */
 
-	// TODO: subsample time interval to satisfy CFL condition
-	double cur_time = time;
+	// 0. subsample time interval to satisfy CFL condition
+	double dt_new = compute_timestep(dt);
+	double num_substeps = int((dt/dt_new) + 1);
+	std::cout << num_substeps << "<---------------" << std::endl;
+	for( int s = 0; s < num_substeps ; ++s ){
+		
+		// 1.
+		advance_particles(dt_new, step);
 
-	//std::cout << MACGrid_->get_v(10, 40) << "\n\n";
-	// 1.
-	compute_velocity_field();
+		// 2.
+		compute_velocity_field();
 
-	// 1a.
-	MACGrid_->set_uv_star();
+		// 2a.
+		MACGrid_->set_uv_star();
 
-	//std::cout << MACGrid_->get_v(10, 40) << "\n\n";
-	//std::cout << particles_->get_velocity() << std::endl;
-	//std::cout << ".....\n";
-	// 2.
-	apply_forces(dt);
+		// 3.
+		apply_forces(dt_new);
 
-	// 3.
-	apply_boundary_conditions();
+		// 4.
+		apply_boundary_conditions();
 
-	// 4.
-	do_pressures(dt);
+		// 5.
+		do_pressures(dt_new);
 
-	//~ std::cout << "Pressure for cell (5, 1): " << MACGrid_->get_pressure(5, 1) << std::endl;
+		// 6.
+		grid_to_particle();
+	}
+}
 
-	// 5.
-	grid_to_particle();
-
-	// 6.
-	advance_particles(dt, step);
+double FLIP::compute_timestep( const double dt ){
+	double dt_new;
+	
+	Eigen::Vector3d vel;
+	double u_max;
+	double v_max;
+	for( unsigned int n = 0; n < num_particles_; ++n ){
+		vel = (particles_ + n)->get_velocity();
+		if ( vel(0) > u_max ){
+			u_max = vel(0);
+		}
+		else if ( vel(1) > v_max ){
+			v_max = vel(1);
+		}
+	}
+	
+	if ( u_max == 0 ){
+		dt_new = dt;
+	} else {
+		dt_new = std::abs(MACGrid_->get_cell_sizex()/u_max);
+	}
+	
+	if ( v_max == 0 ){
+		if ( dt_new > dt){
+			dt_new = dt;
+		}
+	} else {
+		double tmp = std::abs(MACGrid_->get_cell_sizex()/u_max);
+		if ( tmp < dt_new){
+			dt_new = tmp;
+		}
+		else if ( dt_new > dt ){
+			dt_new = dt;
+		}
+	}
+	
+	return dt_new;
 }
 
 /*** COMPUTE VELOCITY FIELD ***/
@@ -265,8 +302,6 @@ void FLIP::do_pressures(const double dt) {
 	//   3b. Compute rhs d
 	compute_pressure_rhs(dt);
 
-	std::cout << "nnz: " << A_.nonZeros() << std::endl;
-
 	//   3c. Solve for p: Ap = d (MICCG(0))
 	// *TODO: use MICCG(0) solver
 	using namespace Eigen;
@@ -293,11 +328,7 @@ void FLIP::do_pressures(const double dt) {
 
 	//  3d. Apply pressure gradients to velocity field
 	//     -> see SIGGRAPH §4
-	//~ std::cout << "v before" << std::endl;
-	//~ std::cout << particles_->get_velocity() << std::endl;
 	apply_pressure_gradients(dt);
-	//~ std::cout << "v after" << std::endl;
-	//~ std::cout << particles_->get_velocity() << std::endl;
 
 	// Note: boundary conditions are handles here by setting the pressures
 	//    such that no particle exits the system.
@@ -352,7 +383,6 @@ void FLIP::compute_pressure_matrix() {
 	A_.setZero();
 	A_.resize(num_fluid_cells, num_fluid_cells);
 	A_.setFromTriplets(triplets.begin(), triplets.end());
-	//~ std::cout << "nnz: " << A_.nonZeros() << std::endl;
 }
 
 void FLIP::compute_pressure_rhs(const double dt) {
@@ -566,13 +596,13 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 			// Leapfrog
 			pos_next = pos_prev + 2*dt*vel;
 		}
-		if (n == 0) {
-			std::cout << "pos_prev:\n" << pos_prev;
-			std::cout << "\npos_curr:\n" << pos_curr;
-			std::cout << "\npos_next:\n" << pos_next;
-			std::cout << "\nvel:\n" << vel;
-			std::cout << "\n------------\n";
-		}
+		//~ if (n == 0) {
+			//~ std::cout << "pos_prev:\n" << pos_prev;
+			//~ std::cout << "\npos_curr:\n" << pos_curr;
+			//~ std::cout << "\npos_next:\n" << pos_next;
+			//~ std::cout << "\nvel:\n" << vel;
+			//~ std::cout << "\n------------\n";
+		//~ }
 		
 		double x = pos_next(0);
 		double y = pos_next(1);

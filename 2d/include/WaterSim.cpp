@@ -133,9 +133,6 @@ void WaterSim::updateRenderGeometry() {
     for (unsigned i = 0; i < m_num_particles; i++) {
         m_particles.row(i) = flip_particles[i].get_position();//.transpose();
     }
-    //std::cout << flip_particles[0].get_velocity() << std::endl;
-//    std::cout << m_particles(0, 1) << std::endl;
-    //std::cout << "-------------------" << std::endl;
 
     m_particle_colors.resize(m_num_particles, 3);
     m_particle_colors.setZero();
@@ -152,7 +149,7 @@ void WaterSim::updateRenderGeometry() {
         }
     }
 
-    igl::jet(pressures, true, m_renderC);
+    //~ igl::jet(pressures, true, m_renderC);
 
     std::cout << "\n*************\n";
     std::cout << "Pressure at (7, 0): " << p_mac_grid->get_pressure(7, 0) << std::endl;
@@ -171,7 +168,7 @@ void WaterSim::updateRenderGeometry() {
 
 bool WaterSim::advance() {
     // Perform a FLIP step
-    p_flip->step_FLIP(m_dt, m_time, m_step);
+    p_flip->step_FLIP(m_dt, m_step);
     
     // advance step
     m_step++;

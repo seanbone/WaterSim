@@ -584,6 +584,7 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 		Mac2d::Pair_t new_indices = MACGrid_->index_from_coord(pos_next(0), pos_next(1));
 		double sx = MACGrid_->get_cell_sizex();
 		double sy = MACGrid_->get_cell_sizey();
+		//TODO: correctly shift particles & velocities
 		if (MACGrid_->is_solid(new_indices.first, new_indices.second)) {
 			if (prev_indices.first  > new_indices.first)
 				pos_next(0) = (prev_indices.first - 0.25) * sx;
@@ -596,7 +597,6 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 				pos_next(1) = (prev_indices.second + 0.25) * sy;
 		} else {
 			//(particles_ + n)->set_velocity(vel(0), 0, vel(2));
-			//TODO: correctly shift particles & velocities
 		}
 		(particles_ + n)->set_position(pos_next);
 	}

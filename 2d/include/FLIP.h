@@ -84,10 +84,16 @@ class FLIP {
 					   const int j );
 					   
 	// Normalize accumulated horizontal velocities
-	void normalize_accumulated_u();
+	void normalize_accumulated_u( bool* const visited_u );
 	
 	// Normalize accumulated vertical velocities
-	void normalize_accumulated_v();
+	void normalize_accumulated_v( bool* const visited_v );
+	
+	// Extrapolate horizontal velocities into air cells
+	void extrapolate_u( const bool* const visited_u );
+	
+	// Extrapolate vertical velocities into air cells
+	void extrapolate_v( const bool* const visited_v );
 	
 	// Apply external forces to velocities on grid
 	void apply_forces(const double dt);

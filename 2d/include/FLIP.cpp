@@ -21,33 +21,33 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	 * 5. Update particle velocities
 	 * 6. Update particle positions
 	 */
+	
+	// 1.
+	compute_velocity_field();
 
-	// 0. subsample time interval to satisfy CFL condition
+	// 1a.
+	MACGrid_->set_uv_star();
+
+	// 2.
+	apply_forces(dt);
+
+	// 3.
+	apply_boundary_conditions();
+
+	// 4.
+	do_pressures(dt);
+	
+	// 5.
+	grid_to_particle();
+	
+	// 6. subsample time interval to satisfy CFL condition
 	double dt_new = compute_timestep(dt);
 	double num_substeps = std::ceil(dt/dt_new);
 	std::cout << num_substeps << "<---------------" << std::endl;
 	for( int s = 0; s < num_substeps ; ++s ){
 		
-		// 1.
+		// 7.
 		advance_particles(dt_new, step);
-
-		// 2.
-		compute_velocity_field();
-
-		// 2a.
-		MACGrid_->set_uv_star();
-
-		// 3.
-		apply_forces(dt_new);
-
-		// 4.
-		apply_boundary_conditions();
-
-		// 5.
-		do_pressures(dt_new);
-
-		// 6.
-		grid_to_particle();
 	}
 }
 
@@ -122,6 +122,18 @@ void FLIP::compute_velocity_field() {
 	int h_scaledx = h/cell_sizex;
 	int h_scaledy = h/cell_sizey;
 	
+	// Lists of flags for visited grid-velocities: 1 -> visited
+	unsigned N = MACGrid_->get_num_cells_x();
+	unsigned M = MACGrid_->get_num_cells_y();
+	bool* visited_u = new bool[M*(N+1)];
+	bool* visited_v = new bool[N*(M+1)];
+	for( unsigned i = 0; i < M*(N+1); ++i ){
+		*(visited_u + i) = 0;
+	}
+	for( unsigned i = 0; i < N*(M+1); ++i ){
+		*(visited_v + i) = 0;
+	}
+	
 	// Reset all fluid flags
 	MACGrid_->reset_fluid();
 	
@@ -129,8 +141,8 @@ void FLIP::compute_velocity_field() {
 	// to grid points within a threshold h (in this case equal to the 
 	// length of an edge of a cell)
 	for( unsigned int n = 0; n < num_particles_; ++n ){
-		pos = (*(particles_ + n)).get_position();
-		vel = (*(particles_ + n)).get_velocity();
+		pos = (particles_ + n)->get_position();
+		vel = (particles_ + n)->get_velocity();
 		
 		Mac2d::Pair_t tmp = MACGrid_->index_from_coord(pos(0), pos(1));
 		cell_coord << tmp.first, tmp.second, 0;
@@ -168,8 +180,15 @@ void FLIP::compute_velocity_field() {
 	}
 	
 	// Normalize grid-velocities
-	normalize_accumulated_u();
-	normalize_accumulated_v();
+	normalize_accumulated_u( visited_u );
+	normalize_accumulated_v( visited_v );
+	
+	// Extrapolate velocities
+	extrapolate_u( visited_u );
+	extrapolate_v( visited_v );
+	
+	delete[] visited_u;
+	delete[] visited_v;
 }
 
 bool FLIP::check_threshold( const Eigen::Vector3d& particle_coord, 
@@ -237,7 +256,7 @@ void FLIP::accumulate_v( const Eigen::Vector3d& pos,
 	}
 }
 
-void FLIP::normalize_accumulated_u(){
+void FLIP::normalize_accumulated_u( bool* const visited_u ){
 	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned N = MACGrid_->get_num_cells_x();
 	for( unsigned j = 0; j < M; ++j ){
@@ -247,12 +266,13 @@ void FLIP::normalize_accumulated_u(){
 				double u_prev = MACGrid_->get_u(i, j);
 				double u_curr = u_prev/W_u;
 				MACGrid_->set_u(i, j, u_curr);
+				*(visited_u + (N+1)*j + i) = 1;
 			}
 		}	
 	}	
 }
 
-void FLIP::normalize_accumulated_v(){
+void FLIP::normalize_accumulated_v( bool* const visited_v ){
 	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned N = MACGrid_->get_num_cells_x();
 	for( unsigned j = 0; j < M+1; ++j ){
@@ -262,11 +282,75 @@ void FLIP::normalize_accumulated_v(){
 				double v_prev = MACGrid_->get_v(i, j);
 				double v_curr = v_prev/W_v;
 				MACGrid_->set_v(i, j, v_curr);
+				*(visited_v + N*j + i) = 1;
 			}
 		}	
 	}	
 }
 
+void FLIP::extrapolate_u( const bool* const visited_u ){
+	// Do the cases for upper and right bound
+	unsigned M = MACGrid_->get_num_cells_y();
+	unsigned N = MACGrid_->get_num_cells_x();
+	for( unsigned j = 0; j < M; ++j ){
+		for( unsigned i = 0; i < N+1; ++i ){
+			if ( *(visited_u + (N+1)*j + i) ){
+				if ( i != 0 ){
+					if ( !(*(visited_u + (N+1)*j + (i-1))) ){
+						MACGrid_->set_u(i-1, j, MACGrid_->get_u(i, j));
+					}
+				}
+				else if ( j != 0 ){
+					if ( !(*(visited_u + (N+1)*(j-1) + i)) ){
+						MACGrid_->set_u(i, j-1, MACGrid_->get_u(i, j));
+					}
+				}
+				else if ( i != N ){
+					if ( !(*(visited_u + (N+1)*j + (i+1))) ){
+						MACGrid_->set_u(i+1, j, MACGrid_->get_u(i, j));
+					}
+				}
+				else if ( j != M-1 ){
+					if ( !(*(visited_u + (N+1)*(j+1) + i)) ){
+						MACGrid_->set_u(i, j+1, MACGrid_->get_u(i, j));
+					}
+				}
+			}
+		}
+	}
+}
+
+void FLIP::extrapolate_v( const bool* const visited_v ){
+	// Do the cases for upper and right bound
+	unsigned M = MACGrid_->get_num_cells_y();
+	unsigned N = MACGrid_->get_num_cells_x();
+	for( unsigned j = 0; j < M+1; ++j ){
+		for( unsigned i = 0; i < N; ++i ){
+			if ( *(visited_v + N*j + i) ){
+				if ( i != 0 ){
+					if ( !(*(visited_v + N*j + (i-1))) ){
+						MACGrid_->set_v(i-1, j, MACGrid_->get_v(i, j));
+					}
+				}
+				else if ( j != 0 ){
+					if ( !(*(visited_v + N*(j-1) + i)) ){
+						MACGrid_->set_v(i, j-1, MACGrid_->get_v(i, j));
+					}
+				}
+				else if ( i != N-1 ){
+					if ( !(*(visited_v + N*j + (i+1))) ){
+						MACGrid_->set_v(i+1, j, MACGrid_->get_v(i, j));
+					}
+				}
+				else if ( j != M ){
+					if ( !(*(visited_v + N*(j+1) + i)) ){
+						MACGrid_->set_v(i, j+1, MACGrid_->get_v(i, j));
+					}
+				}
+			}
+		}
+	}
+}
 
 /*** APPLY EXTERNAL FORCES ***/
 void FLIP::apply_forces(const double dt) {

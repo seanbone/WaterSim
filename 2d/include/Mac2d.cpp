@@ -12,6 +12,9 @@
 //7) getters for the indices of the cell to which a particle belong.
 
 //1. Layout properties of the grid -------------------------------------
+Eigen::Vector3d Mac2d::get_grid_size() const {
+	return Eigen::Vector3d(sizex_, sizey_, 0.);
+}
 unsigned Mac2d::get_num_cells_x() {
 	return N_;
 }

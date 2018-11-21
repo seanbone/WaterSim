@@ -143,6 +143,8 @@ class Mac2d{
 		}
 		
 		//GETS
+		// Get size of the full grid
+		Eigen::Vector3d get_grid_size() const;
 		//Get the x-velocity in the mathematical point (i-1/2,j) 
 		double get_u(const unsigned i, const unsigned j);
 		//Get the y-velocity in the mathematical point (i,j-1/2)

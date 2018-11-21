@@ -628,64 +628,48 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 		double x = pos_next(0);
 		double y = pos_next(1);
 		//Check if the particle exits the grid
-		double size_x = MACGrid_->get_cell_sizex() * MACGrid_->get_num_cells_x();
-		double size_y = MACGrid_->get_cell_sizey() * MACGrid_->get_num_cells_y();
-		//~ if(x < 0) {
-			//~ pos_next(0) = 0;
-			//~ vel(0) = 0;
-		//~ }
-		//~ if(x > size_x) {
-			//~ pos_next(0) = size_x;
-			//~ vel(0) = 0;
-		//~ }
-		//~ if(y < 0) {
-			//~ pos_next(1) = 0;
-			//~ vel(1) = 0;
-		//~ }
-		//~ if(y > size_y) {
-			//~ pos_next(1) = size_y;
-			//~ vel(1) = 0;
-		//~ }
-		//~ (particles_ + n)->set_velocity(vel);
+		double size_x = MACGrid_->get_grid_size()(0);
+		double size_y = MACGrid_->get_grid_size()(1);
 		
-		if(x < 0) {
-			pos_next(0) = MACGrid_->get_cell_sizex() * 0.25;
-			//vel(0) = 0;
+		if (x < 0) {
+			pos_next(0) = 0.;
 		}
-		if(x > size_x) {
-			pos_next(0) = size_x - MACGrid_->get_cell_sizex() * 0.25;
-			//vel(0) = 0;
+		if (x > size_x) {
+			pos_next(0) = size_x - MACGrid_->get_cell_sizex() * 0.5;
 		}
-		if(y < 0) {
-			pos_next(1) = MACGrid_->get_cell_sizey() * 0.25;
-			//vel(1) = 0;
+		if (y < 0) {
+			pos_next(1) = MACGrid_->get_cell_sizey() * 0.5;
 		}
-		if(y > size_y) {
-			pos_next(1) = size_y - MACGrid_->get_cell_sizey() * 0.25;
-			//vel(1) = 0;
+		if (y > size_y) {
+			pos_next(1) = size_y - MACGrid_->get_cell_sizey() * 0.5;
 		}
-		//(particles_ + n)->set_velocity(vel);
-		
+
+		// If a particle is in a solid, move it to the closest fluid cell
+		/*auto new_indices = MACGrid_->index_from_coord(pos_next(0), pos_next(1));
+		if (MACGrid_->is_solid(new_indices.first, new_indices.second)) {
+			// TODO: compute closest fluid cell
+			// TODO: move particle to that cell
+		}
+		*/
 
 		//Check if the particle enters in a solid
-		//Mac2d::Pair_t prev_indices = MACGrid_->index_from_coord(pos_curr(0),pos_curr(1));
-		//Mac2d::Pair_t new_indices = MACGrid_->index_from_coord(pos_next(0), pos_next(1));
-		//double sx = MACGrid_->get_cell_sizex();
-		//double sy = MACGrid_->get_cell_sizey();
-		////TODO: correctly shift particles & velocities
-		//if (MACGrid_->is_solid(new_indices.first, new_indices.second)) {
-		//	if (prev_indices.first  > new_indices.first)
-		//		pos_next(0) = (prev_indices.first - 0.25) * sx;
-		//	else if (prev_indices.first < new_indices.first)
-		//		pos_next(0) = (prev_indices.first + 0.25) * sx;
+		Mac2d::Pair_t prev_indices = MACGrid_->index_from_coord(pos_curr(0),pos_curr(1));
+		Mac2d::Pair_t new_indices = MACGrid_->index_from_coord(pos_next(0), pos_next(1));
+		double sx = MACGrid_->get_cell_sizex();
+		double sy = MACGrid_->get_cell_sizey();
+		//TODO: correctly shift particles & velocities
+		if (MACGrid_->is_solid(new_indices.first, new_indices.second)) {
+			if (prev_indices.first  > new_indices.first)
+				pos_next(0) = (prev_indices.first - 0.25) * sx;
+			else if (prev_indices.first < new_indices.first)
+				pos_next(0) = (prev_indices.first + 0.25) * sx;
 
-		//	if (prev_indices.second > new_indices.second)
-		//		pos_next(1) = (prev_indices.second - 0.25) * sy;
-		//	else if (prev_indices.second < new_indices.second)
-		//		pos_next(1) = (prev_indices.second + 0.25) * sy;
-		//} else {
-		//	//~ (particles_ + n)->set_velocity(vel(0), 0, vel(2));
-		//}
+			if (prev_indices.second > new_indices.second)
+				pos_next(1) = (prev_indices.second - 0.25) * sy;
+			else if (prev_indices.second < new_indices.second)
+				pos_next(1) = (prev_indices.second + 0.25) * sy;
+		}
+
 		(particles_ + n)->set_position(pos_next);
 	}
 }

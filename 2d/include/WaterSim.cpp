@@ -152,7 +152,20 @@ void WaterSim::updateRenderGeometry() {
         }
     }
 
-    //~ igl::jet(pressures, true, m_renderC);
+//    igl::jet(pressures, true, m_renderC);
+
+    std::cout << "\n*************\n";
+    std::cout << "Pressure at (7, 0): " << p_mac_grid->get_pressure(7, 0) << std::endl;
+    std::cout << "Pressure at (7, 1): " << p_mac_grid->get_pressure(7, 1) << std::endl;
+    std::cout << "U velocity at (6.5, 1): " << p_mac_grid->get_u(7, 1) << std::endl;
+    std::cout << "V velocity at (6.5, 1): " << p_mac_grid->get_v(7, 1) << std::endl;
+    std::cout << "U* velocity at (6.5, 1): " << p_mac_grid->get_u_star(7, 1) << std::endl;
+    std::cout << "V* velocity at (6.5, 1): " << p_mac_grid->get_v_star(7, 1) << std::endl;
+    std::cout << "X of particle 0: " << flip_particles->get_position()(0) << std::endl;
+    std::cout << "Y of particle 0: " << flip_particles->get_position()(1) << std::endl;
+    std::cout << "U of particle 0: " << flip_particles->get_velocity()(0) << std::endl;
+    std::cout << "V of particle 0: " << flip_particles->get_velocity()(1) << std::endl;
+    std::cout << "\n*************\n";
 }
 
 

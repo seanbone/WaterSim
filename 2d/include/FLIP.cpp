@@ -262,12 +262,20 @@ void FLIP::do_pressures(const double dt) {
 	VectorXd p = solver.solve(d_);
 
 	// Copy pressures to MAC grid
-	//~ for( int j = 0; j < MACGrid_->get_num_cells_y(); ++j ){
-		//~ for( int i = 0; i < MACGrid_->get_num_cells_x(); ++i ){
-			//~ if ()
-	MACGrid_->set_pressure(p);
-		//~ }
-	//~ }
+	//MACGrid_->set_pressure(p);
+	
+	unsigned nx = MACGrid_->get_num_cells_x();
+	unsigned ny = MACGrid_->get_num_cells_y();
+	unsigned cellidx = 0;
+	for (unsigned j = 0; j < ny; j++) {
+		for (unsigned i = 0; i < nx; i++) {
+			if (MACGrid_->is_fluid(i, j)) {
+				MACGrid_->set_pressure(i, j, p(cellidx));
+			} else {
+				MACGrid_->set_pressure(i, j, 0);
+			} // is_fluid(i,j)
+		}
+	}
 
 	//  3d. Apply pressure gradients to velocity field
 	//     -> see SIGGRAPH §4
@@ -290,32 +298,45 @@ void FLIP::compute_pressure_matrix() {
 	unsigned nx = MACGrid_->get_num_cells_x();
 	unsigned ny = MACGrid_->get_num_cells_y();
 
+
+	unsigned num_fluid_cells = 0;
+	for (unsigned j = 0; j < ny; j++) {
+		for (unsigned i = 0; i < nx; i++) {
+			if (MACGrid_->is_fluid(i, j))
+				num_fluid_cells++;
+		}
+	}
+
+	unsigned cellidx = 0;
 	// *TODO: reduce matrix size from (N*M)x(N*M) to (#fluidcells)x(#fluidcells)
 	for (unsigned j = 0; j < ny; j++) {
 		for (unsigned i = 0; i < nx; i++) {
 			if (MACGrid_->is_fluid(i, j)) {
 				// Copy diagonal entry
-				triplets.push_back(MACGrid_->get_a_diag()[i + j*nx]);
+				auto diag_e = MACGrid_->get_a_diag()[i + j*nx];
+				triplets.push_back(Mac2d::Triplet_t(cellidx, cellidx, diag_e.value()));
 				
 				// Compute off-diagonal entries
 				// x-adjacent cells
-				if (i < nx-1 && MACGrid_->is_fluid(i+1, j)) {
-						triplets.push_back(Mac2d::Triplet_t(i+j*ny, i+1+j*ny, -1));
+				if (cellidx+1 < num_fluid_cells && MACGrid_->is_fluid(i+1, j)) {
+						triplets.push_back(Mac2d::Triplet_t(cellidx, cellidx+1, -1));
 						// Use symmetry to avoid computing (i-1,j) separately
-						triplets.push_back(Mac2d::Triplet_t(i+1+j*ny, i+j*ny, -1));
+						triplets.push_back(Mac2d::Triplet_t(cellidx+1, cellidx, -1));
 				}
 				// y-adjacent cells
-				if (j < ny-1 && MACGrid_->is_fluid(i, j+1)) {
-						triplets.push_back(Mac2d::Triplet_t(i+j*ny, i+(j+1)*ny, -1));
+				if (cellidx+ny < num_fluid_cells && MACGrid_->is_fluid(i, j+1)) {
+						triplets.push_back(Mac2d::Triplet_t(cellidx, cellidx + ny, -1));
 						// Use symmetry to avoid computing (i,j-1) separately
-						triplets.push_back(Mac2d::Triplet_t(i+(j+1)*ny, i+j*ny, -1));
+						triplets.push_back(Mac2d::Triplet_t(cellidx + ny, cellidx, -1));
 				}
+
+				cellidx++;
 			} // if is_fluid(i,j)
 		}
 	} // outer for
 
 	A_.setZero();
-	A_.resize(nx*ny, nx*ny);
+	A_.resize(num_fluid_cells, num_fluid_cells);
 	A_.setFromTriplets(triplets.begin(), triplets.end());
 	//~ std::cout << "nnz: " << A_.nonZeros() << std::endl;
 }
@@ -325,14 +346,23 @@ void FLIP::compute_pressure_rhs(const double dt) {
 	//  See eq. (4.19) and (4.24) in SIGGRAPH notes
 	unsigned nx = MACGrid_->get_num_cells_x();
 	unsigned ny = MACGrid_->get_num_cells_y();
-	d_.setZero();
-	d_.resize(nx*ny);
 
 	// Alias for MAC grid
 	auto& g = MACGrid_;
 
+	unsigned num_fluid_cells = 0;
+	for (unsigned j = 0; j < ny; j++) {
+		for (unsigned i = 0; i < nx; i++) {
+			if (MACGrid_->is_fluid(i, j))
+				num_fluid_cells++;
+		}
+	}
+
+	d_.setZero();
+	d_.resize(num_fluid_cells);
+	
 	// *TODO: reduce vector size from (N*M) to (#fluidcells)
-	unsigned idx = 0;
+	unsigned cellidx = 0;
 	for (unsigned j = 0; j < ny; j++) {
 		for (unsigned i = 0; i < nx; i++) {
 			if (g->is_fluid(i,j)) {
@@ -360,11 +390,10 @@ void FLIP::compute_pressure_rhs(const double dt) {
 				}
 	
 				// *TODO: cell x and y size should always be the same -> enforce via sim params?
-				d_(idx) = fluid_density_ * dt * d_ij / g->get_cell_sizex();
-			} else {
-				d_(idx) = 0;
-			}
-			idx++;
+				d_(cellidx) = fluid_density_ * g->get_cell_sizex() * d_ij / dt;
+
+				cellidx++;
+			} // if is_fluid(i,j)
 		}
 	}
 }
@@ -403,8 +432,7 @@ void FLIP::apply_pressure_gradients(const double dt) {
 void FLIP::grid_to_particle(){
 	// FLIP grid to particle transfer
 	//  -> See slides Fluids II, FLIP_explained.pdf
-	//  Pure PIC:
-	double alpha = 1.;
+	double alpha = 0.0;
 	
 	for(int i = 0; i < num_particles_; ++i){
 		//Store the initial positions and velocities of the particles
@@ -524,13 +552,13 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 			// Leapfrog
 			pos_next = pos_prev + 2*dt*vel;
 		}
-		//if (n == 0) {
-		//	std::cout << "pos_prev:\n" << pos_prev;
-		//	std::cout << "\npos_curr:\n" << pos_curr;
-		//	std::cout << "\npos_next:\n" << pos_next;
-		//	std::cout << "\nvel:\n" << vel;
-		//	std::cout << "\n------------\n";
-		//}
+		if (n == 0) {
+			std::cout << "pos_prev:\n" << pos_prev;
+			std::cout << "\npos_curr:\n" << pos_curr;
+			std::cout << "\npos_next:\n" << pos_next;
+			std::cout << "\nvel:\n" << vel;
+			std::cout << "\n------------\n";
+		}
 		
 		double x = pos_next(0);
 		double y = pos_next(1);
@@ -553,15 +581,28 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 			pos_next(1) = size_y;
 			vel(1) = 0;
 		}
-		(particles_ + n)->set_velocity(vel);
+		//(particles_ + n)->set_velocity(vel);
 		
 		//Check if the particle enters in a solid
-		Mac2d::Pair_t indices = MACGrid_->index_from_coord(x,y);
-		if (!MACGrid_->is_solid(indices.first, indices.second)) {
-			(particles_ + n)->set_position(pos_next);
+		Mac2d::Pair_t prev_indices = MACGrid_->index_from_coord(pos_curr(0),pos_curr(1));
+		Mac2d::Pair_t new_indices = MACGrid_->index_from_coord(pos_next(0), pos_next(1));
+		double sx = MACGrid_->get_cell_sizex();
+		double sy = MACGrid_->get_cell_sizey();
+		//TODO: correctly shift particles & velocities
+		if (MACGrid_->is_solid(new_indices.first, new_indices.second)) {
+			if (prev_indices.first  > new_indices.first)
+				pos_next(0) = (prev_indices.first - 0.25) * sx;
+			else if (prev_indices.first < new_indices.first)
+				pos_next(0) = (prev_indices.first + 0.25) * sx;
+
+			if (prev_indices.second > new_indices.second)
+				pos_next(1) = (prev_indices.second - 0.25) * sy;
+			else if (prev_indices.second < new_indices.second)
+				pos_next(1) = (prev_indices.second + 0.25) * sy;
 		} else {
-			(particles_ + n)->set_velocity(0, 0, 0);
+			//(particles_ + n)->set_velocity(vel(0), 0, vel(2));
 		}
+		(particles_ + n)->set_position(pos_next);
 	}
 }
 

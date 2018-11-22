@@ -1,7 +1,9 @@
 #include "FLIP.h"
 
-FLIP::FLIP(Particle* particles, const unsigned num_particles, Mac2d* MACGrid) 
-	: particles_(particles), num_particles_(num_particles), MACGrid_(MACGrid) {
+FLIP::FLIP(Particle* particles, const unsigned num_particles, Mac2d* MACGrid,
+		   const double density, const double gravity) 
+	: particles_(particles), num_particles_(num_particles), MACGrid_(MACGrid),
+	  fluid_density_(density), gravity_mag_(gravity) {
 	
 }
 
@@ -364,7 +366,7 @@ void FLIP::apply_forces(const double dt) {
 	// Iterate over cells & update: dv = dt*g
 	for (unsigned j = 0; j <= M; j++) {
 		for (unsigned i = 0; i < N; i++) {
-			g->set_v(i, j, g->get_v(i,j) + dt*gravity_mag_);
+			g->set_v(i, j, g->get_v(i,j) - dt*gravity_mag_);
 		}
 	}
 }

@@ -93,8 +93,6 @@ class Gui {
 
     void singleStep();
 
-    void resetSimulation();
-
     void exportRecording();
 
     void clearScreen();
@@ -142,6 +140,8 @@ class Gui {
 
    protected:
     igl::opengl::glfw::Viewer m_viewer;
+
+    virtual void resetSimulation();
 
 };
 

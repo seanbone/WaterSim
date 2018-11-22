@@ -1,20 +1,145 @@
 #include "WaterSim.h"
 
 
-// WaterSim(viewer_t& viewer, const int res_x, const int res_y, const double len_x, const double len_y);
 WaterSim::WaterSim(WaterSim::viewer_t& viewer,
         const int res_x, const int res_y,
-        const double len_x, const double len_y)
-        : Simulation(), p_mac_grid(new Mac2d(res_x, res_y, len_x, len_y)) {
+        const double len_x, const double len_y,
+        const double density, const double gravity, const bool show_pressures)
+        : Simulation(), p_viewer(&viewer), m_res_x(res_x), m_res_y(res_y),
+          m_len_x(len_y), m_len_y(len_y), m_fluid_density_(density),
+          m_gravity_mag_(gravity), m_show_pressures(show_pressures) {
 
-    init(viewer);
+    init();
 }
 
 
-void WaterSim::init(WaterSim::viewer_t& viewer) {
-    
+void WaterSim::init() {
+    WaterSim::viewer_t& viewer = *p_viewer;
+
+    // Initialize MAC grid
+    initMacGrid();
+
     // Initialize particles
-    // Fill top left of box with flip particles
+    initParticles();
+
+    // Initialize FLIP object
+    initFLIP();
+    
+    // Index of ViewerData instance dedicated to particles
+    m_particles_data_idx = viewer.append_mesh();
+    
+    // Generate visualization mesh based on Mac2d
+    initMacViz();
+
+    // Index of ViewerData instance dedicated to MAC grid
+    m_grid_data_idx = viewer.append_mesh();
+    
+    // Update rendering geometry
+    updateRenderGeometry();
+}
+
+
+/*
+ * Reset class variables to reset the simulation.
+ */
+void WaterSim::resetMembers() {
+    // MAC grid
+    delete p_mac_grid;
+    initMacGrid();
+
+    p_viewer->data_list[m_grid_data_idx].clear();
+    initMacViz();
+
+    // Particles
+    delete [] flip_particles;
+    initParticles();
+
+    // FLIP simulator
+    delete p_flip;
+    initFLIP();
+}
+
+
+
+void WaterSim::updateParams(const int res_x, const int res_y, 
+				  const double len_x, const double len_y,
+                  const double density, const double gravity,
+                  const bool show_pressures) {
+    m_res_x = res_x;
+    m_res_y = res_y;
+    m_len_x = len_x;
+    m_len_y = len_y;
+    m_fluid_density_ = density;
+    m_gravity_mag_ = gravity;
+    m_show_pressures = show_pressures;
+    std::cout << "\nParams updated\n";
+}
+
+
+void WaterSim::updateRenderGeometry() {
+    // Copy particle positions from FLIP's data structure
+    m_particles.resize(m_num_particles, 3);
+    for (unsigned i = 0; i < m_num_particles; i++) {
+        m_particles.row(i) = flip_particles[i].get_position();//.transpose();
+    }
+
+    m_particle_colors.resize(m_num_particles, 3);
+    m_particle_colors.setZero();
+    m_particle_colors.col(2).setOnes();
+
+    if (m_show_pressures) {
+        // Render pressure as a scalar field
+        unsigned nx = p_mac_grid->get_num_cells_x();
+        unsigned ny = p_mac_grid->get_num_cells_y();
+        Eigen::VectorXd pressures(2*nx*ny);
+        for (unsigned j = 0; j < nx; j++) {
+            for (unsigned i = 0; i < ny; i++) {
+                pressures(2*(i + j*ny)) = p_mac_grid->get_pressure(i, j);
+                pressures(2*(i + j*ny) + 1) = p_mac_grid->get_pressure(i, j);
+            }
+        }
+
+        igl::jet(pressures, true, m_renderC);
+    }
+
+    std::cout << "\n*************\n";
+    std::cout << "Pressure at (7, 0): " << p_mac_grid->get_pressure(7, 0) << std::endl;
+    std::cout << "Pressure at (7, 1): " << p_mac_grid->get_pressure(7, 1) << std::endl;
+    std::cout << "U velocity at (6.5, 1): " << p_mac_grid->get_u(7, 1) << std::endl;
+    std::cout << "V velocity at (6.5, 1): " << p_mac_grid->get_v(7, 1) << std::endl;
+    std::cout << "U* velocity at (6.5, 1): " << p_mac_grid->get_u_star(7, 1) << std::endl;
+    std::cout << "V* velocity at (6.5, 1): " << p_mac_grid->get_v_star(7, 1) << std::endl;
+    std::cout << "X of particle 0: " << flip_particles->get_position()(0) << std::endl;
+    std::cout << "Y of particle 0: " << flip_particles->get_position()(1) << std::endl;
+    std::cout << "U of particle 0: " << flip_particles->get_velocity()(0) << std::endl;
+    std::cout << "V of particle 0: " << flip_particles->get_velocity()(1) << std::endl;
+    std::cout << "\n*************\n";
+}
+
+
+bool WaterSim::advance() {
+    // Perform a FLIP step
+    p_flip->step_FLIP(m_dt, m_step);
+    
+    // advance step
+    m_step++;
+    m_time += m_dt;
+    return false;
+}
+
+
+void WaterSim::renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) {
+    viewer.data_list[m_grid_data_idx].set_mesh(m_renderV, m_renderF);
+    viewer.data_list[m_grid_data_idx].set_colors(m_renderC);
+    viewer.data_list[m_grid_data_idx].set_edges(m_renderV, m_renderE, m_renderEC);
+
+    viewer.data_list[m_particles_data_idx].set_points(m_particles, m_particle_colors);
+    viewer.data_list[m_particles_data_idx].point_size = 5;
+}
+
+
+void WaterSim::initParticles() {
+
     double sx = p_mac_grid->get_cell_sizex();
     double sy = p_mac_grid->get_cell_sizey();
     std::cout << "Cell size x: " << sx;
@@ -43,16 +168,25 @@ void WaterSim::init(WaterSim::viewer_t& viewer) {
             idx += 4;
         }
     }
+}
 
-    // Initialize FLIP object
-    p_flip = new FLIP(flip_particles, m_num_particles, p_mac_grid);
-    
-    
-    // Index of ViewerData instance dedicated to particles
-    m_particles_data_idx = viewer.append_mesh();
 
-    
-    // Generate visualization mesh based on Mac2d
+void WaterSim::initMacGrid() {
+    p_mac_grid = new Mac2d(m_res_x, m_res_y, m_len_x, m_len_y);
+}
+
+void WaterSim::initFLIP() {
+    p_flip = new FLIP(flip_particles, m_num_particles, p_mac_grid,
+                      m_fluid_density_, m_gravity_mag_);
+}
+
+
+void WaterSim::initMacViz() {
+
+    unsigned nx = p_mac_grid->get_num_cells_x();
+    unsigned ny = p_mac_grid->get_num_cells_y();
+    double sx = p_mac_grid->get_cell_sizex();
+    double sy = p_mac_grid->get_cell_sizey();
 
     unsigned num_vertices = (nx + 1) * (ny + 1);
     unsigned num_edges = nx + ny + 2;
@@ -111,78 +245,5 @@ void WaterSim::init(WaterSim::viewer_t& viewer) {
         }
     }
 
-    m_grid_data_idx = viewer.append_mesh();
-    
-    // Update rendering geometry
-    updateRenderGeometry();
-    
-    // Initial reset
-    reset();
-}
-
-
-void WaterSim::resetMembers() {
-    m_particle_colors.setZero();
-    m_particle_colors.col(2).setOnes();
-}
-
-
-void WaterSim::updateRenderGeometry() {
-    // Copy particle positions from FLIP's data structure
-    m_particles.resize(m_num_particles, 3);
-    for (unsigned i = 0; i < m_num_particles; i++) {
-        m_particles.row(i) = flip_particles[i].get_position();//.transpose();
-    }
-
-    m_particle_colors.resize(m_num_particles, 3);
-    m_particle_colors.setZero();
-    m_particle_colors.col(2).setOnes();
-
-    // Render pressure as a scalar field
-    unsigned nx = p_mac_grid->get_num_cells_x();
-    unsigned ny = p_mac_grid->get_num_cells_y();
-    Eigen::VectorXd pressures(2*nx*ny);
-    for (unsigned j = 0; j < nx; j++) {
-        for (unsigned i = 0; i < ny; i++) {
-            pressures(2*(i + j*ny)) = p_mac_grid->get_pressure(i, j);
-            pressures(2*(i + j*ny) + 1) = p_mac_grid->get_pressure(i, j);
-        }
-    }
-
-    //igl::jet(pressures, true, m_renderC);
-
-    std::cout << "\n*************\n";
-    std::cout << "Pressure at (7, 0): " << p_mac_grid->get_pressure(7, 0) << std::endl;
-    std::cout << "Pressure at (7, 1): " << p_mac_grid->get_pressure(7, 1) << std::endl;
-    std::cout << "U velocity at (6.5, 1): " << p_mac_grid->get_u(7, 1) << std::endl;
-    std::cout << "V velocity at (6.5, 1): " << p_mac_grid->get_v(7, 1) << std::endl;
-    std::cout << "U* velocity at (6.5, 1): " << p_mac_grid->get_u_star(7, 1) << std::endl;
-    std::cout << "V* velocity at (6.5, 1): " << p_mac_grid->get_v_star(7, 1) << std::endl;
-    std::cout << "X of particle 0: " << flip_particles->get_position()(0) << std::endl;
-    std::cout << "Y of particle 0: " << flip_particles->get_position()(1) << std::endl;
-    std::cout << "U of particle 0: " << flip_particles->get_velocity()(0) << std::endl;
-    std::cout << "V of particle 0: " << flip_particles->get_velocity()(1) << std::endl;
-    std::cout << "\n*************\n";
-}
-
-
-bool WaterSim::advance() {
-    // Perform a FLIP step
-    p_flip->step_FLIP(m_dt, m_step);
-    
-    // advance step
-    m_step++;
-    m_time += m_dt;
-    return false;
-}
-
-
-void WaterSim::renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) {
-    viewer.data_list[m_grid_data_idx].set_mesh(m_renderV, m_renderF);
-    viewer.data_list[m_grid_data_idx].set_colors(m_renderC);
-    viewer.data_list[m_grid_data_idx].set_edges(m_renderV, m_renderE, m_renderEC);
-
-    viewer.data_list[m_particles_data_idx].set_points(m_particles, m_particle_colors);
-    viewer.data_list[m_particles_data_idx].point_size = 5;
 }
 

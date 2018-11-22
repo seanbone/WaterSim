@@ -1,7 +1,9 @@
 #include "FLIP.h"
 
-FLIP::FLIP(Particle* particles, const unsigned num_particles, Mac2d* MACGrid) 
-	: particles_(particles), num_particles_(num_particles), MACGrid_(MACGrid) {
+FLIP::FLIP(Particle* particles, const unsigned num_particles, Mac2d* MACGrid,
+		   const double density, const double gravity) 
+	: particles_(particles), num_particles_(num_particles), MACGrid_(MACGrid),
+	  fluid_density_(density), gravity_mag_(gravity) {
 	
 }
 
@@ -364,7 +366,7 @@ void FLIP::apply_forces(const double dt) {
 	// Iterate over cells & update: dv = dt*g
 	for (unsigned j = 0; j <= M; j++) {
 		for (unsigned i = 0; i < N; i++) {
-			g->set_v(i, j, g->get_v(i,j) + dt*gravity_mag_);
+			g->set_v(i, j, g->get_v(i,j) - dt*gravity_mag_);
 		}
 	}
 }
@@ -647,18 +649,20 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 		//Check if the particle exits the grid
 		double size_x = MACGrid_->get_grid_size()(0);
 		double size_y = MACGrid_->get_grid_size()(1);
+		double cell_sizex = MACGrid_->get_cell_sizex();
+		double cell_sizey = MACGrid_->get_cell_sizey();
 		
-		if (x < 0) {
+		if (x < -0.5*cell_sizex) {
 			pos_next(0) = 0.;
 		}
-		if (x > size_x) {
-			pos_next(0) = size_x - MACGrid_->get_cell_sizex() * 0.5;
+		if (x > size_x - 0.5*cell_sizex) {
+			pos_next(0) = size_x - cell_sizex;
 		}
-		if (y < 0) {
-			pos_next(1) = MACGrid_->get_cell_sizey() * 0.5;
+		if (y < -0.5*cell_sizey) {
+			pos_next(1) = 0.;
 		}
-		if (y > size_y) {
-			pos_next(1) = size_y - MACGrid_->get_cell_sizey() * 0.5;
+		if (y > size_y - 0.5*cell_sizex) {
+			pos_next(1) = size_y - cell_sizex;
 		}
 
 		// If a particle is in a solid, move it to the closest fluid cell
@@ -670,7 +674,7 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 		*/
 
 		//Check if the particle enters in a solid
-		Mac2d::Pair_t prev_indices = MACGrid_->index_from_coord(pos_curr(0),pos_curr(1));
+		Mac2d::Pair_t prev_indices = MACGrid_->index_from_coord(pos_curr(0), pos_curr(1));
 		Mac2d::Pair_t new_indices = MACGrid_->index_from_coord(pos_next(0), pos_next(1));
 		double sx = MACGrid_->get_cell_sizex();
 		double sy = MACGrid_->get_cell_sizey();

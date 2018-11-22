@@ -22,7 +22,8 @@ class FLIP {
 	 * - num_particles is the size of particles list
 	 * - MACGrid is an initialized MAC grid
 	 */
-	FLIP(Particle* particles, const unsigned num_particles, Mac2d* MACGrid);
+	FLIP(Particle* particles, const unsigned num_particles, Mac2d* MACGrid,
+		 const double density, const double gravity);
 	
 	/** Perform one FLIP step
 	 * Params:
@@ -37,9 +38,8 @@ class FLIP {
 	// Array of all particles
 	Particle* particles_;
 	const unsigned num_particles_;
-	// *TODO: pass density and gravity as sim parameters
-	const double fluid_density_ = 1.;
-	const double gravity_mag_ = -9.81;
+	const double fluid_density_;
+	const double gravity_mag_;
 	
 	// MAC Grid
 	Mac2d* MACGrid_;

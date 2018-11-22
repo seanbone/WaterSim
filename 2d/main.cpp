@@ -12,6 +12,7 @@ class WaterGui : public Gui {
    private:
       // Simulation parameters
       bool m_export_meshes = false;
+      bool m_show_pressures = false;
       int m_export_fps = 30;
 
       double m_system_size_x = 25; // X dimension of system in m
@@ -20,8 +21,10 @@ class WaterGui : public Gui {
       int m_grid_res_x = 25; // Number of cells on X axis
       int m_grid_res_y = 25; // Number of cells on Y axis
 
-      // TODO: proper input
       double m_dt = 0.005 * std::sqrt((m_grid_res_x + m_grid_res_y) * 0.5);
+
+      double m_density = 1000.0;  // Fluid density in kg/m^3
+      double m_gravity = 9.81; // Acceleration of gravity in m/s^2
 
       // Other members
       bool m_display_grid = true;
@@ -33,8 +36,9 @@ class WaterGui : public Gui {
 
       WaterGui() {
          // create a new simulation instance
-         //WaterSim(viewer_t& viewer, const int res_x, const int res_y, const double len_x, const double len_y);
-         p_waterSim = new WaterSim(m_viewer, m_grid_res_x, m_grid_res_y, m_system_size_x, m_system_size_y);
+         p_waterSim = new WaterSim(m_viewer, m_grid_res_x, m_grid_res_y,
+                                   m_system_size_x, m_system_size_y,
+                                   m_density, m_gravity, m_show_pressures);
 
          // set this simulation as the simulation that is running in our GUI
          setSimulation(p_waterSim);
@@ -47,16 +51,10 @@ class WaterGui : public Gui {
        * Update the Simulation class with the parameters input to the GUI
        */
       virtual void updateSimulationParameters() override {
-         // TODO: copy GUI inputs to WaterSim
-         std::cout << "\n*********\n Simulation Parameters:\n\n";
-         std::cout << "Export meshes:\t" << m_export_meshes << std::endl;
-         std::cout << "Export freq.:\t" << m_export_fps << std::endl;
-         std::cout << "X Size [m]:\t" << m_system_size_x << std::endl;
-         std::cout << "Y Size [m]:\t" << m_system_size_y << std::endl;
-         std::cout << "Resolution X:\t" << m_grid_res_x << std::endl;
-         std::cout << "Resolution Y:\t" << m_grid_res_y << std::endl;
-         std::cout << "\n*********\n";
          p_waterSim->setTimestep(m_dt);
+         p_waterSim->updateParams(m_grid_res_x, m_grid_res_y,
+                                  m_system_size_x, m_system_size_y,
+                                  m_density, m_gravity, m_show_pressures);
       };
 
       /**
@@ -64,12 +62,24 @@ class WaterGui : public Gui {
        */
       virtual void drawSimulationParameterMenu() override {
             ImGui::Checkbox("Export meshes", &m_export_meshes);
-            ImGui::InputInt("Export FPS", &m_export_fps, 0, 0);
+            ImGui::Checkbox("Show pressure field", &m_show_pressures);
+            //ImGui::InputInt("Export frequency [FPS]", &m_export_fps, 0, 0);
+            ImGui::InputDouble("Timestep [s]", &m_dt, 0, 0);
+            ImGui::InputDouble("Density [kg/m^3]", &m_density, 0, 0);
+            ImGui::InputDouble("Gravity [m/s^2]", &m_gravity, 0, 0);
             ImGui::InputDouble("X Size [m]", &m_system_size_x, 0, 0);
             ImGui::InputDouble("Y Size [m]", &m_system_size_y, 0, 0);
             ImGui::InputInt("Grid resolution X", &m_grid_res_x, 0, 0);
             ImGui::InputInt("Grid resolution Y", &m_grid_res_y, 0, 0);
             ImGui::Checkbox("Display grid", &m_display_grid);
+      }
+
+      /**
+       * Override Gui::resetSimulation to also update simulation parameters.
+       */
+      void resetSimulation() override {
+         updateSimulationParameters();
+         Gui::resetSimulation();
       }
 
 };

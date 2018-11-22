@@ -3,9 +3,11 @@
 
 WaterSim::WaterSim(WaterSim::viewer_t& viewer,
         const int res_x, const int res_y,
-        const double len_x, const double len_y)
+        const double len_x, const double len_y,
+        const double density, const double gravity, const bool show_pressures)
         : Simulation(), p_viewer(&viewer), m_res_x(res_x), m_res_y(res_y),
-          m_len_x(len_y), m_len_y(len_y) {
+          m_len_x(len_y), m_len_y(len_y), m_fluid_density_(density),
+          m_gravity_mag_(gravity), m_show_pressures(show_pressures) {
 
     init();
 }
@@ -41,17 +43,36 @@ void WaterSim::init() {
  * Reset class variables to reset the simulation.
  */
 void WaterSim::resetMembers() {
-    // Particles
-    delete [] flip_particles;
-    initParticles();
-
     // MAC grid
     delete p_mac_grid;
     initMacGrid();
 
+    p_viewer->data_list[m_grid_data_idx].clear();
+    initMacViz();
+
+    // Particles
+    delete [] flip_particles;
+    initParticles();
+
     // FLIP simulator
     delete p_flip;
     initFLIP();
+}
+
+
+
+void WaterSim::updateParams(const int res_x, const int res_y, 
+				  const double len_x, const double len_y,
+                  const double density, const double gravity,
+                  const bool show_pressures) {
+    m_res_x = res_x;
+    m_res_y = res_y;
+    m_len_x = len_x;
+    m_len_y = len_y;
+    m_fluid_density_ = density;
+    m_gravity_mag_ = gravity;
+    m_show_pressures = show_pressures;
+    std::cout << "\nParams updated\n";
 }
 
 
@@ -66,18 +87,20 @@ void WaterSim::updateRenderGeometry() {
     m_particle_colors.setZero();
     m_particle_colors.col(2).setOnes();
 
-    // Render pressure as a scalar field
-    unsigned nx = p_mac_grid->get_num_cells_x();
-    unsigned ny = p_mac_grid->get_num_cells_y();
-    Eigen::VectorXd pressures(2*nx*ny);
-    for (unsigned j = 0; j < nx; j++) {
-        for (unsigned i = 0; i < ny; i++) {
-            pressures(2*(i + j*ny)) = p_mac_grid->get_pressure(i, j);
-            pressures(2*(i + j*ny) + 1) = p_mac_grid->get_pressure(i, j);
+    if (m_show_pressures) {
+        // Render pressure as a scalar field
+        unsigned nx = p_mac_grid->get_num_cells_x();
+        unsigned ny = p_mac_grid->get_num_cells_y();
+        Eigen::VectorXd pressures(2*nx*ny);
+        for (unsigned j = 0; j < nx; j++) {
+            for (unsigned i = 0; i < ny; i++) {
+                pressures(2*(i + j*ny)) = p_mac_grid->get_pressure(i, j);
+                pressures(2*(i + j*ny) + 1) = p_mac_grid->get_pressure(i, j);
+            }
         }
-    }
 
-    //igl::jet(pressures, true, m_renderC);
+        igl::jet(pressures, true, m_renderC);
+    }
 
     std::cout << "\n*************\n";
     std::cout << "Pressure at (7, 0): " << p_mac_grid->get_pressure(7, 0) << std::endl;
@@ -153,7 +176,8 @@ void WaterSim::initMacGrid() {
 }
 
 void WaterSim::initFLIP() {
-    p_flip = new FLIP(flip_particles, m_num_particles, p_mac_grid);
+    p_flip = new FLIP(flip_particles, m_num_particles, p_mac_grid,
+                      m_fluid_density_, m_gravity_mag_);
 }
 
 

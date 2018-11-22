@@ -27,6 +27,11 @@ class WaterSim : public Simulation {
 		int m_res_x, m_res_y; // no. of cells in X and Y directions
 		double m_len_x, m_len_y; // size in [m] of full grid
 
+		// Other params
+		double m_fluid_density_;
+		double m_gravity_mag_;
+		bool m_show_pressures;
+
 		// List of Particles
 		Particle* flip_particles;
 
@@ -53,7 +58,11 @@ class WaterSim : public Simulation {
 
 	public:
 
-		WaterSim(viewer_t& viewer, const int res_x, const int res_y, const double len_x, const double len_y);
+		WaterSim(viewer_t& viewer, 
+				 const int res_x, const int res_y,
+				 const double len_x, const double len_y,
+				 const double density, const double gravity,
+				 const bool show_pressures);
 
 		~WaterSim() {
 			delete p_mac_grid;
@@ -67,6 +76,14 @@ class WaterSim : public Simulation {
 		 * Reset class variables to reset the simulation.
 		 */
 		virtual void resetMembers() override;
+
+		/*
+		 * Update simulation parameters. Requires a reset to take effect.
+		 */
+		void updateParams(const int res_x, const int res_y, 
+						  const double len_x, const double len_y,
+						  const double density, const double gravity,
+						  const bool show_pressures);
 
 		/*
 		 * Update the rendering data structures. This method will be called in

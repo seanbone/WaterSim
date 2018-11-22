@@ -71,6 +71,7 @@ class WaterGui : public Gui {
             ImGui::InputInt("Grid resolution Y", &m_grid_res_y, 0, 0);
             ImGui::Checkbox("Display grid", &m_display_grid);
       }
+
 };
 
 int main() { //int argc, char *argv[]) {

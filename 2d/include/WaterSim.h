@@ -17,9 +17,15 @@
 class WaterSim : public Simulation {
 
 	private:
+		using viewer_t = igl::opengl::glfw::Viewer;
+
+		// Pointer to IGL viewer used by Gui
+		viewer_t* const p_viewer;
 		
 		// MAC grid data structure
 		Mac2d* p_mac_grid;
+		int m_res_x, m_res_y; // no. of cells in X and Y directions
+		double m_len_x, m_len_y; // size in [m] of full grid
 
 		// List of Particles
 		Particle* flip_particles;
@@ -45,7 +51,6 @@ class WaterSim : public Simulation {
 		Eigen::MatrixXd m_renderEC; // colors of edges of mac grid, Nx3
 
 
-	using viewer_t = igl::opengl::glfw::Viewer;
 	public:
 
 		WaterSim(viewer_t& viewer, const int res_x, const int res_y, const double len_x, const double len_y);
@@ -56,9 +61,7 @@ class WaterSim : public Simulation {
 			delete [] flip_particles;
 		}
 		
-		using Simulation::init;
-
-		virtual void init(viewer_t& viewer);
+		virtual void init() override;
 
 		/*
 		 * Reset class variables to reset the simulation.
@@ -92,6 +95,30 @@ class WaterSim : public Simulation {
 		 */
 		virtual void renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) override;
 		
+	private:
+
+		/*
+		 * Initialize the particle list according to the current settings.
+		 * Note: does not delete previous particles!
+		 */
+		void initParticles();
+
+		/*
+		 * Initialize a new instance of the MAC grid
+		 * Note: does not delete previous instance!
+		 */
+		void initMacGrid();
+
+		/*
+		 * Initialize a new instance of the FLIP simulator
+		 * Note: does not delete previous instance!
+		 */
+		void initFLIP();
+
+		/*
+		 * Initialize a mesh to visualize the MAC grid
+		 */
+		void initMacViz();
 };
 
 #endif // WATERSIM_H

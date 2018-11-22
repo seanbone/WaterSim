@@ -655,13 +655,13 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 		if (x < -0.5*cell_sizex) {
 			pos_next(0) = 0.;
 		}
-		if (x > size_x - 0.5*cell_sizex_) {
+		if (x > size_x - 0.5*cell_sizex) {
 			pos_next(0) = size_x - cell_sizex;
 		}
-		if (y < -0.5*cell_sizey_) {
+		if (y < -0.5*cell_sizey) {
 			pos_next(1) = 0.;
 		}
-		if (y > size_y - 0.5*cell_sizex_) {
+		if (y > size_y - 0.5*cell_sizex) {
 			pos_next(1) = size_y - cell_sizex;
 		}
 

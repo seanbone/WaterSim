@@ -1,5 +1,107 @@
 #include "Mac2d.h"
 
+// Constructor
+
+Mac2d::Mac2d(const unsigned n, const unsigned m, const double dx, const double dy)
+	: N_(n), M_(m), sizex_(dx), sizey_(dy), cell_sizex_(sizex_/(1.*N_)), cell_sizey_(sizey_/(1.*M_)){
+
+	initArrays();
+
+	// Initialize solid cells as a "box"
+	//  Top & bottom
+	for (unsigned i = 0; i < N_; i++) {
+		psolid_[i] = true;
+		psolid_[i + (M_ - 1)*N_] = true;
+	}
+	// Sides
+	for (unsigned i = 1; i < M_ - 1; i++) {
+		psolid_[N_*i] = true;
+		for (unsigned j = 1; j < N_ - 1; j++) {
+			psolid_[j + N_*i] = false;
+		}
+		psolid_[N_-1 + N_*i] = true;
+	}
+
+	//Initialization of the diagonal of A
+	initAdiag();
+}
+
+
+void Mac2d::initArrays() {
+	ppressure_ = new double[N_*M_];
+	std::fill(ppressure_, ppressure_+N_*M_, 0.);
+
+	pu_ = new double[(N_+1)*M_];
+	std::fill(pu_, pu_+(N_+1)*M_, 0.);
+
+	pu_star_ = new double[(N_+1)*M_];
+	std::fill(pu_star_, pu_star_+(N_+1)*M_, 0.);
+
+	pv_ = new double[N_*(M_+1)];
+	std::fill(pv_, pv_+N_*(M_+1), 0.);
+
+	pv_star_ = new double[N_*(M_+1)];
+	std::fill(pv_star_, pv_star_+N_*(M_+1), 0.);
+
+	psolid_ = new bool[N_*M_];
+	std::fill(psolid_, psolid_+N_*M_, 0.);
+
+	pfluid_ = new bool[N_*M_];
+	std::fill(pfluid_, pfluid_+N_*M_, 0.);
+
+	pweights_u_ = new double[(N_+1)*M_];
+	std::fill(pweights_u_, pweights_u_+(N_+1)*M_, 0.);
+
+	pweights_v_ = new double[N_*(M_+1)];
+	std::fill(pweights_v_, pweights_v_+N_*(M_+1), 0.);
+}
+
+
+void Mac2d::initAdiag() {
+	A_diag_.clear();
+
+	for(unsigned j = 0; j < M_; ++j){
+		for(unsigned i = 0; i < N_; ++i){
+			int index = N_ * j + i;
+			int count = 0;
+			if (i == 0){
+				if (j == 0){
+					count = !is_solid(i+1,j) + !is_solid(i,j+1);
+				}
+				else if (j == M_ - 1){
+					count = !is_solid(i+1,j) + !is_solid(i,j-1);
+				}
+				else{
+					count = !is_solid(i+1,j) + !is_solid(i,j-1) + !is_solid(i,j+1);
+				}
+			}
+			else if (i == N_ - 1){
+				if (j == 0){
+					count = !is_solid(i-1,j) + !is_solid(i,j+1);
+				}
+				else if (j == M_ - 1){
+					count = !is_solid(i-1,j) + !is_solid(i,j-1);
+				}
+				else{
+					count = !is_solid(i-1,j) + !is_solid(i,j-1) + !is_solid(i,j+1);
+				}
+			}
+			else {
+				if (j == 0){
+					count = !is_solid(i+1,j) + !is_solid(i-1,j) + !is_solid(i,j+1);
+				}
+				else if (j == M_ - 1){
+					count = !is_solid(i+1,j) + !is_solid(i-1,j) + !is_solid(i,j-1);
+				}
+				else{
+					count = !is_solid(i-1,j) + !is_solid(i+1,j) + !is_solid(i,j-1) + !is_solid(i,j+1);
+				}
+			}
+			A_diag_.push_back(Triplet_t(index, index, count));
+		}
+	}
+}
+
 //************************************************************************************
 //***********************************GETTERS******************************************
 //************************************************************************************

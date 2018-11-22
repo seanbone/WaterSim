@@ -294,64 +294,128 @@ void FLIP::extrapolate_u( const bool* const visited_u ){
 	// Do the cases for upper and right bound
 	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned N = MACGrid_->get_num_cells_x();
+	unsigned* counter = new unsigned[M*(N+1)];
+	std::fill(counter, counter + M*(N+1), 0);
 	for( unsigned j = 0; j < M; ++j ){
 		for( unsigned i = 0; i < N+1; ++i ){
 			if ( *(visited_u + (N+1)*j + i) ){
 				if ( i != 0 ){
 					if ( !(*(visited_u + (N+1)*j + (i-1))) ){
-						MACGrid_->set_u(i-1, j, MACGrid_->get_u(i, j));
+						if ( MACGrid_->get_u(i-1, j) != 0 ){
+							double tmp = MACGrid_->get_u(i-1, j) * *(counter + (N+1)*j + (i-1));
+							*(counter + (N+1)*j + (i-1)) += 1;
+							MACGrid_->set_u(i-1, j, (tmp + MACGrid_->get_u(i, j))/(*(counter + (N+1)*j + (i-1))));
+						} else {
+							*(counter + (N+1)*j + (i-1)) += 1;
+							MACGrid_->set_u(i-1, j, MACGrid_->get_u(i, j));
+						}
 					}
 				}
 				else if ( j != 0 ){
 					if ( !(*(visited_u + (N+1)*(j-1) + i)) ){
-						MACGrid_->set_u(i, j-1, MACGrid_->get_u(i, j));
+						if ( MACGrid_->get_u(i, j-1) != 0 ){
+							double tmp = MACGrid_->get_u(i, j-1) * *(counter + (N+1)*(j-1) + i);
+							*(counter + (N+1)*(j-1) + i) += 1;
+							MACGrid_->set_u(i, j-1, (tmp + MACGrid_->get_u(i, j))/(*(counter + (N+1)*(j-1) + i)));
+						} else {
+							*(counter + (N+1)*(j-1) + i) += 1;
+							MACGrid_->set_u(i, j-1, MACGrid_->get_u(i, j));
+						}
 					}
 				}
 				else if ( i != N ){
 					if ( !(*(visited_u + (N+1)*j + (i+1))) ){
-						MACGrid_->set_u(i+1, j, MACGrid_->get_u(i, j));
+						if ( MACGrid_->get_u(i+1, j) != 0 ){
+							double tmp = MACGrid_->get_u(i+1, j) * *(counter + (N+1)*j + (i+1));
+							*(counter + (N+1)*j + (i+1)) += 1;
+							MACGrid_->set_u(i+1, j, (tmp + MACGrid_->get_u(i, j))/(*(counter + (N+1)*j + (i+1))));
+						} else {
+							*(counter + (N+1)*j + (i+1)) += 1;
+							MACGrid_->set_u(i+1, j, MACGrid_->get_u(i, j));
+						}
 					}
 				}
 				else if ( j != M-1 ){
 					if ( !(*(visited_u + (N+1)*(j+1) + i)) ){
-						MACGrid_->set_u(i, j+1, MACGrid_->get_u(i, j));
+						if ( MACGrid_->get_u(i, j+1) != 0 ){
+							double tmp = MACGrid_->get_u(i, j+1) * *(counter + (N+1)*(j+1) + i);
+							*(counter + (N+1)*(j+1) + i) += 1;
+							MACGrid_->set_u(i, j+1, (tmp + MACGrid_->get_u(i, j))/(*(counter + (N+1)*(j+1) + i)));
+						} else {
+							*(counter + (N+1)*(j+1) + i) += 1;
+							MACGrid_->set_u(i, j+1, MACGrid_->get_u(i, j));
+						}
 					}
 				}
 			}
 		}
 	}
+	
+	delete[] counter;
 }
 
 void FLIP::extrapolate_v( const bool* const visited_v ){
 	// Do the cases for upper and right bound
 	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned N = MACGrid_->get_num_cells_x();
+	unsigned* counter = new unsigned[N*(M+1)];
+	std::fill(counter, counter + N*(M+1), 0);
 	for( unsigned j = 0; j < M+1; ++j ){
 		for( unsigned i = 0; i < N; ++i ){
 			if ( *(visited_v + N*j + i) ){
 				if ( i != 0 ){
 					if ( !(*(visited_v + N*j + (i-1))) ){
-						MACGrid_->set_v(i-1, j, MACGrid_->get_v(i, j));
+						if ( MACGrid_->get_v(i-1, j) != 0 ){
+							double tmp = MACGrid_->get_v(i-1, j) * *(counter + (N+1)*j + (i-1));
+							*(counter + (N+1)*j + (i-1)) += 1;
+							MACGrid_->set_v(i-1, j, (tmp + MACGrid_->get_v(i, j))/(*(counter + (N+1)*j + (i-1))));
+						} else {
+							*(counter + (N+1)*j + (i-1)) += 1;
+							MACGrid_->set_v(i-1, j, MACGrid_->get_v(i, j));
+						}
 					}
 				}
 				else if ( j != 0 ){
 					if ( !(*(visited_v + N*(j-1) + i)) ){
-						MACGrid_->set_v(i, j-1, MACGrid_->get_v(i, j));
+						if ( MACGrid_->get_v(i, j-1) != 0 ){
+							double tmp = MACGrid_->get_v(i, j-1) * *(counter + (N+1)*(j-1) + i);
+							*(counter + (N+1)*(j-1) + i) += 1;
+							MACGrid_->set_v(i, j-1, (tmp + MACGrid_->get_v(i, j))/(*(counter + (N+1)*(j-1) + i)));
+						} else {
+							*(counter + (N+1)*(j-1) + i) += 1;
+							MACGrid_->set_v(i, j-1, MACGrid_->get_v(i, j));
+						}
 					}
 				}
 				else if ( i != N-1 ){
 					if ( !(*(visited_v + N*j + (i+1))) ){
-						MACGrid_->set_v(i+1, j, MACGrid_->get_v(i, j));
+						if ( MACGrid_->get_v(i+1, j) != 0 ){
+							double tmp = MACGrid_->get_v(i+1, j) * *(counter + (N+1)*j + (i+1));
+							*(counter + (N+1)*j + (i+1)) += 1;
+							MACGrid_->set_v(i+1, j, (tmp + MACGrid_->get_v(i, j))/(*(counter + (N+1)*j + (i+1))));
+						} else {
+							*(counter + (N+1)*j + (i+1)) += 1;
+							MACGrid_->set_v(i+1, j, MACGrid_->get_v(i, j));
+						}
 					}
 				}
 				else if ( j != M ){
 					if ( !(*(visited_v + N*(j+1) + i)) ){
-						MACGrid_->set_v(i, j+1, MACGrid_->get_v(i, j));
+						if ( MACGrid_->get_v(i, j+1) != 0 ){
+							double tmp = MACGrid_->get_v(i, j+1) * *(counter + (N+1)*(j+1) + i);
+							*(counter + (N+1)*(j+1) + i) += 1;
+							MACGrid_->set_v(i, j+1, (tmp + MACGrid_->get_v(i, j))/(*(counter + (N+1)*(j+1) + i)));
+						} else {
+							*(counter + (N+1)*(j+1) + i) += 1;
+							MACGrid_->set_v(i, j+1, MACGrid_->get_v(i, j));
+						}
 					}
 				}
 			}
 		}
 	}
+	
+	delete[] counter;
 }
 
 /*** APPLY EXTERNAL FORCES ***/

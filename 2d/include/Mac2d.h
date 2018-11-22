@@ -61,75 +61,13 @@ class Mac2d{
 			: N_(0), M_(0), sizex_(0), sizey_(0), cell_sizex_(0), cell_sizey_(0){}
 		
 		//Constructor with the number of cells (in both directions) and the length of the box (in metres)
-		Mac2d(const unsigned n, const unsigned m, const double dx, const double dy)
-			: N_(n), M_(m), sizex_(dx), sizey_(dy), cell_sizex_(sizex_/(1.*N_)), cell_sizey_(sizey_/(1.*M_)){
-			ppressure_ = new double[N_*M_];
-			pu_ = new double[(N_+1)*M_];
-			pu_star_ = new double[(N_+1)*M_];
-			pv_ = new double[N_*(M_+1)];
-			pv_star_ = new double[N_*(M_+1)];
-			psolid_ = new bool[N_*M_];
-			pfluid_ = new bool[N_*M_];
-			pweights_u_ = new double[(N_+1)*M_];
-			pweights_v_ = new double[N_*(M_+1)];
+		Mac2d(const unsigned n, const unsigned m, const double dx, const double dy);
 
-			// Initialize solid cells as a "box"
-			//  Top & bottom
-			for (unsigned i = 0; i < N_; i++) {
-				psolid_[i] = true;
-				psolid_[i + (M_ - 1)*N_] = true;
-			}
-			// Sides
-			for (unsigned i = 1; i < M_ - 1; i++) {
-				psolid_[N_*i] = true;
-				for (unsigned j = 1; j < N_ - 1; j++) {
-					psolid_[j + N_*i] = false;
-				}
-				psolid_[N_-1 + N_*i] = true;
-			}
+		// Initialize arrays to zero (pressure, u, v, etc)
+		void initArrays();
 
-			//Initialization of the diagonal of A
-			for(unsigned j = 0; j < M_; ++j){
-				for(unsigned i = 0; i < N_; ++i){
-					int index = N_ * j + i;
-					int count = 0;
-					if (i == 0){
-						if (j == 0){
-							count = !is_solid(i+1,j) + !is_solid(i,j+1);
-						}
-						else if (j == M_ - 1){
-							count = !is_solid(i+1,j) + !is_solid(i,j-1);
-						}
-						else{
-							count = !is_solid(i+1,j) + !is_solid(i,j-1) + !is_solid(i,j+1);
-						}
-					}
-					else if (i == N_ - 1){
-						if (j == 0){
-							count = !is_solid(i-1,j) + !is_solid(i,j+1);
-						}
-						else if (j == M_ - 1){
-							count = !is_solid(i-1,j) + !is_solid(i,j-1);
-						}
-						else{
-							count = !is_solid(i-1,j) + !is_solid(i,j-1) + !is_solid(i,j+1);
-						}
-					}
-					else {
-						if (j == 0){
-							count = !is_solid(i+1,j) + !is_solid(i-1,j) + !is_solid(i,j+1);
-						}
-						else if (j == M_ - 1){
-							count = !is_solid(i+1,j) + !is_solid(i-1,j) + !is_solid(i,j-1);
-						}
-						else{
-							count = !is_solid(i-1,j) + !is_solid(i+1,j) + !is_solid(i,j-1) + !is_solid(i,j+1);
-						}
-					}
-					A_diag_.push_back(Triplet_t(index, index, count));
-				}
-			}
-		}
+		// Initialize A diagonal
+		void initAdiag();
 		
 		//Destructor
 		~Mac2d(){

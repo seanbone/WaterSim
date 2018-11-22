@@ -49,7 +49,7 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	for( int s = 0; s < num_substeps ; ++s ){
 		
 		// 7.
-		advance_particles(dt_new, step);
+		advance_particles(dt, step);
 	}
 }
 
@@ -628,13 +628,13 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 		Eigen::Vector3d vel = (particles_ + n)->get_velocity();
 		
 		Eigen::Vector3d pos_next;
-		if (step == 0) {
+		//~ if (step == 0) {
 			// Euler
 			pos_next = pos_curr + dt*vel;
-		} else {
-			// Leapfrog
-			pos_next = pos_prev + 2*dt*vel;
-		}
+		//~ } else {
+			//~ // Leapfrog
+			//~ pos_next = pos_prev + 2*dt*vel;
+		//~ }
 
 		//if (n == 0) {
 		//	std::cout << "pos_prev:\n" << pos_prev;

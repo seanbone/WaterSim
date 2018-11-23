@@ -43,14 +43,14 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	grid_to_particle();
 	
 	// 6. subsample time interval to satisfy CFL condition
-	//~ double dt_new = compute_timestep(dt);
-	//~ double num_substeps = std::ceil(dt/dt_new);
-	//~ std::cout << num_substeps << "<---------------" << std::endl;
-	//~ for( int s = 0; s < num_substeps ; ++s ){
+	double dt_new = compute_timestep(dt);
+	double num_substeps = std::ceil(dt/dt_new);
+	std::cout << num_substeps << "<---------------" << std::endl;
+	for( int s = 0; s < num_substeps ; ++s ){
 		
 		// 7.
 		advance_particles(dt, step);
-	//~ }
+	}
 }
 
 double FLIP::compute_timestep( const double dt ){
@@ -593,7 +593,7 @@ void FLIP::compute_pressure_rhs(const double dt) {
 				}
 				// (i-1, j)
 				if ((i > 0 && g->is_solid(i-1,j)) || i == 0) {
-					d_ij += g->get_u(i-1,j);
+					d_ij += g->get_u(i,j);
 				}
 	
 				// (i, j+1)
@@ -602,7 +602,7 @@ void FLIP::compute_pressure_rhs(const double dt) {
 				}
 				// (i, j-1)
 				if ((j > 0 && g->is_solid(i,j-1)) || j == 0) {
-					d_ij += g->get_v(i,j-1);
+					d_ij += g->get_v(i,j);
 				}
 	
 				// *TODO: cell x and y size should always be the same -> enforce via sim params?

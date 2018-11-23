@@ -693,12 +693,17 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 		
 		Eigen::Vector3d pos_next;
 		//~ if (step == 0) {
-			// Euler
-			pos_next = pos_curr + dt*vel;
+			//~ // Euler
+			//~ pos_next = pos_curr + dt*vel;
 		//~ } else {
 			//~ // Leapfrog
 			//~ pos_next = pos_prev + 2*dt*vel;
 		//~ }
+		
+		// Euler estimate
+		Eigen::Vector3d pos_half = pos_curr + 0.5*dt*vel;
+		pos_next(0) = pos_curr(0) + dt*MACGrid_->get_interp_u(pos_half(0), pos_half(1));
+		pos_next(1) = pos_curr(1) + dt*MACGrid_->get_interp_v(pos_half(0), pos_half(1));
 
 		//if (n == 0) {
 		//	std::cout << "pos_prev:\n" << pos_prev;

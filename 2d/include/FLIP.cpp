@@ -687,21 +687,15 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 	// TODO: update particle positions 
 	//  - Use RK2 interpolator	
 	for(unsigned n = 0; n < num_particles_; ++n){
-		Eigen::Vector3d pos_prev = (particles_ + n)->get_prev_position();
 		Eigen::Vector3d pos_curr = (particles_ + n)->get_position();
 		Eigen::Vector3d vel = (particles_ + n)->get_velocity();
 		
 		Eigen::Vector3d pos_next;
-		//~ if (step == 0) {
-			//~ // Euler
-			//~ pos_next = pos_curr + dt*vel;
-		//~ } else {
-			//~ // Leapfrog
-			//~ pos_next = pos_prev + 2*dt*vel;
-		//~ }
 		
 		// Euler estimate
 		Eigen::Vector3d pos_half = pos_curr + 0.5*dt*vel;
+		
+		// RK2
 		pos_next(0) = pos_curr(0) + dt*MACGrid_->get_interp_u(pos_half(0), pos_half(1));
 		pos_next(1) = pos_curr(1) + dt*MACGrid_->get_interp_v(pos_half(0), pos_half(1));
 

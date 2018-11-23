@@ -43,14 +43,14 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	grid_to_particle();
 	
 	// 6. subsample time interval to satisfy CFL condition
-	double dt_new = compute_timestep(dt);
-	double num_substeps = std::ceil(dt/dt_new);
-	std::cout << num_substeps << "<---------------" << std::endl;
-	for( int s = 0; s < num_substeps ; ++s ){
+	//~ double dt_new = compute_timestep(dt);
+	//~ double num_substeps = std::ceil(dt/dt_new);
+	//~ std::cout << num_substeps << "<---------------" << std::endl;
+	//~ for( int s = 0; s < num_substeps ; ++s ){
 		
 		// 7.
-		advance_particles(dt_new, step);
-	}
+		advance_particles(dt, step);
+	//~ }
 }
 
 double FLIP::compute_timestep( const double dt ){
@@ -612,6 +612,7 @@ void FLIP::compute_pressure_rhs(const double dt) {
 			}
 		}
 	}
+	std::cout << d_ << std::endl;
 }
 
 void FLIP::apply_pressure_gradients(const double dt) {

@@ -183,8 +183,8 @@ void FLIP::compute_velocity_field() {
 	normalize_accumulated_v( visited_v );
 	
 	// Extrapolate velocities
-	extrapolate_u( visited_u );
-	extrapolate_v( visited_v );
+	//~ extrapolate_u( visited_u );
+	//~ extrapolate_v( visited_v );
 	
 	delete[] visited_u;
 	delete[] visited_v;
@@ -621,16 +621,16 @@ void FLIP::apply_pressure_gradients(const double dt) {
 	auto& g = MACGrid_;
 	// *TODO: correct cell dimensions
 	double dx = g->get_cell_sizex();
-	for (unsigned j = 0; j < ny; j++) {
-		for (unsigned i = 0; i < nx; i++) {
-			if (i != 0) {
+	for (unsigned j = 0; j <= ny; j++) {
+		for (unsigned i = 0; i <= nx; i++) {
+			if (i != 0 and j < ny) {
 				// get_u(i,j) = u_{ (i-1/2, j) }
 				// See SIGGRAPH eq. (4.4)
 				double du = (g->get_pressure(i,j) - g->get_pressure(i-1,j));
 				du *= (dt/(dx*fluid_density_));
 				g->set_u(i,j, g->get_u(i,j) - du);
 			}
-			if (j != 0) {
+			if (j != 0 and i < nx) {
 				// get_v(i,j) = v_{ (i, j-1/2) }
 				// See SIGGRAPH eq. (4.5)
 				double dv = (g->get_pressure(i,j) - g->get_pressure(i,j-1));

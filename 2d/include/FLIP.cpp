@@ -35,21 +35,75 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 
 	// 3.
 	apply_boundary_conditions();
+	unsigned nx = MACGrid_->get_num_cells_x();
+	unsigned ny = MACGrid_->get_num_cells_y();
+	for (unsigned j = 0; j < ny; j++) {
+		for (unsigned i = 0; i <= nx; i++) {
+			std::cout << "u_grid: " << MACGrid_->get_u(i,j) << std::endl; 
+		}
+	}
+	for (unsigned j = 0; j <= ny; j++) {
+		for (unsigned i = 0; i < nx; i++) {
+			std::cout << "v_grid: " << MACGrid_->get_v(i,j) << std::endl; 
+		}
+	}
 
 	// 4.
 	do_pressures(dt);
+	for (unsigned j = 0; j < ny; j++) {
+		for (unsigned i = 0; i <= nx; i++) {
+			std::cout << "u_grid: " << MACGrid_->get_u(i,j) << std::endl; 
+		}
+	}
+	for (unsigned j = 0; j <= ny; j++) {
+		for (unsigned i = 0; i < nx; i++) {
+			std::cout << "v_grid: " << MACGrid_->get_v(i,j) << std::endl; 
+		}
+	}
 	
+	for (unsigned j = 0; j < ny; j++) {
+		for (unsigned i = 0; i < nx; i++) {
+			std::cout << "pressure: " << MACGrid_->get_pressure(i,j) << std::endl; 
+		}
+	}
+	
+	Eigen::Vector3d vel;
+	double u_max;
+	double v_max;
+	for( unsigned int n = 0; n < num_particles_; ++n ){
+		vel = (particles_ + n)->get_velocity();
+		if ( vel(0) > u_max ){
+			u_max = vel(0);
+		}
+		else if ( vel(1) > v_max ){
+			v_max = vel(1);
+		}
+	}
+	std::cout << u_max << "\t" << v_max << std::endl;
 	// 5.
 	grid_to_particle();
 	
 	// 6. subsample time interval to satisfy CFL condition
 	double dt_new = compute_timestep(dt);
+	Eigen::Vector3d vel2;
+	double u_max2;
+	double v_max2;
+	for( unsigned int n = 0; n < num_particles_; ++n ){
+		vel2 = (particles_ + n)->get_velocity();
+		if ( vel2(0) > u_max2 ){
+			u_max2 = vel2(0);
+		}
+		else if ( vel2(1) > v_max2 ){
+			v_max2 = vel2(1);
+		}
+	}
+	std::cout << u_max2 << "\t" << v_max2 << std::endl;
 	double num_substeps = std::ceil(dt/dt_new);
 	std::cout << num_substeps << "<---------------" << std::endl;
 	for( int s = 0; s < num_substeps ; ++s ){
 		
 		// 7.
-		advance_particles(dt, step);
+		advance_particles(dt_new, step);
 	}
 }
 
@@ -453,7 +507,7 @@ void FLIP::apply_boundary_conditions() {
 	for (unsigned i = 0; i < nx; i++) {
 		if (MACGrid_->get_v(i, 0) < 0)
 			MACGrid_->set_v(i, 0, 0);
-		if (MACGrid_->get_v(i, ny) > 0)
+		//~ if (MACGrid_->get_v(i, ny) > 0)
 			MACGrid_->set_v(i, ny, 0);
 	}
 	for (unsigned j = 0; j < ny; j++) {
@@ -482,6 +536,7 @@ void FLIP::do_pressures(const double dt) {
 	solver_t solver;
 	solver.compute(A_);
 	VectorXd p = solver.solve(d_);
+	std::cout << "Error: " << (A_*p - d_).norm() << std::endl;
 
 	// Copy pressures to MAC grid
 	MACGrid_->set_pressure(p);
@@ -623,16 +678,16 @@ void FLIP::apply_pressure_gradients(const double dt) {
 	auto& g = MACGrid_;
 	// *TODO: correct cell dimensions
 	double dx = g->get_cell_sizex();
-	for (unsigned j = 0; j <= ny; j++) {
-		for (unsigned i = 0; i <= nx; i++) {
-			if (i != 0 and j < ny) {
+	for (unsigned j = 0; j < ny; j++) {
+		for (unsigned i = 0; i < nx; i++) {
+			if (i != 0) {
 				// get_u(i,j) = u_{ (i-1/2, j) }
 				// See SIGGRAPH eq. (4.4)
 				double du = (g->get_pressure(i,j) - g->get_pressure(i-1,j));
 				du *= (dt/(dx*fluid_density_));
 				g->set_u(i,j, g->get_u(i,j) - du);
 			}
-			if (j != 0 and i < nx) {
+			if (j != 0) {
 				// get_v(i,j) = v_{ (i, j-1/2) }
 				// See SIGGRAPH eq. (4.5)
 				double dv = (g->get_pressure(i,j) - g->get_pressure(i,j-1));

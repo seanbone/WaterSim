@@ -49,7 +49,7 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	for( int s = 0; s < num_substeps ; ++s ){
 		
 		// 7.
-		advance_particles(dt, step);
+		advance_particles(dt_new, step);
 	}
 }
 

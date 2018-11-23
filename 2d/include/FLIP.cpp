@@ -183,8 +183,8 @@ void FLIP::compute_velocity_field() {
 	normalize_accumulated_v( visited_v );
 	
 	// Extrapolate velocities
-	//~ extrapolate_u( visited_u );
-	//~ extrapolate_v( visited_v );
+	extrapolate_u( visited_u );
+	extrapolate_v( visited_v );
 	
 	delete[] visited_u;
 	delete[] visited_v;
@@ -539,10 +539,10 @@ void FLIP::compute_pressure_matrix() {
 						triplets.push_back(Mac2d::Triplet_t(cellidx+1, cellidx, -1));
 				}
 				// y-adjacent cells
-				if (j+ny < ny && MACGrid_->is_fluid(i, j+1)) {
-						triplets.push_back(Mac2d::Triplet_t(cellidx, cellidx + ny, -1));
+				if (j+1 < ny && MACGrid_->is_fluid(i, j+1)) {
+						triplets.push_back(Mac2d::Triplet_t(cellidx, cellidx + nx, -1));
 						// Use symmetry to avoid computing (i,j-1) separately
-						triplets.push_back(Mac2d::Triplet_t(cellidx + ny, cellidx, -1));
+						triplets.push_back(Mac2d::Triplet_t(cellidx + nx, cellidx, -1));
 				}
 			} // if is_fluid(i,j)
 		}
@@ -552,6 +552,7 @@ void FLIP::compute_pressure_matrix() {
 	//TODO: only resize A_ and d_ at beginning of sim
 	A_.resize(nx*ny, nx*ny);
 	A_.setFromTriplets(triplets.begin(), triplets.end());
+	std::cout << A_ << std::endl;
 }
 
 void FLIP::compute_pressure_rhs(const double dt) {

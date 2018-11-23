@@ -121,20 +121,16 @@ void FLIP::compute_velocity_field() {
 	
 	// Threshold h and h scaled so that it is equal to the distance expressed in number of cells
 	double h = cell_sizex;
-	int h_scaledx = h/cell_sizex;
-	int h_scaledy = h/cell_sizey;
+	int h_scaledx = std::ceil(h/cell_sizex);
+	int h_scaledy = std::ceil(h/cell_sizey);
 	
 	// Lists of flags for visited grid-velocities: 1 -> visited
 	unsigned N = MACGrid_->get_num_cells_x();
 	unsigned M = MACGrid_->get_num_cells_y();
 	bool* visited_u = new bool[M*(N+1)];
 	bool* visited_v = new bool[N*(M+1)];
-	for( unsigned i = 0; i < M*(N+1); ++i ){
-		*(visited_u + i) = 0;
-	}
-	for( unsigned i = 0; i < N*(M+1); ++i ){
-		*(visited_v + i) = 0;
-	}
+	std::fill(visited_u, visited_u + M*(N+1), 0);
+	std::fill(visited_u, visited_u + N*(M+1), 0);
 	
 	// Reset all fluid flags
 	MACGrid_->reset_fluid();
@@ -159,8 +155,8 @@ void FLIP::compute_velocity_field() {
 		grid_coord << 0, 0, 0;
 		int nx = MACGrid_->get_num_cells_x();
 		int ny = MACGrid_->get_num_cells_y();
-		for( int j = cell_coord(1) - h_scaledy; j < cell_coord(1) + h_scaledy + 1; ++j ){
-			for( int i = cell_coord(0) - h_scaledx; i < cell_coord(0) + h_scaledx + 1; ++i ){
+		for( int j = cell_coord(1) - h_scaledy; j <= cell_coord(1) + h_scaledy + 1; ++j ){
+			for( int i = cell_coord(0) - h_scaledx; i <= cell_coord(0) + h_scaledx + 1; ++i ){
 				if ( ( i >= 0 and j >= 0 ) ){
 					if ( ( i <= nx and j < ny ) ){
 					
@@ -171,9 +167,10 @@ void FLIP::compute_velocity_field() {
 					}
 					
 					if ( ( i < nx and j <= ny ) ){
+						
 						// Lower edge
-						grid_coord(0) += 0.5 * cell_sizex;
-						grid_coord(1) -= 0.5 * cell_sizey;
+						grid_coord(0) = i * cell_sizex;
+						grid_coord(1) = (j - 0.5) * cell_sizey;
 						accumulate_v(pos, vel, grid_coord, h, i, j);
 					}
 				}

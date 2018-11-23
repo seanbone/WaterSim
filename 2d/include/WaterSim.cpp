@@ -149,13 +149,14 @@ void WaterSim::initParticles() {
     unsigned idx = 0;
 
     // 4 particles per fluid cell
-    m_num_particles = 4 * (nx/2 - 1) * (ny/2 - 1);
+    m_num_particles = 4 * (nx) * (ny);
     flip_particles = new Particle[m_num_particles];
 
-    Eigen::VectorXd rnd = Eigen::VectorXd::Random(2*m_num_particles);
+//    Eigen::VectorXd rnd = Eigen::VectorXd::Random(2*m_num_particles);
+    Eigen::VectorXd rnd = Eigen::VectorXd::Zero(2*m_num_particles);
 
-    for (unsigned x = 3; x < (nx/2)+2; x++) {
-        for (unsigned y = 1; y < ny/2; y++) {
+    for (unsigned x = 0; x < nx; x++) {
+        for (unsigned y = 0; y < ny; y++) {
             // Populate cell (x,y)
             double cx = x * sx;
             double cy = y * sy;

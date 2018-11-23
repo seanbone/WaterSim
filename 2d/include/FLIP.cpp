@@ -454,12 +454,16 @@ void FLIP::apply_boundary_conditions() {
 
 	// Outer (system) boundaries
 	for (unsigned i = 0; i < nx; i++) {
-		MACGrid_->set_v(i, 0, 0);
-		MACGrid_->set_v(i, nx*(ny-1), 0);
+		if (MACGrid_->get_v(i, 0) < 0)
+			MACGrid_->set_v(i, 0, 0);
+		if (MACGrid_->get_v(i, ny-1) > 0)
+			MACGrid_->set_v(i, ny-1, 0);
 	}
 	for (unsigned j = 0; j < ny; j++) {
-		MACGrid_->set_u(0, j, 0);
-		MACGrid_->set_u(nx-1, j, 0);
+		if (MACGrid_->get_u(0, j) < 0)
+			MACGrid_->set_u(0, j, 0);
+		if (MACGrid_->get_u(nx-1, j) > 0)
+			MACGrid_->set_u(nx-1, j, 0);
 	}
 }
 

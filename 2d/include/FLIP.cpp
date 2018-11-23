@@ -539,7 +539,7 @@ void FLIP::compute_pressure_matrix() {
 						triplets.push_back(Mac2d::Triplet_t(cellidx+1, cellidx, -1));
 				}
 				// y-adjacent cells
-				if (j+ny < ny && MACGrid_->is_fluid(i, j+1)) {
+				if (j+1 < ny && MACGrid_->is_fluid(i, j+1)) {
 						triplets.push_back(Mac2d::Triplet_t(cellidx, cellidx + ny, -1));
 						// Use symmetry to avoid computing (i,j-1) separately
 						triplets.push_back(Mac2d::Triplet_t(cellidx + ny, cellidx, -1));

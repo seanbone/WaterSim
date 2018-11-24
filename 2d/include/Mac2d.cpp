@@ -424,7 +424,7 @@ const std::vector< Mac2d::Triplet_t >& Mac2d::get_a_diag() {
 
 //7. Indices from coordinate -------------------------------------------
 Mac2d::Pair_t Mac2d::index_from_coord(const double x, const double y){
-	assert((x < sizex_ - 0.5*cell_sizex_ || y < sizey_ - 0.5*cell_sizey_ || x > -0.5*cell_sizex_ || y > -0.5*cell_sizey_)
+	assert((x < sizex_ - 0.5*cell_sizex_ && y < sizey_ - 0.5*cell_sizey_ && x > -0.5*cell_sizex_ && y > -0.5*cell_sizey_)
 			&& "Attention: out of the grid!");
 	return Pair_t(int(x/cell_sizex_ + 0.5), int(y/cell_sizey_ + 0.5));
 }

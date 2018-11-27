@@ -23,7 +23,6 @@ class WaterSim : public Simulation {
 		viewer_t* const p_viewer;
 		
 		// MAC grid data structure
-		Mac2d* p_mac_grid;
 		int m_res_x, m_res_y; // no. of cells in X and Y directions
 		double m_len_x, m_len_y; // size in [m] of full grid
 
@@ -57,7 +56,9 @@ class WaterSim : public Simulation {
 
 
 	public:
-
+		//MAC grid data structure
+		Mac2d* p_mac_grid;
+		
 		WaterSim(viewer_t& viewer, 
 				 const int res_x, const int res_y,
 				 const double len_x, const double len_y,

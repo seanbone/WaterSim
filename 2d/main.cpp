@@ -73,6 +73,34 @@ class WaterGui : public Gui {
             ImGui::InputInt("Grid resolution Y", &m_grid_res_y, 0, 0);
             ImGui::Checkbox("Display grid", &m_display_grid);
       }
+      
+      /**
+       * Add maximum and minimum pressure to the GUI
+       */
+      virtual void drawSimulationStats() override{	        
+	        //Print the maximal and the minimal pressure at every time-step
+	        double pressure_max;
+	        double pressure_min;
+	        unsigned nx = (*p_waterSim).p_mac_grid->get_num_cells_x();
+	        unsigned ny = (*p_waterSim).p_mac_grid->get_num_cells_y();
+	        for (unsigned j = 0; j < nx; j++) {
+	            for (unsigned i = 0; i < ny; i++) {
+					double temp = (*p_waterSim).p_mac_grid->get_pressure(i, j);
+					if(i == 0 && j == 0){
+						pressure_max = temp;
+						pressure_min = temp;
+					}
+					else{
+						if(temp > pressure_max)
+							pressure_max = temp;
+						if(temp < pressure_min)
+							pressure_min = temp;
+					}
+	            }
+	        }
+			ImGui::Text("Maximal pressure: %.5f", pressure_max);
+			ImGui::Text("Minimal pressure: %.5f", pressure_min);
+	  }
 
       /**
        * Override Gui::resetSimulation to also update simulation parameters.

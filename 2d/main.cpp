@@ -18,8 +18,8 @@ class WaterGui : public Gui {
       double m_system_size_x = 5; // X dimension of system in m
       double m_system_size_y = 5; // Y dimension of system in m
       
-      int m_grid_res_x = 5; // Number of cells on X axis
-      int m_grid_res_y = 5; // Number of cells on Y axis
+      int m_grid_res_x = 20; // Number of cells on X axis
+      int m_grid_res_y = 20; // Number of cells on Y axis
 
       double m_dt = 0.005 * std::sqrt((m_grid_res_x + m_grid_res_y) * 0.5);
 

@@ -111,14 +111,14 @@ double FLIP::compute_timestep( const double dt ){
 	double dt_new;
 	
 	Eigen::Vector3d vel;
-	double u_max;
-	double v_max;
+	double u_max = 0;
+	double v_max = 0;
 	for( unsigned int n = 0; n < num_particles_; ++n ){
 		vel = (particles_ + n)->get_velocity();
-		if ( vel(0) > u_max ){
+		if ( std::abs(vel(0)) > std::abs(u_max) ){
 			u_max = vel(0);
 		}
-		else if ( vel(1) > v_max ){
+		else if ( std::abs(vel(1)) > std::abs(v_max) ){
 			v_max = vel(1);
 		}
 	}
@@ -417,11 +417,11 @@ void FLIP::extrapolate_v( const bool* const visited_v ){
 				if ( i != 0 ){
 					if ( !(*(visited_v + N*j + (i-1))) ){
 						if ( MACGrid_->get_v(i-1, j) != 0 ){
-							double tmp = MACGrid_->get_v(i-1, j) * *(counter + (N+1)*j + (i-1));
-							*(counter + (N+1)*j + (i-1)) += 1;
-							MACGrid_->set_v(i-1, j, (tmp + MACGrid_->get_v(i, j))/(*(counter + (N+1)*j + (i-1))));
+							double tmp = MACGrid_->get_v(i-1, j) * *(counter + N*j + (i-1));
+							*(counter + N*j + (i-1)) += 1;
+							MACGrid_->set_v(i-1, j, (tmp + MACGrid_->get_v(i, j))/(*(counter + N*j + (i-1))));
 						} else {
-							*(counter + (N+1)*j + (i-1)) += 1;
+							*(counter + N*j + (i-1)) += 1;
 							MACGrid_->set_v(i-1, j, MACGrid_->get_v(i, j));
 						}
 					}
@@ -429,11 +429,11 @@ void FLIP::extrapolate_v( const bool* const visited_v ){
 				else if ( j != 0 ){
 					if ( !(*(visited_v + N*(j-1) + i)) ){
 						if ( MACGrid_->get_v(i, j-1) != 0 ){
-							double tmp = MACGrid_->get_v(i, j-1) * *(counter + (N+1)*(j-1) + i);
-							*(counter + (N+1)*(j-1) + i) += 1;
-							MACGrid_->set_v(i, j-1, (tmp + MACGrid_->get_v(i, j))/(*(counter + (N+1)*(j-1) + i)));
+							double tmp = MACGrid_->get_v(i, j-1) * *(counter + N*(j-1) + i);
+							*(counter + N*(j-1) + i) += 1;
+							MACGrid_->set_v(i, j-1, (tmp + MACGrid_->get_v(i, j))/(*(counter + N*(j-1) + i)));
 						} else {
-							*(counter + (N+1)*(j-1) + i) += 1;
+							*(counter + N*(j-1) + i) += 1;
 							MACGrid_->set_v(i, j-1, MACGrid_->get_v(i, j));
 						}
 					}
@@ -441,11 +441,11 @@ void FLIP::extrapolate_v( const bool* const visited_v ){
 				else if ( i != N-1 ){
 					if ( !(*(visited_v + N*j + (i+1))) ){
 						if ( MACGrid_->get_v(i+1, j) != 0 ){
-							double tmp = MACGrid_->get_v(i+1, j) * *(counter + (N+1)*j + (i+1));
-							*(counter + (N+1)*j + (i+1)) += 1;
-							MACGrid_->set_v(i+1, j, (tmp + MACGrid_->get_v(i, j))/(*(counter + (N+1)*j + (i+1))));
+							double tmp = MACGrid_->get_v(i+1, j) * *(counter + N*j + (i+1));
+							*(counter + N*j + (i+1)) += 1;
+							MACGrid_->set_v(i+1, j, (tmp + MACGrid_->get_v(i, j))/(*(counter + N*j + (i+1))));
 						} else {
-							*(counter + (N+1)*j + (i+1)) += 1;
+							*(counter + N*j + (i+1)) += 1;
 							MACGrid_->set_v(i+1, j, MACGrid_->get_v(i, j));
 						}
 					}
@@ -453,11 +453,11 @@ void FLIP::extrapolate_v( const bool* const visited_v ){
 				else if ( j != M ){
 					if ( !(*(visited_v + N*(j+1) + i)) ){
 						if ( MACGrid_->get_v(i, j+1) != 0 ){
-							double tmp = MACGrid_->get_v(i, j+1) * *(counter + (N+1)*(j+1) + i);
-							*(counter + (N+1)*(j+1) + i) += 1;
-							MACGrid_->set_v(i, j+1, (tmp + MACGrid_->get_v(i, j))/(*(counter + (N+1)*(j+1) + i)));
+							double tmp = MACGrid_->get_v(i, j+1) * *(counter + N*(j+1) + i);
+							*(counter + N*(j+1) + i) += 1;
+							MACGrid_->set_v(i, j+1, (tmp + MACGrid_->get_v(i, j))/(*(counter + N*(j+1) + i)));
 						} else {
-							*(counter + (N+1)*(j+1) + i) += 1;
+							*(counter + N*(j+1) + i) += 1;
 							MACGrid_->set_v(i, j+1, MACGrid_->get_v(i, j));
 						}
 					}

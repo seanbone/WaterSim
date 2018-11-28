@@ -260,7 +260,8 @@ double FLIP::compute_weight( const Eigen::Vector3d& particle_coord,
 							 const double h )
 {
 	double r = (particle_coord - grid_coord).norm();
-	return ( (315/(64 * M_PI * pow(h, 9))) * (pow(h, 2) - pow(r, 2)) );
+	double diff = pow(h, 2) - pow(r, 2);
+	return ( (315/(64 * M_PI * pow(h, 9))) * pow(diff, 3) );
 }
 
 // Accumulate velocities and weights for u					

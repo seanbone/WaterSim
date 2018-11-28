@@ -105,18 +105,18 @@ void WaterSim::updateRenderGeometry() {
         igl::jet(pressures, true, m_renderC);
     }
 
-    std::cout << "\n*************\n";
-    std::cout << "Pressure at (7, 0): " << p_mac_grid->get_pressure(7, 0) << std::endl;
-    std::cout << "Pressure at (7, 1): " << p_mac_grid->get_pressure(7, 1) << std::endl;
-    std::cout << "U velocity at (6.5, 1): " << p_mac_grid->get_u(7, 1) << std::endl;
-    std::cout << "V velocity at (6.5, 1): " << p_mac_grid->get_v(7, 1) << std::endl;
-    std::cout << "U* velocity at (6.5, 1): " << p_mac_grid->get_u_star(7, 1) << std::endl;
-    std::cout << "V* velocity at (6.5, 1): " << p_mac_grid->get_v_star(7, 1) << std::endl;
-    std::cout << "X of particle 0: " << flip_particles->get_position()(0) << std::endl;
-    std::cout << "Y of particle 0: " << flip_particles->get_position()(1) << std::endl;
-    std::cout << "U of particle 0: " << flip_particles->get_velocity()(0) << std::endl;
-    std::cout << "V of particle 0: " << flip_particles->get_velocity()(1) << std::endl;
-    std::cout << "\n*************\n";
+    //~ std::cout << "\n*************\n";
+    //~ std::cout << "Pressure at (7, 0): " << p_mac_grid->get_pressure(7, 0) << std::endl;
+    //~ std::cout << "Pressure at (7, 1): " << p_mac_grid->get_pressure(7, 1) << std::endl;
+    //~ std::cout << "U velocity at (6.5, 1): " << p_mac_grid->get_u(7, 1) << std::endl;
+    //~ std::cout << "V velocity at (6.5, 1): " << p_mac_grid->get_v(7, 1) << std::endl;
+    //~ std::cout << "U* velocity at (6.5, 1): " << p_mac_grid->get_u_star(7, 1) << std::endl;
+    //~ std::cout << "V* velocity at (6.5, 1): " << p_mac_grid->get_v_star(7, 1) << std::endl;
+    //~ std::cout << "X of particle 0: " << flip_particles->get_position()(0) << std::endl;
+    //~ std::cout << "Y of particle 0: " << flip_particles->get_position()(1) << std::endl;
+    //~ std::cout << "U of particle 0: " << flip_particles->get_velocity()(0) << std::endl;
+    //~ std::cout << "V of particle 0: " << flip_particles->get_velocity()(1) << std::endl;
+    //~ std::cout << "\n*************\n";
 }
 
 
@@ -186,13 +186,13 @@ void WaterSim::initParticles() {
     m_num_particles = 0;// 4 * (nx) * (ny);
     flip_particles = new Particle[4 * (nx) * (ny)];
 
-    //Eigen::VectorXd rnd = Eigen::VectorXd::Random(8*nx*ny);
-    Eigen::VectorXd rnd = Eigen::VectorXd::Zero(8*nx*ny);
+    Eigen::VectorXd rnd = Eigen::VectorXd::Random(8*nx*ny);
+    //~ Eigen::VectorXd rnd = Eigen::VectorXd::Zero(8*nx*ny);
 
 	//~ flip_particles[0] = Particle(sx*(nx/2), sy*(ny/2), 0.);
 	
-    for (unsigned x = 3; x < 13; x++) {
-        for (unsigned y = 3; y < 13; y++) {
+    for (unsigned x = 5; x < 15; x++) {
+        for (unsigned y = 5; y < 15; y++) {
             // Populate cell (x,y)
             double cx = x * sx;
             double cy = y * sy;
@@ -284,4 +284,3 @@ void WaterSim::initMacViz() {
     }
 
 }
-

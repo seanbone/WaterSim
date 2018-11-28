@@ -566,7 +566,7 @@ void FLIP::grid_to_particle(){
 	//  -> See slides Fluids II, FLIP_explained.pdf
 	// FLIP: alpha = 0.
 	// PIC: alpha = 1.
-	double alpha = 0.05;
+	double alpha = 0.10;
 	
 	for(unsigned i = 0; i < num_particles_; ++i){
 		//Store the initial positions and velocities of the particles

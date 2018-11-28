@@ -13,6 +13,7 @@ class WaterGui : public Gui {
       // Simulation parameters
       bool m_export_meshes = false;
       bool m_show_pressures = false;
+      bool m_display_velocity_arrows = true;
       int m_export_fps = 30;
 
       double m_system_size_x = 5; // X dimension of system in m
@@ -38,7 +39,8 @@ class WaterGui : public Gui {
          // create a new simulation instance
          p_waterSim = new WaterSim(m_viewer, m_grid_res_x, m_grid_res_y,
                                    m_system_size_x, m_system_size_y,
-                                   m_density, m_gravity, m_show_pressures);
+                                   m_density, m_gravity, m_show_pressures, 
+                                   m_display_velocity_arrows);
 
          // set this simulation as the simulation that is running in our GUI
          setSimulation(p_waterSim);
@@ -54,7 +56,8 @@ class WaterGui : public Gui {
          p_waterSim->setTimestep(m_dt);
          p_waterSim->updateParams(m_grid_res_x, m_grid_res_y,
                                   m_system_size_x, m_system_size_y,
-                                  m_density, m_gravity, m_show_pressures);
+                                  m_density, m_gravity, m_show_pressures, 
+                                  m_display_velocity_arrows);
       };
 
       /**
@@ -72,6 +75,7 @@ class WaterGui : public Gui {
             ImGui::InputInt("Grid resolution X", &m_grid_res_x, 0, 0);
             ImGui::InputInt("Grid resolution Y", &m_grid_res_y, 0, 0);
             ImGui::Checkbox("Display grid", &m_display_grid);
+            ImGui::Checkbox("Display velocity arrows", &m_display_velocity_arrows);      
       }
       
       /**
@@ -99,7 +103,7 @@ class WaterGui : public Gui {
 	            }
 	        }
 			ImGui::Text("Maximal pressure: %.5f", pressure_max);
-			ImGui::Text("Minimal pressure: %.5f", pressure_min);
+			ImGui::Text("Minimal pressure: %.5f", pressure_min);		
 	  }
 
       /**

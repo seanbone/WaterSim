@@ -4,11 +4,13 @@
 WaterSim::WaterSim(WaterSim::viewer_t& viewer,
         const int res_x, const int res_y,
         const double len_x, const double len_y,
-        const double density, const double gravity, const bool show_pressures,
+        const double density, const double gravity, 
+        const double alpha, const bool show_pressures,
         const bool show_velocity_arrows)
         : Simulation(), p_viewer(&viewer), m_res_x(res_x), m_res_y(res_y),
           m_len_x(len_y), m_len_y(len_y), m_fluid_density_(density),
-          m_gravity_mag_(gravity), m_show_pressures(show_pressures),
+          m_gravity_mag_(gravity), m_alpha_(alpha),
+          m_show_pressures(show_pressures),
           m_show_velocity_arrows(show_velocity_arrows) {
 
     init();
@@ -65,7 +67,7 @@ void WaterSim::resetMembers() {
 
 void WaterSim::updateParams(const int res_x, const int res_y, 
 				  const double len_x, const double len_y,
-                  const double density, const double gravity,
+                  const double density, const double gravity, const double alpha,
                   const bool show_pressures, const bool show_velocity_arrows) {
     m_res_x = res_x;
     m_res_y = res_y;
@@ -73,6 +75,7 @@ void WaterSim::updateParams(const int res_x, const int res_y,
     m_len_y = len_y;
     m_fluid_density_ = density;
     m_gravity_mag_ = gravity;
+    m_alpha_ = alpha;
     m_show_pressures = show_pressures;
     m_show_velocity_arrows = show_velocity_arrows;
     std::cout << "\nParams updated\n";
@@ -215,7 +218,7 @@ void WaterSim::initMacGrid() {
 
 void WaterSim::initFLIP() {
     p_flip = new FLIP(flip_particles, m_num_particles, p_mac_grid,
-                      m_fluid_density_, m_gravity_mag_);
+                      m_fluid_density_, m_gravity_mag_, m_alpha_);
 }
 
 

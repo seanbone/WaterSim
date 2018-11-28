@@ -1,9 +1,9 @@
 #include "FLIP.h"
 
 FLIP::FLIP(Particle* particles, const unsigned num_particles, Mac2d* MACGrid,
-		   const double density, const double gravity) 
+		   const double density, const double gravity, const double alpha) 
 	: particles_(particles), num_particles_(num_particles), MACGrid_(MACGrid),
-	  fluid_density_(density), gravity_mag_(gravity) {
+	  fluid_density_(density), gravity_mag_(gravity), alpha_(alpha) {
 	
 }
 
@@ -564,9 +564,7 @@ void FLIP::apply_pressure_gradients(const double dt) {
 void FLIP::grid_to_particle(){
 	// FLIP grid to particle transfer
 	//  -> See slides Fluids II, FLIP_explained.pdf
-	// FLIP: alpha = 0.
-	// PIC: alpha = 1.
-	double alpha = 0.05;
+	double alpha = alpha_;
 	
 	for(unsigned i = 0; i < num_particles_; ++i){
 		//Store the initial positions and velocities of the particles

@@ -45,6 +45,9 @@ class WaterSim : public Simulation {
 		// Index of the ViewerData object containing the mesh representing
 		//  the grid MAC grid in viewer.data_list
 		unsigned int m_grid_data_idx;
+		unsigned int m_velocity_u_idx;
+		unsigned int m_velocity_v_idx;
+		
 
 		unsigned int m_num_particles;
 		Eigen::MatrixXd m_particles; // Particle positions for rendering, Nx3
@@ -56,10 +59,10 @@ class WaterSim : public Simulation {
 		Eigen::MatrixXd m_renderC;  // colors per face for rendering, Nx3
 		Eigen::MatrixXd m_renderEC; // colors of edges of mac grid, Nx3
 		
-		Eigen::MatrixXd m_velocities;
-		Eigen::MatrixXd m_velocities_color;
-		
-
+		Eigen::MatrixXd m_render_velocity_u_V;
+		Eigen::MatrixXi m_render_velocity_u_E;
+		Eigen::MatrixXd m_render_velocity_v_V;
+		Eigen::MatrixXi m_render_velocity_v_E;
 
 	public:
 		//MAC grid data structure

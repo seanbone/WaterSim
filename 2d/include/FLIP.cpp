@@ -130,7 +130,7 @@ void FLIP::compute_velocity_field() {
 	bool* visited_u = new bool[M*(N+1)];
 	bool* visited_v = new bool[N*(M+1)];
 	std::fill(visited_u, visited_u + M*(N+1), 0);
-	std::fill(visited_u, visited_u + N*(M+1), 0);
+	std::fill(visited_v, visited_v + N*(M+1), 0);
 	
 	// Reset all fluid flags
 	MACGrid_->reset_fluid();

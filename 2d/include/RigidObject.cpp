@@ -115,9 +115,9 @@ void RigidObject::setTorque(const Eigen::Vector3d& t) {
     m_torque = t;
 }
 
-void RigidObject::resetForce() { m_force.setZero(); };
+void RigidObject::resetForce() { m_force.setZero(); }
 
-void RigidObject::resetTorque() { m_torque.setZero(); };
+void RigidObject::resetTorque() { m_torque.setZero(); }
 
 double RigidObject::getMass() const { return m_mass; }
 

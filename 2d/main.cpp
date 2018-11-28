@@ -13,16 +13,18 @@ class WaterGui : public Gui {
       // Simulation parameters
       bool m_export_meshes = false;
       bool m_show_pressures = false;
-      bool m_display_velocity_arrows = true;
+      bool m_display_velocity_arrows = false;
       int m_export_fps = 30;
 
-      double m_system_size_x = 5; // X dimension of system in m
-      double m_system_size_y = 5; // Y dimension of system in m
+      double m_system_size_x = 20; // X dimension of system in m
+      double m_system_size_y = 20; // Y dimension of system in m
       
       int m_grid_res_x = 20; // Number of cells on X axis
       int m_grid_res_y = 20; // Number of cells on Y axis
 
       double m_dt = 0.005 * std::sqrt((m_grid_res_x + m_grid_res_y) * 0.5);
+
+      double m_alpha = 0.05;
 
       double m_density = 1000.0;  // Fluid density in kg/m^3
       double m_gravity = 9.81; // Acceleration of gravity in m/s^2
@@ -39,8 +41,8 @@ class WaterGui : public Gui {
          // create a new simulation instance
          p_waterSim = new WaterSim(m_viewer, m_grid_res_x, m_grid_res_y,
                                    m_system_size_x, m_system_size_y,
-                                   m_density, m_gravity, m_show_pressures, 
-                                   m_display_velocity_arrows);
+                                   m_density, m_gravity, m_alpha,
+                                   m_show_pressures, m_display_velocity_arrows);
 
          // set this simulation as the simulation that is running in our GUI
          setSimulation(p_waterSim);
@@ -56,7 +58,7 @@ class WaterGui : public Gui {
          p_waterSim->setTimestep(m_dt);
          p_waterSim->updateParams(m_grid_res_x, m_grid_res_y,
                                   m_system_size_x, m_system_size_y,
-                                  m_density, m_gravity, m_show_pressures, 
+                                  m_density, m_gravity, m_alpha, m_show_pressures, 
                                   m_display_velocity_arrows);
       };
 
@@ -66,7 +68,7 @@ class WaterGui : public Gui {
       virtual void drawSimulationParameterMenu() override {
             ImGui::Checkbox("Export meshes", &m_export_meshes);
             ImGui::Checkbox("Show pressure field", &m_show_pressures);
-            //ImGui::InputInt("Export frequency [FPS]", &m_export_fps, 0, 0);
+            ImGui::InputDouble("Alpha", &m_alpha, 0, 0);
             ImGui::InputDouble("Timestep [s]", &m_dt, 0, 0);
             ImGui::InputDouble("Density [kg/m^3]", &m_density, 0, 0);
             ImGui::InputDouble("Gravity [m/s^2]", &m_gravity, 0, 0);

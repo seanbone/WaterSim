@@ -23,7 +23,7 @@ class FLIP {
 	 * - MACGrid is an initialized MAC grid
 	 */
 	FLIP(Particle* particles, const unsigned num_particles, Mac2d* MACGrid,
-		 const double density, const double gravity);
+		 const double density, const double gravity, const double alpha);
 	
 	/** Perform one FLIP step
 	 * Params:
@@ -40,6 +40,10 @@ class FLIP {
 	const unsigned num_particles_;
 	const double fluid_density_;
 	const double gravity_mag_;
+
+	// FLIP: alpha = 0.
+	// PIC: alpha = 1.
+	const double alpha_;
 	
 	// MAC Grid
 	Mac2d* MACGrid_;

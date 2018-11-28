@@ -194,7 +194,6 @@ bool FLIP::check_threshold( const Eigen::Vector3d& particle_coord,
 					  const Eigen::Vector3d& grid_coord, 
 					  const double h )
 {
-	//~ std::cout << "TEST RESULTS:\n" << particle_coord << "\n" << grid_coord << "\n" << h << std::endl;
 	if ( (particle_coord - grid_coord).norm() <= h ) {
 		return true;
 	}
@@ -242,9 +241,7 @@ void FLIP::accumulate_v( const Eigen::Vector3d& pos,
 						 const int i,
 						 const int j )
 {
-	std::cout << "PASSED: " << i << " " << j << std::endl;
 	if ( check_threshold(pos, grid_coord, h) ){
-		std::cout << "VISITED: " << i << " " << j << std::endl;
 		double v_prev = MACGrid_->get_v(i, j);
 		double W_v = compute_weight(pos, grid_coord, h);
 		double v_curr = v_prev + (W_v * vel(1));
@@ -337,25 +334,21 @@ void FLIP::extrapolate_v( const bool* const visited_v ){
 		for( unsigned i = 0; i < N; ++i ){
 			if ( *(visited_v + N*j + i) ){
 				if ( i != 0 and !(*(visited_v + N*j + (i-1))) ){
-					std::cout << "DONE - left: " << i << "  " <<  j << std::endl;
 					double tmp = MACGrid_->get_v(i-1, j) * *(counter + N*j + (i-1));
 					*(counter + N*j + (i-1)) += 1;
 					MACGrid_->set_v(i-1, j, (tmp + MACGrid_->get_v(i, j))/(*(counter + N*j + (i-1))));
 				}
 				if ( j != 0 and !(*(visited_v + N*(j-1) + i)) ){
-					std::cout << "DONE - down: " << i << "  " <<  j << std::endl;
 					double tmp = MACGrid_->get_v(i, j-1) * *(counter + N*(j-1) + i);
 					*(counter + N*(j-1) + i) += 1;
 					MACGrid_->set_v(i, j-1, (tmp + MACGrid_->get_v(i, j))/(*(counter + N*(j-1) + i)));
 				}
 				if ( i != N-1 and !(*(visited_v + N*j + (i+1))) ){
-					std::cout << "DONE - right: " << i << "  " <<  j << std::endl;
 					double tmp = MACGrid_->get_v(i+1, j) * *(counter + N*j + (i+1));
 					*(counter + N*j + (i+1)) += 1;
 					MACGrid_->set_v(i+1, j, (tmp + MACGrid_->get_v(i, j))/(*(counter + N*j + (i+1))));
 				}
 				if ( j != M and !(*(visited_v + N*(j+1) + i)) ){
-					std::cout << "DONE - up: " << i << "  " <<  j << std::endl;
 					double tmp = MACGrid_->get_v(i, j+1) * *(counter + N*(j+1) + i);
 					*(counter + N*(j+1) + i) += 1;
 					MACGrid_->set_v(i, j+1, (tmp + MACGrid_->get_v(i, j))/(*(counter + N*(j+1) + i)));

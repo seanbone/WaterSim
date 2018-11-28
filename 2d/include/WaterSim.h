@@ -29,6 +29,7 @@ class WaterSim : public Simulation {
 		// Other params
 		double m_fluid_density_;
 		double m_gravity_mag_;
+		double m_alpha_;
 		bool m_show_pressures;
 		bool m_show_velocity_arrows;
 
@@ -68,6 +69,7 @@ class WaterSim : public Simulation {
 				 const int res_x, const int res_y,
 				 const double len_x, const double len_y,
 				 const double density, const double gravity,
+				 const double alpha,
 				 const bool show_pressures, const bool show_velocity_arrows);
 
 		~WaterSim() {
@@ -88,7 +90,7 @@ class WaterSim : public Simulation {
 		 */
 		void updateParams(const int res_x, const int res_y, 
 						  const double len_x, const double len_y,
-						  const double density, const double gravity,
+						  const double density, const double gravity, const double alpha,
 						  const bool show_pressures, const bool show_velocity_arrows);
 
 		/*

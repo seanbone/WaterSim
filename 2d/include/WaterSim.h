@@ -30,6 +30,7 @@ class WaterSim : public Simulation {
 		double m_fluid_density_;
 		double m_gravity_mag_;
 		bool m_show_pressures;
+		bool m_show_velocity_arrows;
 
 		// List of Particles
 		Particle* flip_particles;
@@ -53,6 +54,10 @@ class WaterSim : public Simulation {
 		Eigen::MatrixXi m_renderF;  // face indices for rendering, Nx3
 		Eigen::MatrixXd m_renderC;  // colors per face for rendering, Nx3
 		Eigen::MatrixXd m_renderEC; // colors of edges of mac grid, Nx3
+		
+		Eigen::MatrixXd m_velocities;
+		Eigen::MatrixXd m_velocities_color;
+		
 
 
 	public:
@@ -63,7 +68,7 @@ class WaterSim : public Simulation {
 				 const int res_x, const int res_y,
 				 const double len_x, const double len_y,
 				 const double density, const double gravity,
-				 const bool show_pressures);
+				 const bool show_pressures, const bool show_velocity_arrows);
 
 		~WaterSim() {
 			delete p_mac_grid;
@@ -84,7 +89,7 @@ class WaterSim : public Simulation {
 		void updateParams(const int res_x, const int res_y, 
 						  const double len_x, const double len_y,
 						  const double density, const double gravity,
-						  const bool show_pressures);
+						  const bool show_pressures, const bool show_velocity_arrows);
 
 		/*
 		 * Update the rendering data structures. This method will be called in

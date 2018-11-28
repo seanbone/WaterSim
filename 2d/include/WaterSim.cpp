@@ -142,21 +142,23 @@ void WaterSim::renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) {
     if(m_show_velocity_arrows){
 		unsigned nx = p_mac_grid->get_num_cells_x();
         unsigned ny = p_mac_grid->get_num_cells_y();
+        double dx = p_mac_grid->get_cell_sizex();
+        double dy = p_mac_grid->get_cell_sizey();
         for (unsigned j = 0; j < nx + 1; j++) {
             for (unsigned i = 0; i < ny; i++) {
-                Eigen::RowVector3d start(i-0.5, j, 0);
+                Eigen::RowVector3d start((i-0.5)*dx, j*dy, 0);
                 double temp = p_mac_grid->get_u(i,j);
                 temp *= m_dt;
-                Eigen::RowVector3d end(i-0.5 + temp, j, 0);
+                Eigen::RowVector3d end((i-0.5)*dx + temp, j*dy, 0);
                 viewer.data().add_edges(start, end, Eigen::RowVector3d(0,0,0));
             }
         }
         for (unsigned j = 0; j < nx + 1; j++) {
             for (unsigned i = 0; i < ny + 1; i++) {
-                Eigen::RowVector3d start(i, j - 0.5, 0);
+                Eigen::RowVector3d start(i*dx, (j - 0.5)*dy, 0);
                 double temp = p_mac_grid->get_v(i,j);
                 temp *= m_dt;
-                Eigen::RowVector3d end(i, j-0.5 + temp, 0);
+                Eigen::RowVector3d end(i*dx, (j-0.5)*dy + temp, 0);
                 viewer.data().add_edges(start, end, Eigen::RowVector3d(0,0,0));
             }
         }
@@ -186,7 +188,7 @@ void WaterSim::initParticles() {
 
     //Eigen::VectorXd rnd = Eigen::VectorXd::Random(8*nx*ny);
     Eigen::VectorXd rnd = Eigen::VectorXd::Zero(8*nx*ny);
-	
+
 	//~ flip_particles[0] = Particle(sx*(nx/2), sy*(ny/2), 0.);
 	
     for (unsigned x = 3; x < 13; x++) {

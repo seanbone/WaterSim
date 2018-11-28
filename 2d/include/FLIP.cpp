@@ -261,7 +261,8 @@ double FLIP::compute_weight( const Eigen::Vector3d& particle_coord,
 							 const double h )
 {
 	double r = (particle_coord - grid_coord).norm();
-	return ( (315/(64 * M_PI * std::pow(h, 9))) * (std::pow(h, 2) - std::pow(r, 2)) );
+	double diff = std::pow(h, 2) - std::pow(r, 2);
+	return ( (315/(64 * M_PI * std::pow(h, 9))) * std::pow(diff, 3) );
 }
 
 // Accumulate velocities and weights for u					
@@ -507,15 +508,15 @@ void FLIP::apply_boundary_conditions() {
 
 	// Outer (system) boundaries
 	for (unsigned i = 0; i < nx; i++) {
-		if (MACGrid_->get_v(i, 0) < 0)
+		//if (MACGrid_->get_v(i, 0) < 0)
 			MACGrid_->set_v(i, 0, 0);
-		//~ if (MACGrid_->get_v(i, ny) > 0)
+		//if (MACGrid_->get_v(i, ny) > 0)
 			MACGrid_->set_v(i, ny, 0);
 	}
 	for (unsigned j = 0; j < ny; j++) {
-		if (MACGrid_->get_u(0, j) < 0)
+		//if (MACGrid_->get_u(0, j) < 0)
 			MACGrid_->set_u(0, j, 0);
-		if (MACGrid_->get_u(nx, j) > 0)
+		//if (MACGrid_->get_u(nx, j) > 0)
 			MACGrid_->set_u(nx, j, 0);
 	}
 }
@@ -534,9 +535,15 @@ void FLIP::do_pressures(const double dt) {
 	// Solve for p: Ap = d (MICCG(0))
 	// *TODO: use MICCG(0) solver
 	using namespace Eigen;
-	using solver_t = ConjugateGradient<SparseMatrix<double>, Lower|Upper>;
+	//using solver_t = ConjugateGradient<SparseMatrix<double>, Lower|Upper>;
+	//using solver_t = SimplicialLDLT<SparseMatrix<double>, Lower|Upper>;
+	using solver_t = ConjugateGradient<SparseMatrix<double>, Lower|Upper, IncompleteCholesky<double> >;
+	
+	//MatrixXd A = A_;
 	solver_t solver;
+	solver.setMaxIterations(100);
 	solver.compute(A_);
+	//VectorXd p = A.fullPivLu().solve(d_);
 	VectorXd p = solver.solve(d_);
 	//~ std::cout << "Error: " << (A_*p - d_).norm() << std::endl;
 
@@ -582,10 +589,10 @@ void FLIP::compute_pressure_matrix() {
 	unsigned cellidx = 0;
 	for (unsigned j = 0; j < ny; j++) {
 		for (unsigned i = 0; i < nx; i++, cellidx++) {
+			// Copy diagonal entry
+			auto& diag_e = MACGrid_->get_a_diag()[i + j*nx];
+			triplets.push_back(diag_e);
 			if (MACGrid_->is_fluid(i, j)) {
-				// Copy diagonal entry
-				auto& diag_e = MACGrid_->get_a_diag()[i + j*nx];
-				triplets.push_back(diag_e);
 				//triplets.push_back(Mac2d::Triplet_t(cellidx, cellidx, diag_e.value()));
 				
 				// Compute off-diagonal entries

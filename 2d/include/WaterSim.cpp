@@ -36,6 +36,10 @@ void WaterSim::init() {
     // Index of ViewerData instance dedicated to MAC grid
     m_grid_data_idx = viewer.append_mesh();
     
+    // Index of ViewerData instance dedicated to the velocities
+    m_velocity_u_idx = viewer.append_mesh();
+    m_velocity_v_idx = viewer.append_mesh();
+    
     // Update rendering geometry
     updateRenderGeometry();
 }
@@ -59,6 +63,10 @@ void WaterSim::resetMembers() {
     // FLIP simulator
     delete p_flip;
     initFLIP();
+    
+	//Velocity arrows
+	p_viewer->data_list[m_velocity_u_idx].clear();
+    p_viewer->data_list[m_velocity_u_idx].clear();
 }
 
 
@@ -95,8 +103,8 @@ void WaterSim::updateRenderGeometry() {
         unsigned nx = p_mac_grid->get_num_cells_x();
         unsigned ny = p_mac_grid->get_num_cells_y();
         Eigen::VectorXd pressures(2*nx*ny);
-        for (unsigned j = 0; j < nx; j++) {
-            for (unsigned i = 0; i < ny; i++) {
+        for (unsigned j = 0; j < ny; j++) {
+            for (unsigned i = 0; i < nx; i++) {
                 pressures(2*(i + j*ny)) = p_mac_grid->get_pressure(i, j);
                 pressures(2*(i + j*ny) + 1) = p_mac_grid->get_pressure(i, j);
             }
@@ -104,6 +112,51 @@ void WaterSim::updateRenderGeometry() {
 
         igl::jet(pressures, true, m_renderC);
     }
+    
+    if(m_show_velocity_arrows){
+		unsigned nx = p_mac_grid->get_num_cells_x();
+        unsigned ny = p_mac_grid->get_num_cells_y();
+        double dx = p_mac_grid->get_cell_sizex();
+        double dy = p_mac_grid->get_cell_sizey();
+		m_render_velocity_u_V.resize(2*((nx+1)*ny),3);
+		m_render_velocity_u_E.resize((nx+1)*ny,2);
+		m_render_velocity_v_V.resize(2*(nx*(ny+1)),3);
+		m_render_velocity_v_E.resize(nx*(ny+1),2);
+        for (unsigned j = 0; j < ny ; j++) {
+            for (unsigned i = 0; i < nx + 1; i++) {
+                //insert start vertex
+                Eigen::Vector3d start((i-0.5)*dx, j*dy, 0);
+                m_render_velocity_u_V.row(2*((nx+1)*j + i)) = start;
+                
+                //insert end vertex
+                double temp = p_mac_grid->get_u(i,j);
+                temp *= m_dt;
+                Eigen::Vector3d end((i-0.5)*dx + temp, j*dy, 0);
+                m_render_velocity_u_V.row(2*((nx+1)*j + i) + 1) = end;
+                
+                //insert edge
+                m_render_velocity_u_E((nx+1)*j + i,0) = 2*((nx+1)*j + i);
+                m_render_velocity_u_E((nx+1)*j + i,1) = 2*((nx+1)*j + i) + 1;
+            }
+        }
+        for (unsigned j = 0; j < ny + 1; j++) {
+            for (unsigned i = 0; i < nx; i++) {
+                //insert start vertex
+                Eigen::Vector3d start(i*dx, (j - 0.5)*dy, 0);
+                m_render_velocity_v_V.row(2*(nx*j+i)) = start;
+                
+                //insert end vertex
+                double temp = p_mac_grid->get_v(i,j);
+                temp *= m_dt;
+                Eigen::Vector3d end(i*dx, (j-0.5)*dy + temp, 0);
+                m_render_velocity_v_V.row(2*(nx*j+i) + 1) = end;
+                
+                //insert edge
+                m_render_velocity_v_E(nx*j+i,0) = 2*(nx*j+i);
+                m_render_velocity_v_E(nx*j+i,1) = 2*(nx*j+i) + 1;
+            }
+        }
+	}
 
     std::cout << "\n*************\n";
     std::cout << "Pressure at (7, 0): " << p_mac_grid->get_pressure(7, 0) << std::endl;
@@ -140,35 +193,9 @@ void WaterSim::renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) {
     viewer.data_list[m_particles_data_idx].point_size = 5;
     
     if(m_show_velocity_arrows){
-		unsigned nx = p_mac_grid->get_num_cells_x();
-        unsigned ny = p_mac_grid->get_num_cells_y();
-        double dx = p_mac_grid->get_cell_sizex();
-        double dy = p_mac_grid->get_cell_sizey();
-        for (unsigned j = 0; j < nx + 1; j++) {
-            for (unsigned i = 0; i < ny; i++) {
-                Eigen::RowVector3d start((i-0.5)*dx, j*dy, 0);
-                double temp = p_mac_grid->get_u(i,j);
-                temp *= m_dt;
-                Eigen::RowVector3d end((i-0.5)*dx + temp, j*dy, 0);
-                viewer.data().add_edges(start, end, Eigen::RowVector3d(0,0,0));
-            }
-        }
-        for (unsigned j = 0; j < nx + 1; j++) {
-            for (unsigned i = 0; i < ny + 1; i++) {
-                Eigen::RowVector3d start(i*dx, (j - 0.5)*dy, 0);
-                double temp = p_mac_grid->get_v(i,j);
-                temp *= m_dt;
-                Eigen::RowVector3d end(i*dx, (j-0.5)*dy + temp, 0);
-                viewer.data().add_edges(start, end, Eigen::RowVector3d(0,0,0));
-            }
-        }
+		viewer.data_list[m_velocity_u_idx].set_edges(m_render_velocity_u_V, m_render_velocity_u_E, m_renderEC);
+		viewer.data_list[m_velocity_v_idx].set_edges(m_render_velocity_v_V, m_render_velocity_v_E, m_renderEC);
 	}
-    
-    /*Eigen::RowVector3d start(1,1,0);
-	Eigen::RowVector3d end(2,2,0);
-	viewer.data().add_edges(start, end, Eigen::RowVector3d(1.0,0,0));*/
-	//Arrow probe = new Arrow(start, end);
-	//addArrow(start, end);*/
 }
 
 

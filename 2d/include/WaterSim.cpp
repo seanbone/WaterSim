@@ -142,21 +142,23 @@ void WaterSim::renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) {
     if(m_show_velocity_arrows){
 		unsigned nx = p_mac_grid->get_num_cells_x();
         unsigned ny = p_mac_grid->get_num_cells_y();
+        double dx = p_mac_grid->get_cell_sizex();
+        double dy = p_mac_grid->get_cell_sizey();
         for (unsigned j = 0; j < nx + 1; j++) {
             for (unsigned i = 0; i < ny; i++) {
-                Eigen::RowVector3d start(i-0.5, j, 0);
+                Eigen::RowVector3d start((i-0.5)*dx, j*dy, 0);
                 double temp = p_mac_grid->get_u(i,j);
                 temp *= m_dt;
-                Eigen::RowVector3d end(i-0.5 + temp, j, 0);
+                Eigen::RowVector3d end((i-0.5)*dx + temp, j*dy, 0);
                 viewer.data().add_edges(start, end, Eigen::RowVector3d(0,0,0));
             }
         }
         for (unsigned j = 0; j < nx + 1; j++) {
             for (unsigned i = 0; i < ny + 1; i++) {
-                Eigen::RowVector3d start(i, j - 0.5, 0);
+                Eigen::RowVector3d start(i*dx, (j - 0.5)*dy, 0);
                 double temp = p_mac_grid->get_v(i,j);
                 temp *= m_dt;
-                Eigen::RowVector3d end(i, j-0.5 + temp, 0);
+                Eigen::RowVector3d end(i*dx, (j-0.5)*dy + temp, 0);
                 viewer.data().add_edges(start, end, Eigen::RowVector3d(0,0,0));
             }
         }
@@ -181,29 +183,29 @@ void WaterSim::initParticles() {
     unsigned idx = 0;
 
     // 4 particles per fluid cell
-    m_num_particles = 1;// 4 * (nx) * (ny);
+    m_num_particles = 0;// 4 * (nx) * (ny);
     flip_particles = new Particle[4 * (nx) * (ny)];
 
     //Eigen::VectorXd rnd = Eigen::VectorXd::Random(8*nx*ny);
     Eigen::VectorXd rnd = Eigen::VectorXd::Zero(8*nx*ny);
 	
-	flip_particles[0] = Particle(sx*(nx/2), sy*(ny/2), 0.);
+	//flip_particles[0] = Particle(sx*(nx/2), sy*(ny/2), 0.);
 	
-    //~ for (unsigned x = 0; x < nx; x++) {
-        //~ for (unsigned y = 0; y < ny; y++) {
-            //~ // Populate cell (x,y)
-            //~ double cx = x * sx;
-            //~ double cy = y * sy;
+    for (unsigned x = 0; x < nx/3; x++) {
+        for (unsigned y = 0; y < ny; y++) {
+            // Populate cell (x,y)
+            double cx = x * sx;
+            double cy = y * sy;
 
-            //~ flip_particles[idx]     = Particle(cx - sx/4. + sx*rnd(idx  )/8., cy - sy/4. + sy*rnd(idx+1)/8., 0.);
-            //~ flip_particles[idx + 1] = Particle(cx + sx/4. + sx*rnd(idx+2)/8., cy - sy/4. + sy*rnd(idx+3)/8., 0.);
-            //~ flip_particles[idx + 2] = Particle(cx - sx/4. + sx*rnd(idx+4)/8., cy + sy/4. + sy*rnd(idx+5)/8., 0.);
-            //~ flip_particles[idx + 3] = Particle(cx + sx/4. + sx*rnd(idx+6)/8., cy + sy/4. + sy*rnd(idx+7)/8., 0.);
+            flip_particles[idx]     = Particle(cx - sx/4. + sx*rnd(idx  )/8., cy - sy/4. + sy*rnd(idx+1)/8., 0.);
+            flip_particles[idx + 1] = Particle(cx + sx/4. + sx*rnd(idx+2)/8., cy - sy/4. + sy*rnd(idx+3)/8., 0.);
+            flip_particles[idx + 2] = Particle(cx - sx/4. + sx*rnd(idx+4)/8., cy + sy/4. + sy*rnd(idx+5)/8., 0.);
+            flip_particles[idx + 3] = Particle(cx + sx/4. + sx*rnd(idx+6)/8., cy + sy/4. + sy*rnd(idx+7)/8., 0.);
 
-            //~ idx += 4;
-            //~ m_num_particles += 4;
-        //~ }
-    //~ }
+            idx += 4;
+            m_num_particles += 4;
+        }
+    }
 }
 
 

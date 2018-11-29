@@ -475,9 +475,9 @@ void FLIP::compute_pressure_matrix() {
 		}
 	} // outer for
 
-	A_.setZero();
 	//TODO: only resize A_ and d_ at beginning of sim
 	A_.resize(nx*ny, nx*ny);
+	A_.setZero();
 	A_.setFromTriplets(triplets.begin(), triplets.end());
 }
 
@@ -490,10 +490,10 @@ void FLIP::compute_pressure_rhs(const double dt) {
 
 	// Alias for MAC grid
 	auto& g = MACGrid_;
-
-	d_.setZero();
+	
 	//TODO: only resize A_ and d_ at beginning of sim
 	d_.resize(nx*ny);
+	d_.setZero();
 	
 	unsigned cellidx = 0;
 	for (unsigned j = 0; j < ny; j++) {

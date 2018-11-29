@@ -214,27 +214,31 @@ void WaterSim::initParticles() {
 
     // 4 particles per fluid cell
     m_num_particles = 0;// 4 * (nx) * (ny);
-    flip_particles = new Particle[4 * (nx) * (ny)];
+    flip_particles = new Particle[9 * (nx) * (ny)];
 
     //~ Eigen::VectorXd rnd = Eigen::VectorXd::Random(8*nx*ny);
-    Eigen::VectorXd rnd = Eigen::VectorXd::Zero(8*nx*ny);
+    Eigen::VectorXd rnd = Eigen::VectorXd::Zero(18*nx*ny);
 
-	//~ flip_particles[0] = Particle(sx*(nx/2), sy*(ny/2), 0.);
-	
-
-    for (unsigned x = 0; x < nx; x++) {
-        for (unsigned y = 0; y < ny; y++) {
+    for (unsigned x = nx/4; x < 3*nx/4; x++) {
+        for (unsigned y = ny/4; y < 3*ny/4; y++) {
             // Populate cell (x,y)
             double cx = x * sx;
             double cy = y * sy;
 
-            flip_particles[idx]     = Particle(cx - sx/4. + sx*rnd(idx  )/8., cy - sy/4. + sy*rnd(idx+1)/8., 0.);
-            flip_particles[idx + 1] = Particle(cx + sx/4. + sx*rnd(idx+2)/8., cy - sy/4. + sy*rnd(idx+3)/8., 0.);
-            flip_particles[idx + 2] = Particle(cx - sx/4. + sx*rnd(idx+4)/8., cy + sy/4. + sy*rnd(idx+5)/8., 0.);
-            flip_particles[idx + 3] = Particle(cx + sx/4. + sx*rnd(idx+6)/8., cy + sy/4. + sy*rnd(idx+7)/8., 0.);
+            flip_particles[idx]     = Particle(cx - sx/3. + sx*rnd(idx   )/12., cy - sy/3. + sy*rnd(idx+1 )/12., 0.);
+            flip_particles[idx + 1] = Particle(cx         + sx*rnd(idx+2 )/12., cy - sy/3. + sy*rnd(idx+3 )/12., 0.);
+            flip_particles[idx + 2] = Particle(cx + sx/3. + sx*rnd(idx+4 )/12., cy - sy/3. + sy*rnd(idx+5 )/12., 0.);
 
-            idx += 4;
-            m_num_particles += 4;
+            flip_particles[idx + 3] = Particle(cx - sx/3. + sx*rnd(idx+6 )/12., cy         + sy*rnd(idx+7 )/12., 0.);
+            flip_particles[idx + 4] = Particle(cx         + sx*rnd(idx+8 )/12., cy         + sy*rnd(idx+9 )/12., 0.);
+            flip_particles[idx + 5] = Particle(cx + sx/3. + sx*rnd(idx+10)/12., cy         + sy*rnd(idx+11)/12., 0.);
+
+            flip_particles[idx + 6] = Particle(cx - sx/3. + sx*rnd(idx+12)/12., cy + sy/3. + sy*rnd(idx+13)/12., 0.);
+            flip_particles[idx + 7] = Particle(cx         + sx*rnd(idx+14)/12., cy + sy/3. + sy*rnd(idx+15)/12., 0.);
+            flip_particles[idx + 8] = Particle(cx + sx/3. + sx*rnd(idx+16)/12., cy + sy/3. + sy*rnd(idx+17)/12., 0.);
+
+            idx += 9;
+            m_num_particles += 9;
         }
     }
 }

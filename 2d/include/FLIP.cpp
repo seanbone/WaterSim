@@ -456,9 +456,9 @@ void FLIP::compute_pressure_matrix() {
 			// Copy diagonal entry
 			auto& diag_e = MACGrid_->get_a_diag()[i + j*nx];
 			triplets.push_back(diag_e);
+
+			// Compute off-diagonal entries
 			if (MACGrid_->is_fluid(i, j)) {
-				
-				// Compute off-diagonal entries
 				// x-adjacent cells
 				if (i+1 < nx && MACGrid_->is_fluid(i+1, j)) {
 						triplets.push_back(Mac2d::Triplet_t(cellidx, cellidx+1, -1));
@@ -484,6 +484,7 @@ void FLIP::compute_pressure_matrix() {
 void FLIP::compute_pressure_rhs(const double dt) {
 	// Compute right-hand side of the pressure equations and store in d_
 	//  See eq. (4.19) and (4.24) in SIGGRAPH notes
+	//   Note: u_{solid} = 0
 	unsigned nx = MACGrid_->get_num_cells_x();
 	unsigned ny = MACGrid_->get_num_cells_y();
 
@@ -502,7 +503,8 @@ void FLIP::compute_pressure_rhs(const double dt) {
 				double d_ij = -(g->get_u(i+1,j) - g->get_u(i,j));
 				d_ij -= g->get_v(i,j+1) - g->get_v(i,j);
 	
-				// Note: u_{solid} = 0
+				// Check each adjacent cell. If solid, alter term as in (4.24)
+				// Consider cells outside of the boundary as solid
 				// (i+1, j)
 				if ((i < (nx-1) && g->is_solid(i+1,j)) || i == nx-1) {
 					d_ij += g->get_u(i+1,j);

@@ -221,6 +221,7 @@ void WaterSim::initParticles() {
 
 	//~ flip_particles[0] = Particle(sx*(nx/2), sy*(ny/2), 0.);
 	
+
     for (unsigned x = 0; x < nx; x++) {
         for (unsigned y = 0; y < ny; y++) {
             // Populate cell (x,y)

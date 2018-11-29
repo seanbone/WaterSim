@@ -120,7 +120,7 @@ void FLIP::compute_velocity_field() {
 	double cell_sizey = MACGrid_->get_cell_sizey();
 	
 	// Threshold h and h scaled so that it is equal to the distance expressed in number of cells
-	double h = cell_sizex;
+	double h = 2*cell_sizex;
 	int h_scaledx = std::ceil(h/cell_sizex);
 	int h_scaledy = std::ceil(h/cell_sizey);
 	

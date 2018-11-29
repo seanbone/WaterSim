@@ -564,6 +564,8 @@ void FLIP::apply_pressure_gradients(const double dt) {
 void FLIP::grid_to_particle(){
 	// FLIP grid to particle transfer
 	//  -> See slides Fluids II, FLIP_explained.pdf
+	// FLIP: alpha = 0.
+	// PIC: alpha = 1.
 	double alpha = alpha_;
 	int nx = MACGrid_->get_num_cells_x();
 	int ny = MACGrid_->get_num_cells_y();

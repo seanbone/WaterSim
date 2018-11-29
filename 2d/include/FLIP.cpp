@@ -567,11 +567,15 @@ void FLIP::grid_to_particle(){
 	// FLIP: alpha = 0.
 	// PIC: alpha = 1.
 	double alpha = alpha_;
+	int nx = MACGrid_->get_num_cells_x();
+	int ny = MACGrid_->get_num_cells_y();
 	
 	for(unsigned i = 0; i < num_particles_; ++i){
 		//Store the initial positions and velocities of the particles
 		Eigen::Vector3d initial_position = (particles_+i)->get_position();
 		Eigen::Vector3d initial_velocity = (particles_+i)->get_velocity();
+		auto initial_idx = MACGrid_->index_from_coord(initial_position(0), 
+													  initial_position(1));
 		
 		//Initialization of the variables
 		Eigen::Vector3d interp_u_star;
@@ -595,8 +599,16 @@ void FLIP::grid_to_particle(){
 		interp_u_star[1] = MACGrid_->get_interp_v_star(x,y);
 		interp_u_n1[1] = MACGrid_->get_interp_v(x,y);
 		
+
 		//Update the final velocity of the particles
-		u_update = initial_velocity*(1 - alpha) + interp_u_n1 + interp_u_star*(alpha - 1);
+		
+		// Use pure PIC on boundary, blend PIC+FLIP elsewhere
+		if (initial_idx.first == 0 or initial_idx.first == nx-1
+		 or initial_idx.second == 0 or initial_idx.second == ny-1)
+			u_update = interp_u_n1;
+		else
+			u_update = initial_velocity*(1 - alpha) + interp_u_n1 + interp_u_star*(alpha - 1);
+
 		(particles_ + i)->set_velocity(u_update);
 	}
 }

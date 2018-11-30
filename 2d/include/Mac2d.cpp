@@ -278,11 +278,11 @@ double Mac2d::get_interp_u_star(double x, double y){
 	int ix1, ix2, iy1, iy2;
 	double u11, u12, u21, u22;
 	
-	if(y > 0 && y <= sizey_ - cell_sizey_){
+	if(y >= 0 && y <= sizey_ - cell_sizey_){
 		//Update the u*-velocity (bilinear interpolation)
 		ix1 = indices.first;
 		ix2 = ix1 + 1;
-		if(y > (indices.second) * cell_sizey_){
+		if(y > indices.second * cell_sizey_){
 			iy1 = indices.second;
 			iy2 = iy1 + 1;
 		}

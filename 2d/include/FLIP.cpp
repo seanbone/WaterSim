@@ -23,15 +23,9 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	 * 5. Update particle velocities
 	 * 6. Update particle positions
 	 */
-	std::cout << step << "<--------------------------------" << std::endl; 
 	
 	// 1.
 	compute_velocity_field();
-	
-	std::cout << MACGrid_->get_u(0, 4) << std::endl << std::endl;
-	std::cout << MACGrid_->get_u(1, 4) << std::endl << std::endl;
-	std::cout << MACGrid_->get_u(0, 15) << std::endl << std::endl;
-	std::cout << MACGrid_->get_u(1, 15) << std::endl << std::endl;
 
 	// 1a.
 	MACGrid_->set_uv_star();
@@ -56,11 +50,6 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 		// 7.
 		advance_particles(dt_new, step);
 	}
-	
-	std::cout << (particles_)->get_position() << std::endl << std::endl;
-	std::cout << (particles_)->get_velocity() << std::endl << std::endl;
-	std::cout << (particles_ + 87)->get_position() << std::endl << std::endl;
-	std::cout << (particles_ + 87)->get_velocity() << std::endl << std::endl;
 }
 
 double FLIP::compute_timestep( const double dt ){
@@ -614,7 +603,6 @@ void FLIP::grid_to_particle(){
 		
 		//Update the u-velocity (bilinear interpolation)
 		interp_u_star[0] = MACGrid_->get_interp_u_star(x,y);
-		std::cout << "Particle: " << i << std::endl << std::endl;
 		interp_u_n1[0] = MACGrid_->get_interp_u(x,y);
 		
 		//Update the v-velocity (bilinear interpolation)
@@ -626,16 +614,10 @@ void FLIP::grid_to_particle(){
 		
 		// Use pure PIC on boundary, blend PIC+FLIP elsewhere
 		if (initial_idx.first == 0 or initial_idx.first == nx-1
-		 or initial_idx.second == 0 or initial_idx.second == ny-1)
-			u_update = interp_u_n1;
-		else
-			u_update = initial_velocity*(1 - alpha) + interp_u_n1 + interp_u_star*(alpha - 1);
-		
-		if (i==0 or i==87){
-			std::cout << "u_update:\n" << u_update << std::endl << std::endl;
-			std::cout << "initial_vel:\n" << initial_velocity << std::endl << std::endl;
-			std::cout << "interp_u_n1:\n" << interp_u_n1 << std::endl << std::endl;
-			std::cout << "interp_u_star:\n" << interp_u_star << std::endl << std::endl;
+		 or initial_idx.second == 0 or initial_idx.second == ny-1){
+			u_update = initial_velocity*(1 - std::min(1., 2*alpha)) + interp_u_n1 - interp_u_star*(1 - std::min(1., 2*alpha));
+		} else {
+			u_update = initial_velocity*(1 - alpha) + interp_u_n1 - interp_u_star*(1 - alpha);
 		}
 		
 		(particles_ + i)->set_velocity(u_update);

@@ -312,7 +312,7 @@ void FLIP::extrapolate_u( const bool* const visited_u ){
 					*(counter + (N+1)*j + (i-1)) += 1;
 					MACGrid_->set_u(i-1, j, (tmp + MACGrid_->get_u(i, j))/(*(counter + (N+1)*j + (i-1))));
 				}
-				if ( j != 0 and MACGrid_->get_u(i-1, j) != 0 ){
+				if ( j != 0 and !(*(visited_u + (N+1)*(j-1) + i)) ){
 					double tmp = MACGrid_->get_u(i, j-1) * *(counter + (N+1)*(j-1) + i);
 					*(counter + (N+1)*(j-1) + i) += 1;
 					MACGrid_->set_u(i, j-1, (tmp + MACGrid_->get_u(i, j))/(*(counter + (N+1)*(j-1) + i)));

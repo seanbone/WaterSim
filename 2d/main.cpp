@@ -1,8 +1,30 @@
 #include <igl/writeOFF.h>
+#include <Eigen/Eigen>
+#include <vector>
 #include <thread>
 #include "WaterSim.h"
 #include "Gui.h"
 #include "Simulator.h"
+
+
+/*
+ * This helper function is a utility to determine which
+ * cells should be initialized as containing fluid at the
+ * start of the simulation.
+ * Note: use this to set the initial state of fluid!
+ */
+std::vector<bool> select_fluid_cells(size_t nx, size_t ny) {
+   std::vector<bool> is_fluid(nx*ny, false);
+
+   for (unsigned j = ny/4; j < 3*ny/4; j++) {
+      for (unsigned i = nx/4; i < 3*nx/4; i++) {
+         is_fluid[i + j*nx] = true;
+      }
+   }
+
+   return is_fluid;
+}
+
 
 /*
  * This class is a GUI for our water simulation. It extends the basic GUI
@@ -21,6 +43,8 @@ class WaterGui : public Gui {
       
       int m_grid_res_x = 20; // Number of cells on X axis
       int m_grid_res_y = 20; // Number of cells on Y axis
+      // Whether to randomize particle positions
+      bool m_jitter_particles = false; 
 
       double m_dt = 0.005 * std::sqrt((m_grid_res_x + m_grid_res_y) * 0.5);
 
@@ -38,11 +62,16 @@ class WaterGui : public Gui {
       WaterSim *p_waterSim = NULL;  // pointer to the simulation
 
       WaterGui() {
+         // Initialize fluid flags
+         std::vector<bool> is_fluid = select_fluid_cells(m_system_size_x, m_system_size_y);
+
+
          // create a new simulation instance
          p_waterSim = new WaterSim(m_viewer, m_grid_res_x, m_grid_res_y,
                                    m_system_size_x, m_system_size_y,
                                    m_density, m_gravity, m_alpha,
-                                   m_show_pressures, m_display_velocity_arrows);
+                                   m_show_pressures, m_display_velocity_arrows,
+                                   std::move(is_fluid), m_jitter_particles);
 
          // set this simulation as the simulation that is running in our GUI
          setSimulation(p_waterSim);
@@ -55,11 +84,16 @@ class WaterGui : public Gui {
        * Update the Simulation class with the parameters input to the GUI
        */
       virtual void updateSimulationParameters() override {
+         // Dimensions of system have potentially changed
+         //  -> reevaluate fluid population
+         auto is_fluid = select_fluid_cells(m_grid_res_x, m_grid_res_y);
+
          p_waterSim->setTimestep(m_dt);
          p_waterSim->updateParams(m_grid_res_x, m_grid_res_y,
                                   m_system_size_x, m_system_size_y,
                                   m_density, m_gravity, m_alpha, m_show_pressures, 
-                                  m_display_velocity_arrows);
+                                  m_display_velocity_arrows, std::move(is_fluid),
+                                  m_jitter_particles);
       };
 
       /**
@@ -68,16 +102,17 @@ class WaterGui : public Gui {
       virtual void drawSimulationParameterMenu() override {
             ImGui::Checkbox("Export meshes", &m_export_meshes);
             ImGui::Checkbox("Show pressure field", &m_show_pressures);
+            ImGui::Checkbox("Display velocity arrows", &m_display_velocity_arrows);      
+            ImGui::Checkbox("Randomize particles", &m_jitter_particles);
             ImGui::InputDouble("Alpha", &m_alpha, 0, 0);
             ImGui::InputDouble("Timestep [s]", &m_dt, 0, 0);
             ImGui::InputDouble("Density [kg/m^3]", &m_density, 0, 0);
             ImGui::InputDouble("Gravity [m/s^2]", &m_gravity, 0, 0);
-            ImGui::InputDouble("X Size [m]", &m_system_size_x, 0, 0);
-            ImGui::InputDouble("Y Size [m]", &m_system_size_y, 0, 0);
             ImGui::InputInt("Grid resolution X", &m_grid_res_x, 0, 0);
             ImGui::InputInt("Grid resolution Y", &m_grid_res_y, 0, 0);
+            ImGui::InputDouble("X Size [m]", &m_system_size_x, 0, 0);
+            ImGui::InputDouble("Y Size [m]", &m_system_size_y, 0, 0);
             ImGui::Checkbox("Display grid", &m_display_grid);
-            ImGui::Checkbox("Display velocity arrows", &m_display_velocity_arrows);      
       }
       
       /**

@@ -177,7 +177,7 @@ double Mac2d::get_interp_u(double x, double y){
 		//Update the u-velocity (bilinear interpolation)
 		ix1 = indices.first;
 		ix2 = ix1 + 1;
-		if(y > (indices.second-0.5) * cell_sizey_){
+		if(y > (indices.second) * cell_sizey_){
 			iy1 = indices.second;
 			iy2 = iy1 + 1;
 		}
@@ -187,8 +187,8 @@ double Mac2d::get_interp_u(double x, double y){
 		}
 		x1 = (ix1-0.5) * cell_sizex_;
 		x2 = (ix2-0.5) * cell_sizex_;
-		y1 = (iy1-0.5) * cell_sizey_;
-		y2 = (iy2-0.5) * cell_sizey_;
+		y1 = (iy1) * cell_sizey_;
+		y2 = (iy2) * cell_sizey_;
 		
 		u11 = get_u(ix1,iy1);
 		u12 = get_u(ix1,iy2);
@@ -228,7 +228,7 @@ double Mac2d::get_interp_v(double x, double y){
 		//Update the v-velocity (bilinear interpolation)
 		iy1 = indices.second;
 		iy2 = iy1 + 1;
-		if(x > (indices.first-0.5) * cell_sizex_){
+		if(x > (indices.first) * cell_sizex_){
 			ix1 = indices.first;
 			ix2 = ix1 + 1;
 		}
@@ -236,8 +236,8 @@ double Mac2d::get_interp_v(double x, double y){
 			ix2 = indices.first;
 			ix1 = ix2 - 1;
 		}
-		x1 = (ix1-0.5) * cell_sizex_;
-		x2 = (ix2-0.5) * cell_sizex_;
+		x1 = (ix1) * cell_sizex_;
+		x2 = (ix2) * cell_sizex_;
 		y1 = (iy1-0.5) * cell_sizey_;
 		y2 = (iy2-0.5) * cell_sizey_;
 		
@@ -276,11 +276,11 @@ double Mac2d::get_interp_u_star(double x, double y){
 	int ix1, ix2, iy1, iy2;
 	double u11, u12, u21, u22;
 	
-	if(y >= 0 && y <= sizey_ - cell_sizey_){
+	if(y > 0 && y <= sizey_ - cell_sizey_){
 		//Update the u*-velocity (bilinear interpolation)
 		ix1 = indices.first;
 		ix2 = ix1 + 1;
-		if(y > (indices.second-0.5) * cell_sizey_){
+		if(y > (indices.second) * cell_sizey_){
 			iy1 = indices.second;
 			iy2 = iy1 + 1;
 		}
@@ -290,8 +290,8 @@ double Mac2d::get_interp_u_star(double x, double y){
 		}
 		x1 = (ix1-0.5) * cell_sizex_;
 		x2 = (ix2-0.5) * cell_sizex_;
-		y1 = (iy1-0.5) * cell_sizey_;
-		y2 = (iy2-0.5) * cell_sizey_;
+		y1 = (iy1) * cell_sizey_;
+		y2 = (iy2) * cell_sizey_;
 		
 		u11 = get_u_star(ix1,iy1);
 		u12 = get_u_star(ix1,iy2);
@@ -331,7 +331,7 @@ double Mac2d::get_interp_v_star(double x, double y){
 		//Update the v*-velocity (bilinear interpolation)
 		iy1 = indices.second;
 		iy2 = iy1 + 1;
-		if(x > (indices.first-0.5) * cell_sizex_){
+		if(x > (indices.first) * cell_sizex_){
 			ix1 = indices.first;
 			ix2 = ix1 + 1;
 		}
@@ -341,8 +341,8 @@ double Mac2d::get_interp_v_star(double x, double y){
 		}
 		x1 = ix1 * cell_sizex_;
 		x2 = ix2 * cell_sizex_;
-		y1 = iy1 * cell_sizey_;
-		y2 = iy2 * cell_sizey_;
+		y1 = (iy1-0.5) * cell_sizey_;
+		y2 = (iy2-0.5) * cell_sizey_;
 		
 		v11 = get_v_star(ix1,iy1);
 		v12 = get_v_star(ix1,iy2);
@@ -358,7 +358,7 @@ double Mac2d::get_interp_v_star(double x, double y){
 		y1 = (iy1-0.5) * cell_sizex_;
 		y2 = (iy2-0.5) * cell_sizex_;
 		v11 = get_v_star(0, iy1);
-		v21 = get_v_star(0, iy1);
+		v21 = get_v_star(0, iy2);
 		return v11*(1-(y-y1)/(y2-y1)) + v21*((y-y1)/(y2-y1));		
 	}
 	else{
@@ -367,7 +367,7 @@ double Mac2d::get_interp_v_star(double x, double y){
 		y1 = (iy1-0.5) * cell_sizex_;
 		y2 = (iy2-0.5) * cell_sizex_;
 		v11 = get_v_star(N_-1, iy1);
-		v21 = get_v_star(N_-1, iy1);
+		v21 = get_v_star(N_-1, iy2);
 		return v11*(1-(y-y1)/(y2-y1)) + v21*((y-y1)/(y2-y1));
 	}
 }

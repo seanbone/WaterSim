@@ -207,7 +207,8 @@ double Mac2d::get_interp_u(double x, double y){
 		u21 = get_u(ix2, 0);
 		return u11*(1-(x-x1)/(x2-x1)) + u21*((x-x1)/(x2-x1));
 	}
-	else if (y > sizey_ - cell_sizey_){
+	//else if (y > sizey_ - cell_sizey_){
+	else {
 		ix1 = indices.first;
 		ix2 = ix1 + 1;
 		x1 = (ix1-0.5) * cell_sizex_;
@@ -258,7 +259,8 @@ double Mac2d::get_interp_v(double x, double y){
 		v21 = get_v(0, iy2);
 		return v11*(1-(y-y1)/(y2-y1)) + v21*((y-y1)/(y2-y1));		
 	}
-	else if (x > sizex_ - cell_sizex_){
+	//else if (x > sizex_ - cell_sizex_){
+	else {
 		iy1 = indices.second;
 		iy2 = iy1 + 1;
 		y1 = (iy1-0.5) * cell_sizex_;

@@ -194,6 +194,12 @@ double Mac2d::get_interp_u(double x, double y){
 		u12 = get_u(ix1,iy2);
 		u21 = get_u(ix2,iy1);
 		u22 = get_u(ix2,iy2);
+		if (x < 0.5*cell_sizex_){
+			std::cout << "u11:\n" << u11 << std::endl << std::endl;
+			std::cout << "u12:\n" << u12 << std::endl << std::endl;
+			std::cout << "u21:\n" << u21 << std::endl << std::endl;
+			std::cout << "u22:\n" << u22 << std::endl << std::endl;
+		}
 		return 1/((x2 - x1)*(y2-y1))*(u11*(x2 - x)*(y2-y) 
 				+ u21*(x - x1)*(y2-y) + u12*(x2 - x)*(y-y1) 
 				+ u22*(x - x1)*(y-y1));

@@ -14,14 +14,15 @@ This Git repository has a submodule for libigl. To clone it correctly use either
 
 # TODO
  - [X] Set up 2D visualization for FLIP particles & cells
- - [ ] 2D FLIP working correctly
+ - [X] 2D FLIP working correctly
    - [X] MAC2D data structure
-   - [ ] 2D FLIP updates
+   - [X] 2D FLIP updates
  
  - [ ] Extend to 3D
    - [ ] 3D viz
    - [ ] MAC3D data structure
    - [ ] 3D FLIP updates
+   - [ ] Signed distance function
 
  - [ ] Marching cubes & export mesh at each frame
  - [ ] Import meshes into Maya/Blender for rendering

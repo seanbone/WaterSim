@@ -35,6 +35,7 @@ class WaterSim : public Simulation {
 
 		// List of Particles
 		Particle* flip_particles;
+		std::vector<bool> is_fluid_;
 
 		// FLIP simulator
 		FLIP* p_flip;
@@ -50,6 +51,7 @@ class WaterSim : public Simulation {
 		
 
 		unsigned int m_num_particles;
+		bool m_jitter_particles;
 		Eigen::MatrixXd m_particles; // Particle positions for rendering, Nx3
 		Eigen::MatrixXd m_particle_colors; // Particle colours, Nx3
 
@@ -73,7 +75,8 @@ class WaterSim : public Simulation {
 				 const double len_x, const double len_y,
 				 const double density, const double gravity,
 				 const double alpha,
-				 const bool show_pressures, const bool show_velocity_arrows);
+				 const bool show_pressures, const bool show_velocity_arrows,
+				 std::vector<bool> is_fluid, const bool jitter_particles);
 
 		~WaterSim() {
 			delete p_mac_grid;
@@ -81,8 +84,6 @@ class WaterSim : public Simulation {
 			delete [] flip_particles;
 		}
 		
-		virtual void init() override;
-
 		/*
 		 * Reset class variables to reset the simulation.
 		 */
@@ -94,7 +95,8 @@ class WaterSim : public Simulation {
 		void updateParams(const int res_x, const int res_y, 
 						  const double len_x, const double len_y,
 						  const double density, const double gravity, const double alpha,
-						  const bool show_pressures, const bool show_velocity_arrows);
+						  const bool show_pressures, const bool show_velocity_arrows,
+						  std::vector<bool> is_fluid, const bool jitter_particles);
 
 		/*
 		 * Update the rendering data structures. This method will be called in

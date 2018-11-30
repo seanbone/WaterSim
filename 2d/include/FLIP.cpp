@@ -370,9 +370,14 @@ void FLIP::apply_forces(const double dt) {
 	const unsigned M = g->get_num_cells_y();
 	
 	// Iterate over cells & update: dv = dt*g
-	for (unsigned j = 0; j <= M; j++) {
+/*	for (unsigned j = 0; j <= M; j++) {
 		for (unsigned i = 0; i < N; i++) {
 			g->set_v(i, j, g->get_v(i,j) - dt*gravity_mag_);
+		}
+	}*/
+	for (unsigned j = 0; j < M; j++) {
+		for (unsigned i = 0; i <= N; i++) {
+			g->set_u(i, j, g->get_u(i,j) - dt*gravity_mag_);
 		}
 	}
 }

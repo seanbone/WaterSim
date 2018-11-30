@@ -120,7 +120,7 @@ void FLIP::compute_velocity_field() {
 	double cell_sizey = MACGrid_->get_cell_sizey();
 	
 	// Threshold h and h scaled so that it is equal to the distance expressed in number of cells
-	double h = cell_sizex;
+	double h = 2*cell_sizex;
 	int h_scaledx = std::ceil(h/cell_sizex);
 	int h_scaledy = std::ceil(h/cell_sizey);
 	
@@ -432,10 +432,6 @@ void FLIP::do_pressures(const double dt) {
 	solver.compute(A_);
 	//VectorXd p = A.fullPivLu().solve(d_);
 	VectorXd p = solver.solve(d_);
-	
-	//~ std::cout << "A:\n" << A_ << std::endl;
-	std::cout << "d:\n" << d_ << std::endl;
-	//~ std::cout << "p:\n" << p << std::endl;
 
 	// Copy pressures to MAC grid
 	MACGrid_->set_pressure(p);

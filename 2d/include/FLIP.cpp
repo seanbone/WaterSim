@@ -120,7 +120,7 @@ void FLIP::compute_velocity_field() {
 	double cell_sizey = MACGrid_->get_cell_sizey();
 	
 	// Threshold h and h scaled so that it is equal to the distance expressed in number of cells
-	double h = 2*cell_sizex;
+	double h = cell_sizex;
 	int h_scaledx = std::ceil(h/cell_sizex);
 	int h_scaledy = std::ceil(h/cell_sizey);
 	
@@ -425,13 +425,17 @@ void FLIP::do_pressures(const double dt) {
 	//using solver_t = ConjugateGradient<SparseMatrix<double>, Lower|Upper>;
 	//using solver_t = SimplicialLDLT<SparseMatrix<double>, Lower|Upper>;
 	using solver_t = ConjugateGradient<SparseMatrix<double>, Lower|Upper, IncompleteCholesky<double> >;
-	
+
 	//MatrixXd A = A_;
 	solver_t solver;
 	solver.setMaxIterations(100);
 	solver.compute(A_);
 	//VectorXd p = A.fullPivLu().solve(d_);
 	VectorXd p = solver.solve(d_);
+	
+	//~ std::cout << "A:\n" << A_ << std::endl;
+	std::cout << "d:\n" << d_ << std::endl;
+	//~ std::cout << "p:\n" << p << std::endl;
 
 	// Copy pressures to MAC grid
 	MACGrid_->set_pressure(p);
@@ -501,12 +505,13 @@ void FLIP::compute_pressure_rhs(const double dt) {
 				// get_u(i,j) = u_{ (i-1/2, j) }
 				double d_ij = -(g->get_u(i+1,j) - g->get_u(i,j));
 				d_ij -= g->get_v(i,j+1) - g->get_v(i,j);
-	
+				
 				// Note: u_{solid} = 0
 				// (i+1, j)
 				if ((i < (nx-1) && g->is_solid(i+1,j)) || i == nx-1) {
 					d_ij += g->get_u(i+1,j);
 				}
+				
 				// (i-1, j)
 				if ((i > 0 && g->is_solid(i-1,j)) || i == 0) {
 					d_ij += g->get_u(i,j);
@@ -516,11 +521,12 @@ void FLIP::compute_pressure_rhs(const double dt) {
 				if ((j < (ny-1) && g->is_solid(i,j+1)) || j == ny-1) {
 					d_ij += g->get_v(i,j+1);
 				}
+				
 				// (i, j-1)
 				if ((j > 0 && g->is_solid(i,j-1)) || j == 0) {
 					d_ij += g->get_v(i,j);
 				}
-	
+				
 				// *TODO: cell x and y size should always be the same -> enforce via sim params?
 				d_(cellidx) = fluid_density_ * g->get_cell_sizex() * d_ij / dt;
 			} else { // if is_fluid(i,j)

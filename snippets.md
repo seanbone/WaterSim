@@ -23,11 +23,3 @@ Use `m_viewer.append_mesh()` to add a new mesh.
 - [Libigl tutorial](https://libigl.github.io/tutorial/)
 - 
 
-# Making a video from PNGs
-Command:
-    
-    ffmpeg -r 40 -f image2 -s 1280x800 -i PNG_out/%04d.png -vcodec libx264 -crf 20  -pix_fmt yuv420p test.mp4
-
- - `-r`: frame rate ( = 1/dt )
- - `-s`: dimensions
- - `-crf`: quality, lower is better

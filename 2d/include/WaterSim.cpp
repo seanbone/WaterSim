@@ -1,19 +1,21 @@
 #include "WaterSim.h"
 
 
-WaterSim::WaterSim(WaterSim::viewer_t& viewer,
+WaterSim::WaterSim(viewer_t& viewer, 
         const int res_x, const int res_y,
         const double len_x, const double len_y,
-        const double density, const double gravity, 
-        const double alpha, const bool show_pressures,
-        const bool show_velocity_arrows,
-        std::vector<bool> is_fluid, const bool jitter_particles)
+        const double density, const double gravity,
+        const double alpha,
+        const bool show_pressures, const bool show_velocity_arrows,
+        std::vector<bool> is_fluid, const bool jitter_particles,
+        bool export_png, int png_sx, int png_sy, int max_pngs)
         : Simulation(), p_viewer(&viewer), m_res_x(res_x), m_res_y(res_y),
           m_len_x(len_y), m_len_y(len_y), m_fluid_density_(density),
           m_gravity_mag_(gravity), m_alpha_(alpha),
           m_show_pressures(show_pressures),
           m_show_velocity_arrows(show_velocity_arrows),
-          is_fluid_(is_fluid), m_jitter_particles(jitter_particles) {
+          is_fluid_(is_fluid), m_jitter_particles(jitter_particles),
+          m_export_png_(export_png), m_png_sx_(png_sx), m_png_sy_(png_sy), m_max_pngs_(max_pngs) {
 
 
     // Initialize MAC grid
@@ -62,18 +64,22 @@ void WaterSim::resetMembers() {
     delete p_flip;
     initFLIP();
     
-	//Velocity arrows
-	p_viewer->data_list[m_velocity_u_idx].clear();
+    //Velocity arrows
     p_viewer->data_list[m_velocity_u_idx].clear();
+    p_viewer->data_list[m_velocity_u_idx].clear();
+
+    // PNG exporting
+    m_png_num_ = 0;
 }
 
 
 
 void WaterSim::updateParams(const int res_x, const int res_y, 
-				  const double len_x, const double len_y,
+                  const double len_x, const double len_y,
                   const double density, const double gravity, const double alpha,
                   const bool show_pressures, const bool show_velocity_arrows,
-                  std::vector<bool> is_fluid, const bool jitter_particles) {
+                  std::vector<bool> is_fluid, const bool jitter_particles,
+                  bool export_png, int png_sx, int png_sy, int max_pngs) {
     m_res_x = res_x;
     m_res_y = res_y;
     m_len_x = len_x;
@@ -85,6 +91,10 @@ void WaterSim::updateParams(const int res_x, const int res_y,
     m_show_velocity_arrows = show_velocity_arrows;
     is_fluid_ = is_fluid;
     m_jitter_particles = jitter_particles;
+    m_export_png_ = export_png;
+    m_png_sx_ = png_sx;
+    m_png_sy_ = png_sy;
+    m_max_pngs_ = max_pngs;
     std::cout << "\nParams updated\n";
 }
 
@@ -158,7 +168,8 @@ void WaterSim::updateRenderGeometry() {
                 m_render_velocity_v_E(nx*j+i,1) = 2*(nx*j+i) + 1;
             }
         }
-	}
+    }
+
 
     //~ std::cout << "\n*************\n";
     //~ std::cout << "Pressure at (7, 0): " << p_mac_grid->get_pressure(7, 0) << std::endl;
@@ -195,9 +206,13 @@ void WaterSim::renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) {
     viewer.data_list[m_particles_data_idx].point_size = 5;
     
     if(m_show_velocity_arrows){
-		viewer.data_list[m_velocity_u_idx].set_edges(m_render_velocity_u_V, m_render_velocity_u_E, m_renderEC);
-		viewer.data_list[m_velocity_v_idx].set_edges(m_render_velocity_v_V, m_render_velocity_v_E, m_renderEC);
-	}
+        viewer.data_list[m_velocity_u_idx].set_edges(m_render_velocity_u_V, m_render_velocity_u_E, m_renderEC);
+        viewer.data_list[m_velocity_v_idx].set_edges(m_render_velocity_v_V, m_render_velocity_v_E, m_renderEC);
+    }
+
+    // PNG image export
+    if (m_export_png_ and m_png_num_ < m_max_pngs_)
+        exportPNG(viewer);
 }
 
 
@@ -329,3 +344,34 @@ void WaterSim::initMacViz() {
     }
 
 }
+
+
+void WaterSim::exportPNG(igl::opengl::glfw::Viewer &viewer) {
+    // Export current frame as PNG
+    
+    // 1. File name
+    const int pad_size = 4; // number of chars to pad number to
+    
+    std::string file = std::to_string(m_png_num_);
+    file.insert(0, pad_size - file.length(), '0');
+    file += ".png";
+    
+    // 2. Check for folder existence, create if necessary
+    // http://pubs.opengroup.org/onlinepubs/009695399/functions/mkdir.html
+    mkdir(m_png_dirname_.c_str(), S_IRWXU);
+    
+    // 3. Draw buffer
+    Eigen::Matrix<unsigned char,Eigen::Dynamic,Eigen::Dynamic> R(m_png_sx_,m_png_sy_);
+    Eigen::Matrix<unsigned char,Eigen::Dynamic,Eigen::Dynamic> G(m_png_sx_,m_png_sy_);
+    Eigen::Matrix<unsigned char,Eigen::Dynamic,Eigen::Dynamic> B(m_png_sx_,m_png_sy_);
+    Eigen::Matrix<unsigned char,Eigen::Dynamic,Eigen::Dynamic> A(m_png_sx_,m_png_sy_);
+    
+    viewer.core.draw_buffer(viewer.data_list[m_particles_data_idx], false, R,G,B,A);
+
+    // 4. Write image
+    igl::png::writePNG(R,G,B,A, m_png_dirname_ + '/' + file);
+    
+    m_png_num_++;
+    
+}
+

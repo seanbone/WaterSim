@@ -8,7 +8,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 # Custom C++ flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wextra -Wpedantic")
 # Ignore some warnings
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-reorder -Wno-unknown-pragmas -Wno-unused-parameter")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-reorder -Wno-unknown-pragmas -Wno-unused-parameter -Wno-misleading-indentation")
 
 # Export compilation commands for VIM editor
 set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
@@ -26,7 +26,7 @@ option(LIBIGL_WITH_MOSEK             "Use MOSEK"          OFF)
 option(LIBIGL_WITH_OPENGL            "Use OpenGL"         ON)
 option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"           ON)
 option(LIBIGL_WITH_OPENGL_GLFW_IMGUI "Use ImGui"          ON)
-option(LIBIGL_WITH_PNG               "Use PNG"            OFF)
+option(LIBIGL_WITH_PNG               "Use PNG"            ON)
 option(LIBIGL_WITH_PYTHON            "Use Python"         OFF)
 option(LIBIGL_WITH_TETGEN            "Use Tetgen"         OFF)
 option(LIBIGL_WITH_TRIANGLE          "Use Triangle"       OFF)
@@ -48,4 +48,4 @@ include_directories(../lib/eigen3)
 
 add_definitions(-DIGL_VIEWER_VIEWER_QUIET)
 add_executable(${PROJECT_NAME} ${SRCFILES} ${SRC_FILES} ${HFILES} ${H_FILES})
-target_link_libraries(${PROJECT_NAME} igl::core igl::opengl_glfw igl::opengl_glfw_imgui)
+target_link_libraries(${PROJECT_NAME} igl::core igl::opengl_glfw igl::opengl_glfw_imgui igl::png)

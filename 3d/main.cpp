@@ -173,6 +173,10 @@ class WaterGui : public Gui {
 };
 
 int main() { //int argc, char *argv[]) {
+   // Tell Eigen we're using multithreading
+   // https://eigen.tuxfamily.org/dox/TopicMultiThreading.html
+   Eigen::initParallel();
+
    // Create a new instance of the GUI for the simulation
    new WaterGui();
 

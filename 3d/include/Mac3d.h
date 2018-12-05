@@ -8,7 +8,7 @@
 #include <Eigen/Sparse>	//used for the matrix A
 #include <vector>		//used for std::vector
 #include <algorithm>	// std::fill
-#include <cassert>
+#include <cassert>		//assertions
 
 class Mac3d{
 	public:
@@ -54,9 +54,8 @@ class Mac3d{
 		//pointer to array for specifing if a cell contains fluid (1) or not(0)
 		bool* pfluid_;
 		//pointer to a std::vector which contians the triplets for
-		//   the diagonal of the matrix A, used to solve the pressures
+		//the diagonal of the matrix A, used to solve the pressures
 		std::vector<Triplet_t> A_diag_;
-		
 		// Weights for particle-to-grid for u
 		double* pweights_u_;
 		// Weights for particle-to-grid for v
@@ -134,6 +133,7 @@ class Mac3d{
 		double get_weights_w(const unsigned i, const unsigned j, const unsigned k);
 		
 		//Getters for the trilinear interpolation of u, v, w, u*, v*, w* in the point x,y,z
+		void assign_x(double x, int indices_x, int& ix0, int& ix1, double& x0, double& x1);
 		void assign_y(double y, int indices_y, int& iy0, int& iy1, double& y0, double& y1);
 		void assign_z(double z, int indices_z, int& iz0, int& iz1, double& z0, double& z1);
 		void assign_d(double& xd, double& yd, double& zd, double x0, double x1, double y0, double y1, double z0, double z1, double x, double y, double z);

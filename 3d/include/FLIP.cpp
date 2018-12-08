@@ -1,6 +1,6 @@
 #include "FLIP.h"
 
-FLIP::FLIP(Particle* particles, const unsigned num_particles, Mac2d* MACGrid,
+FLIP::FLIP(Particle* particles, const unsigned num_particles, Mac3d* MACGrid,
 		   const double density, const double gravity, const double alpha) 
 	: particles_(particles), num_particles_(num_particles), MACGrid_(MACGrid),
 	  fluid_density_(density), gravity_mag_(gravity), alpha_(alpha) {
@@ -28,7 +28,7 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	compute_velocity_field();
 
 	// 1a.
-	MACGrid_->set_uv_star();
+	MACGrid_->set_uvw_star();
 
 	// 2.
 	apply_forces(dt);
@@ -134,19 +134,24 @@ void FLIP::compute_velocity_field() {
 	// Sizes of the edges of a cell (in meters)
 	double cell_sizex = MACGrid_->get_cell_sizex();
 	double cell_sizey = MACGrid_->get_cell_sizey();
+	double cell_sizez = MACGrid_->get_cell_sizez();
 	
 	// Threshold h and h scaled so that it is equal to the distance expressed in number of cells
 	double h = 2*cell_sizex;
 	int h_scaledx = std::ceil(h/cell_sizex);
 	int h_scaledy = std::ceil(h/cell_sizey);
+	int h_scaledz = std::ceil(h/cell_sizez);
 	
 	// Lists of flags for visited grid-velocities: 1 -> visited
 	unsigned N = MACGrid_->get_num_cells_x();
 	unsigned M = MACGrid_->get_num_cells_y();
-	bool* visited_u = new bool[M*(N+1)];
-	bool* visited_v = new bool[N*(M+1)];
-	std::fill(visited_u, visited_u + M*(N+1), 0);
-	std::fill(visited_v, visited_v + N*(M+1), 0);
+	unsigned L = MACGrid_->get_num_cells_z();
+	bool* visited_u = new bool[M*L*(N+1)];
+	bool* visited_v = new bool[N*L*(M+1)];
+	bool* visited_w = new bool[N*M*(L+1)];
+	std::fill(visited_u, visited_u + M*L*(N+1), 0);
+	std::fill(visited_v, visited_v + N*L*(M+1), 0);
+	std::fill(visited_w, visited_w + N*M*(L+1), 0);
 	
 	// Reset all fluid flags
 	MACGrid_->reset_fluid();
@@ -158,12 +163,12 @@ void FLIP::compute_velocity_field() {
 		pos = (particles_ + n)->get_position();
 		vel = (particles_ + n)->get_velocity();
 
-		Mac2d::Pair_t tmp = MACGrid_->index_from_coord(pos(0), pos(1));
-		cell_coord << tmp.first, tmp.second, 0;
+		Eigen::Vector3d tmp = MACGrid_->index_from_coord(pos(0), pos(1), pos(2));
+		cell_coord << tmp(0), tmp(1), tmp(2);
 		
 		// Set the cell of the current particle to a fluid-cell
-		if ( !(MACGrid_->is_fluid(cell_coord(0), cell_coord(1))) and !(MACGrid_->is_solid(cell_coord(0), cell_coord(1))) ){
-			MACGrid_->set_fluid(cell_coord(0), cell_coord(1));
+		if ( !(MACGrid_->is_fluid(cell_coord(0), cell_coord(1), cell_coord(2))) and !(MACGrid_->is_solid(cell_coord(0), cell_coord(1), cell_coord(2))) ){
+			MACGrid_->set_fluid(cell_coord(0), cell_coord(1), cell_coord(2));
 		}
 		
 		// Coordinates of the points on the grid edges
@@ -171,23 +176,37 @@ void FLIP::compute_velocity_field() {
 		grid_coord << 0, 0, 0;
 		int nx = MACGrid_->get_num_cells_x();
 		int ny = MACGrid_->get_num_cells_y();
-		for( int j = cell_coord(1) - h_scaledy; j <= cell_coord(1) + h_scaledy + 1; ++j ){
-			for( int i = cell_coord(0) - h_scaledx; i <= cell_coord(0) + h_scaledx + 1; ++i ){
-				if ( ( i >= 0 and j >= 0 ) ){
-					if ( ( i <= nx and j < ny ) ){
-					
-						// Left edge
-						grid_coord(0) = (i - 0.5) * cell_sizex;
-						grid_coord(1) = j * cell_sizey;
-						accumulate_u(pos, vel, grid_coord, h, i, j);
-					}
-					
-					if ( ( i < nx and j <= ny ) ){
+		int nz = MACGrid_->get_num_cells_z();
+		for( int k = cell_coord(2) - h_scaledz; k <= cell_coord(2) + h_scaledz + 1; ++k ){	
+			for( int j = cell_coord(1) - h_scaledy; j <= cell_coord(1) + h_scaledy + 1; ++j ){
+				for( int i = cell_coord(0) - h_scaledx; i <= cell_coord(0) + h_scaledx + 1; ++i ){
+					if ( ( i >= 0 and j >= 0 and k >= 0 ) ){
+						if ( ( i <= nx and j < ny and k < nz ) ){
 						
-						// Lower edge
-						grid_coord(0) = i * cell_sizex;
-						grid_coord(1) = (j - 0.5) * cell_sizey;
-						accumulate_v(pos, vel, grid_coord, h, i, j);
+							// Left edge
+							grid_coord(0) = (i - 0.5) * cell_sizex;
+							grid_coord(1) = j * cell_sizey;
+							grid_coord(2) = k * cell_sizez;
+							accumulate_u(pos, vel, grid_coord, h, i, j, k);
+						}
+						
+						if ( ( i < nx and j <= ny and k < nz ) ){
+							
+							// Lower edge
+							grid_coord(0) = i * cell_sizex;
+							grid_coord(1) = (j - 0.5) * cell_sizey;
+							grid_coord(2) = k * cell_sizez;
+							accumulate_v(pos, vel, grid_coord, h, i, j, k);
+						}
+						
+						if ( ( i < nx and j < ny and k <= nz ) ){
+							
+							// Farthest edge (the closer to the origin)
+							grid_coord(0) = i * cell_sizex;
+							grid_coord(1) = j * cell_sizey;
+							grid_coord(2) = (k - 0.5) * cell_sizez;
+							accumulate_w(pos, vel, grid_coord, h, i, j, k);
+						}
 					}
 				}
 			}
@@ -197,13 +216,16 @@ void FLIP::compute_velocity_field() {
 	// Normalize grid-velocities
 	normalize_accumulated_u( visited_u );
 	normalize_accumulated_v( visited_v );
+	normalize_accumulated_w( visited_w );
 	
 	// Extrapolate velocities
 	extrapolate_u( visited_u );
 	extrapolate_v( visited_v );
+	extrapolate_w( visited_w );
 	
 	delete[] visited_u;
 	delete[] visited_v;
+	delete[] visited_w;
 }
 
 bool FLIP::check_threshold( const Eigen::Vector3d& particle_coord, 
@@ -232,20 +254,21 @@ void FLIP::accumulate_u( const Eigen::Vector3d& pos,
 						 const Eigen::Vector3d& grid_coord,
 						 const double h,
 						 const int i,
-						 const int j )
+						 const int j,
+						 const int k )
 {
 	if ( check_threshold(pos, grid_coord, h) ){
-		double u_prev = MACGrid_->get_u(i, j);
+		double u_prev = MACGrid_->get_u(i, j, k);
 		double W_u = compute_weight(pos, grid_coord, h);
 		double u_curr = u_prev + (W_u * vel(0));
 		
 		// Accumulate velocities
-		MACGrid_->set_u(i, j, u_curr);
+		MACGrid_->set_u(i, j, k, u_curr);
 		
 		// Accumulate weights
-		double W_u_prev = MACGrid_->get_weights_u(i, j);
+		double W_u_prev = MACGrid_->get_weights_u(i, j, k);
 		double W_u_curr = W_u_prev + W_u;
-		MACGrid_->set_weights_u(i, j, W_u_curr);
+		MACGrid_->set_weights_u(i, j, k, W_u_curr);
 	}
 }
 
@@ -255,83 +278,146 @@ void FLIP::accumulate_v( const Eigen::Vector3d& pos,
 						 const Eigen::Vector3d& grid_coord,
 						 const double h,
 						 const int i,
-						 const int j )
+						 const int j,
+						 const int k )
 {
 	if ( check_threshold(pos, grid_coord, h) ){
-		double v_prev = MACGrid_->get_v(i, j);
+		double v_prev = MACGrid_->get_v(i, j, k);
 		double W_v = compute_weight(pos, grid_coord, h);
 		double v_curr = v_prev + (W_v * vel(1));
 		
 		// Accumulate velocities
-		MACGrid_->set_v(i, j, v_curr);
+		MACGrid_->set_v(i, j, k, v_curr);
 		
 		// Accumulate weights
-		double W_v_prev = MACGrid_->get_weights_v(i, j);
+		double W_v_prev = MACGrid_->get_weights_v(i, j, k);
 		double W_v_curr = W_v_prev + W_v;
-		MACGrid_->set_weights_v(i, j, W_v_curr);
+		MACGrid_->set_weights_v(i, j, k, W_v_curr);
+	}
+}
+
+// Accumulate velocities and weights for w
+void FLIP::accumulate_w( const Eigen::Vector3d& pos,
+						 const Eigen::Vector3d& vel,
+						 const Eigen::Vector3d& grid_coord,
+						 const double h,
+						 const int i,
+						 const int j,
+						 const int k )
+{
+	if ( check_threshold(pos, grid_coord, h) ){
+		double w_prev = MACGrid_->get_w(i, j, k);
+		double W_w = compute_weight(pos, grid_coord, h);
+		double w_curr = w_prev + (W_w * vel(2));
+		
+		// Accumulate velocities
+		MACGrid_->set_w(i, j, k, w_curr);
+		
+		// Accumulate weights
+		double W_w_prev = MACGrid_->get_weights_w(i, j, k);
+		double W_w_curr = W_w_prev + W_w;
+		MACGrid_->set_weights_w(i, j, k, W_w_curr);
 	}
 }
 
 void FLIP::normalize_accumulated_u( bool* const visited_u ){
-	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned N = MACGrid_->get_num_cells_x();
-	for( unsigned j = 0; j < M; ++j ){
-		for( unsigned i = 0; i < N+1; ++i ){
-			double W_u = MACGrid_->get_weights_u(i, j);
-			if ( W_u != 0 ){
-				double u_prev = MACGrid_->get_u(i, j);
-				double u_curr = u_prev/W_u;
-				MACGrid_->set_u(i, j, u_curr);
-				*(visited_u + (N+1)*j + i) = 1;
-			}
-		}	
+	unsigned M = MACGrid_->get_num_cells_y();
+	unsigned L = MACGrid_->get_num_cells_z();
+	for( unsigned k = 0; k < L; ++k ){
+		for( unsigned j = 0; j < M; ++j ){
+			for( unsigned i = 0; i < N+1; ++i ){
+				double W_u = MACGrid_->get_weights_u(i, j, k);
+				if ( W_u != 0 ){
+					double u_prev = MACGrid_->get_u(i, j, k);
+					double u_curr = u_prev/W_u;
+					MACGrid_->set_u(i, j, k, u_curr);
+					*(visited_u + (N+1)*j + i + (N+1)*M*k) = 1;
+				}
+			}	
+		}
 	}	
 }
 
 void FLIP::normalize_accumulated_v( bool* const visited_v ){
-	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned N = MACGrid_->get_num_cells_x();
-	for( unsigned j = 0; j < M+1; ++j ){
-		for( unsigned i = 0; i < N; ++i ){
-			double W_v = MACGrid_->get_weights_v(i, j);
-			if ( W_v != 0 ){
-				double v_prev = MACGrid_->get_v(i, j);
-				double v_curr = v_prev/W_v;
-				MACGrid_->set_v(i, j, v_curr);
-				*(visited_v + N*j + i) = 1;
-			}
+	unsigned M = MACGrid_->get_num_cells_y();
+	unsigned L = MACGrid_->get_num_cells_z();
+	for( unsigned k = 0; k < L; ++k ){	
+		for( unsigned j = 0; j < M+1; ++j ){
+			for( unsigned i = 0; i < N; ++i ){
+				double W_v = MACGrid_->get_weights_v(i, j, k);
+				if ( W_v != 0 ){
+					double v_prev = MACGrid_->get_v(i, j, k);
+					double v_curr = v_prev/W_v;
+					MACGrid_->set_v(i, j, k, v_curr);
+					*(visited_v + N*j + i + N*(M+1)*k) = 1;
+				}
+			}	
 		}	
-	}	
+	}
+}
+
+void FLIP::normalize_accumulated_w( bool* const visited_w ){
+	unsigned N = MACGrid_->get_num_cells_x();
+	unsigned M = MACGrid_->get_num_cells_y();
+	unsigned L = MACGrid_->get_num_cells_z();
+	for( unsigned k = 0; k < (L+1); ++k ){	
+		for( unsigned j = 0; j < M; ++j ){
+			for( unsigned i = 0; i < N; ++i ){
+				double W_w = MACGrid_->get_weights_w(i, j, k);
+				if ( W_w != 0 ){
+					double w_prev = MACGrid_->get_w(i, j, k);
+					double w_curr = w_prev/W_w;
+					MACGrid_->set_w(i, j, k, w_curr);
+					*(visited_w + N*j + i + N*M*k) = 1;
+				}
+			}	
+		}	
+	}
 }
 
 void FLIP::extrapolate_u( const bool* const visited_u ){
 	// Do the cases for upper and right bound
 	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned N = MACGrid_->get_num_cells_x();
-	unsigned* counter = new unsigned[M*(N+1)];
-	std::fill(counter, counter + M*(N+1), 0);
-	for( unsigned j = 0; j < M; ++j ){
-		for( unsigned i = 0; i < N+1; ++i ){
-			if ( *(visited_u + (N+1)*j + i) ){
-				if ( i != 0 and !(*(visited_u + (N+1)*j + (i-1))) ){
-					double tmp = MACGrid_->get_u(i-1, j) * *(counter + (N+1)*j + (i-1));
-					*(counter + (N+1)*j + (i-1)) += 1;
-					MACGrid_->set_u(i-1, j, (tmp + MACGrid_->get_u(i, j))/(*(counter + (N+1)*j + (i-1))));
-				}
-				if ( j != 0 and !(*(visited_u + (N+1)*(j-1) + i)) ){
-					double tmp = MACGrid_->get_u(i, j-1) * *(counter + (N+1)*(j-1) + i);
-					*(counter + (N+1)*(j-1) + i) += 1;
-					MACGrid_->set_u(i, j-1, (tmp + MACGrid_->get_u(i, j))/(*(counter + (N+1)*(j-1) + i)));
-				}
-				if ( i != N and !(*(visited_u + (N+1)*j + (i+1))) ){
-					double tmp = MACGrid_->get_u(i+1, j) * *(counter + (N+1)*j + (i+1));
-					*(counter + (N+1)*j + (i+1)) += 1;
-					MACGrid_->set_u(i+1, j, (tmp + MACGrid_->get_u(i, j))/(*(counter + (N+1)*j + (i+1))));
-				}
-				if ( j != M-1 and !(*(visited_u + (N+1)*(j+1) + i)) ){
-					double tmp = MACGrid_->get_u(i, j+1) * *(counter + (N+1)*(j+1) + i);
-					*(counter + (N+1)*(j+1) + i) += 1;
-					MACGrid_->set_u(i, j+1, (tmp + MACGrid_->get_u(i, j))/(*(counter + (N+1)*(j+1) + i)));
+	unsigned L = MACGrid_->get_num_cells_z();
+	unsigned* counter = new unsigned[M*L*(N+1)];
+	std::fill(counter, counter + M*L*(N+1), 0);
+	for( unsigned k = 0; k < L; ++k ){	
+		for( unsigned j = 0; j < M; ++j ){
+			for( unsigned i = 0; i < N+1; ++i ){
+				if ( *(visited_u + (N+1)*j + i + (N+1)*M*k) ){
+					if ( i != 0 and !(*(visited_u + (N+1)*j + (i-1) + (N+1)*M*k)) ){
+						double tmp = MACGrid_->get_u(i-1, j, k) * *(counter + (N+1)*j + (i-1) + (N+1)*M*k);
+						*(counter + (N+1)*j + (i-1) + (N+1)*M*k) += 1;
+						MACGrid_->set_u(i-1, j, k, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*j + (i-1) + (N+1)*M*k)));
+					}
+					if ( j != 0 and !(*(visited_u + (N+1)*(j-1) + i + (N+1)*M*k)) ){
+						double tmp = MACGrid_->get_u(i, j-1, k) * *(counter + (N+1)*(j-1) + i + (N+1)*M*k);
+						*(counter + (N+1)*(j-1) + i + (N+1)*M*k) += 1;
+						MACGrid_->set_u(i, j-1, k, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*(j-1) + i + (N+1)*M*k)));
+					}
+					if ( k != 0 and !(*(visited_u + (N+1)*j + i + (N+1)*M*(k-1))) ){
+						double tmp = MACGrid_->get_u(i, j, k-1) * *(counter + (N+1)*j + i + (N+1)*M*(k-1));
+						*(counter + (N+1)*j + i + (N+1)*M*(k-1)) += 1;
+						MACGrid_->set_u(i, j, k-1, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*j + i + (N+1)*M*(k-1))));
+					}
+					if ( i != N and !(*(visited_u + (N+1)*j + (i+1) + (N+1)*M*k)) ){
+						double tmp = MACGrid_->get_u(i+1, j, k) * *(counter + (N+1)*j + (i+1) + (N+1)*M*k);
+						*(counter + (N+1)*j + (i+1) + (N+1)*M*k) += 1;
+						MACGrid_->set_u(i+1, j, k, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*j + (i+1) + (N+1)*M*k)));
+					}
+					if ( j != M-1 and !(*(visited_u + (N+1)*(j+1) + i + (N+1)*M*k)) ){
+						double tmp = MACGrid_->get_u(i, j+1, k) * *(counter + (N+1)*(j+1) + i + (N+1)*M*k);
+						*(counter + (N+1)*(j+1) + i + (N+1)*M*k) += 1;
+						MACGrid_->set_u(i, j+1, k, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*(j+1) + i + (N+1)*M*k)));
+					}
+					if ( k != L-1 and !(*(visited_u + (N+1)*j + i + (N+1)*M*(k+1))) ){
+						double tmp = MACGrid_->get_u(i, j, k+1) * *(counter + (N+1)*j + i + (N+1)*M*(k+1));
+						*(counter + (N+1)*j + i + (N+1)*M*(k+1)) += 1;
+						MACGrid_->set_u(i, j, k+1, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*j + i + (N+1)*M*(k+1))));
+					}
 				}
 			}
 		}
@@ -344,30 +430,92 @@ void FLIP::extrapolate_v( const bool* const visited_v ){
 	// Do the cases for upper and right bound
 	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned N = MACGrid_->get_num_cells_x();
-	unsigned* counter = new unsigned[N*(M+1)];
-	std::fill(counter, counter + N*(M+1), 0);
-	for( unsigned j = 0; j < M+1; ++j ){
-		for( unsigned i = 0; i < N; ++i ){
-			if ( *(visited_v + N*j + i) ){
-				if ( i != 0 and !(*(visited_v + N*j + (i-1))) ){
-					double tmp = MACGrid_->get_v(i-1, j) * *(counter + N*j + (i-1));
-					*(counter + N*j + (i-1)) += 1;
-					MACGrid_->set_v(i-1, j, (tmp + MACGrid_->get_v(i, j))/(*(counter + N*j + (i-1))));
+	unsigned L = MACGrid_->get_num_cells_z();
+	unsigned* counter = new unsigned[N*L*(M+1)];
+	std::fill(counter, counter + N*L*(M+1), 0);
+	for( unsigned k = 0; k < L; ++k ){	
+		for( unsigned j = 0; j < M+1; ++j ){
+			for( unsigned i = 0; i < N; ++i ){
+				if ( *(visited_v + N*j + i + N*(M+1)*k) ){
+					if ( i != 0 and !(*(visited_v + N*j + (i-1) + N*(M+1)*k)) ){
+						double tmp = MACGrid_->get_v(i-1, j, k) * *(counter + N*j + (i-1) + N*(M+1)*k);
+						*(counter + N*j + (i-1) + N*(M+1)*k) += 1;
+						MACGrid_->set_v(i-1, j, k, (tmp + MACGrid_->get_v(i, j, k))/(*(counter + N*j + (i-1) + N*(M+1)*k)));
+					}
+					if ( j != 0 and !(*(visited_v + N*(j-1) + i + N*(M+1)*k)) ){
+						double tmp = MACGrid_->get_v(i, j-1, k) * *(counter + N*(j-1) + i + N*(M+1)*k);
+						*(counter + N*(j-1) + i + N*(M+1)*k) += 1;
+						MACGrid_->set_v(i, j-1, k, (tmp + MACGrid_->get_v(i, j, k))/(*(counter + N*(j-1) + i + N*(M+1)*k)));
+					}
+					if ( k != 0 and !(*(visited_v + N*j + i + N*(M+1)*(k-1))) ){
+						double tmp = MACGrid_->get_v(i, j, k-1) * *(counter + N*j + i + N*(M+1)*(k-1));
+						*(counter + N*j + i + N*(M+1)*(k-1)) += 1;
+						MACGrid_->set_v(i, j, k-1, (tmp + MACGrid_->get_v(i, j, k))/(*(counter + N*j + i + N*(M+1)*(k-1))));
+					}
+					if ( i != N-1 and !(*(visited_v + N*j + (i+1) + N*(M+1)*k)) ){
+						double tmp = MACGrid_->get_v(i+1, j, k) * *(counter + N*j + (i+1) + N*(M+1)*k);
+						*(counter + N*j + (i+1) + N*(M+1)*k) += 1;
+						MACGrid_->set_v(i+1, j, k, (tmp + MACGrid_->get_v(i, j, k))/(*(counter + N*j + (i+1) + N*(M+1)*k)));
+					}
+					if ( j != M and !(*(visited_v + N*(j+1) + i + N*(M+1)*k)) ){
+						double tmp = MACGrid_->get_v(i, j+1, k) * *(counter + N*(j+1) + i + N*(M+1)*k);
+						*(counter + N*(j+1) + i + N*(M+1)*k) += 1;
+						MACGrid_->set_v(i, j+1, k, (tmp + MACGrid_->get_v(i, j, k))/(*(counter + N*(j+1) + i + N*(M+1)*k)));
+					}
+					if ( k != L-1 and !(*(visited_v + N*j + i + N*(M+1)*(k+1))) ){
+						double tmp = MACGrid_->get_v(i, j, k+1) * *(counter + N*j + i + N*(M+1)*(k+1));
+						*(counter + N*j + i + N*(M+1)*(k+1)) += 1;
+						MACGrid_->set_v(i, j, k+1, (tmp + MACGrid_->get_v(i, j, k))/(*(counter + N*j + i + N*(M+1)*(k+1))));
+					}
 				}
-				if ( j != 0 and !(*(visited_v + N*(j-1) + i)) ){
-					double tmp = MACGrid_->get_v(i, j-1) * *(counter + N*(j-1) + i);
-					*(counter + N*(j-1) + i) += 1;
-					MACGrid_->set_v(i, j-1, (tmp + MACGrid_->get_v(i, j))/(*(counter + N*(j-1) + i)));
-				}
-				if ( i != N-1 and !(*(visited_v + N*j + (i+1))) ){
-					double tmp = MACGrid_->get_v(i+1, j) * *(counter + N*j + (i+1));
-					*(counter + N*j + (i+1)) += 1;
-					MACGrid_->set_v(i+1, j, (tmp + MACGrid_->get_v(i, j))/(*(counter + N*j + (i+1))));
-				}
-				if ( j != M and !(*(visited_v + N*(j+1) + i)) ){
-					double tmp = MACGrid_->get_v(i, j+1) * *(counter + N*(j+1) + i);
-					*(counter + N*(j+1) + i) += 1;
-					MACGrid_->set_v(i, j+1, (tmp + MACGrid_->get_v(i, j))/(*(counter + N*(j+1) + i)));
+			}
+		}
+	}
+	
+	delete[] counter;
+}
+
+void FLIP::extrapolate_w( const bool* const visited_w ){
+	// Do the cases for upper and right bound
+	unsigned M = MACGrid_->get_num_cells_y();
+	unsigned N = MACGrid_->get_num_cells_x();
+	unsigned L = MACGrid_->get_num_cells_z();
+	unsigned* counter = new unsigned[N*M*(L+1)];
+	std::fill(counter, counter + N*M*(L+1), 0);
+	for( unsigned k = 0; k < L+1; ++k ){	
+		for( unsigned j = 0; j < M; ++j ){
+			for( unsigned i = 0; i < N; ++i ){
+				if ( *(visited_w + N*j + i + N*M*k) ){
+					if ( i != 0 and !(*(visited_w + N*j + (i-1) + N*M*k)) ){
+						double tmp = MACGrid_->get_w(i-1, j, k) * *(counter + N*j + (i-1) + N*M*k);
+						*(counter + N*j + (i-1) + N*M*k) += 1;
+						MACGrid_->set_w(i-1, j, k, (tmp + MACGrid_->get_w(i, j, k))/(*(counter + N*j + (i-1) + N*M*k)));
+					}
+					if ( j != 0 and !(*(visited_w + N*(j-1) + i + N*M*k)) ){
+						double tmp = MACGrid_->get_w(i, j-1, k) * *(counter + N*(j-1) + i + N*M*k);
+						*(counter + N*(j-1) + i + N*M*k) += 1;
+						MACGrid_->set_w(i, j-1, k, (tmp + MACGrid_->get_w(i, j, k))/(*(counter + N*(j-1) + i + N*M*k)));
+					}
+					if ( k != 0 and !(*(visited_w + N*j + i + N*M*(k-1))) ){
+						double tmp = MACGrid_->get_w(i, j, k-1) * *(counter + N*j + i + N*M*(k-1));
+						*(counter + N*j + i + N*M*(k-1)) += 1;
+						MACGrid_->set_w(i, j, k-1, (tmp + MACGrid_->get_w(i, j, k))/(*(counter + N*j + i + N*M*(k-1))));
+					}
+					if ( i != N-1 and !(*(visited_w + N*j + (i+1) + N*M*k)) ){
+						double tmp = MACGrid_->get_w(i+1, j, k) * *(counter + N*j + (i+1) + N*M*k);
+						*(counter + N*j + (i+1) + N*M*k) += 1;
+						MACGrid_->set_w(i+1, j, k, (tmp + MACGrid_->get_w(i, j, k))/(*(counter + N*j + (i+1) + N*M*k)));
+					}
+					if ( j != M-1 and !(*(visited_w + N*(j+1) + i + N*M*k)) ){
+						double tmp = MACGrid_->get_w(i, j+1, k) * *(counter + N*(j+1) + i + N*M*k);
+						*(counter + N*(j+1) + i + N*M*k) += 1;
+						MACGrid_->set_w(i, j+1, k, (tmp + MACGrid_->get_w(i, j, k))/(*(counter + N*(j+1) + i + N*M*k)));
+					}
+					if ( k != L and !(*(visited_w + N*j + i + N*M*(k+1))) ){
+						double tmp = MACGrid_->get_w(i, j, k+1) * *(counter + N*j + i + N*M*(k+1));
+						*(counter + N*j + i + N*M*(k+1)) += 1;
+						MACGrid_->set_w(i, j, k+1, (tmp + MACGrid_->get_w(i, j, k))/(*(counter + N*j + i + N*M*(k+1))));
+					}
 				}
 			}
 		}
@@ -461,7 +609,7 @@ void FLIP::compute_pressure_matrix() {
 	// Compute matrix for pressure solve and store in A_
 	//  See eq. (4.19) and (4.24) in SIGGRAPH notes
 	
-	std::vector< Mac2d::Triplet_t > triplets;
+	std::vector< Mac3d::Triplet_t > triplets;
 	
 	unsigned nx = MACGrid_->get_num_cells_x();
 	unsigned ny = MACGrid_->get_num_cells_y();
@@ -477,15 +625,15 @@ void FLIP::compute_pressure_matrix() {
 			if (MACGrid_->is_fluid(i, j)) {
 				// x-adjacent cells
 				if (i+1 < nx && MACGrid_->is_fluid(i+1, j)) {
-						triplets.push_back(Mac2d::Triplet_t(cellidx, cellidx+1, -1));
+						triplets.push_back(Mac3d::Triplet_t(cellidx, cellidx+1, -1));
 						// Use symmetry to avoid computing (i-1,j) separately
-						triplets.push_back(Mac2d::Triplet_t(cellidx+1, cellidx, -1));
+						triplets.push_back(Mac3d::Triplet_t(cellidx+1, cellidx, -1));
 				}
 				// y-adjacent cells
 				if (j+1 < ny && MACGrid_->is_fluid(i, j+1)) {
-						triplets.push_back(Mac2d::Triplet_t(cellidx, cellidx + nx, -1));
+						triplets.push_back(Mac3d::Triplet_t(cellidx, cellidx + nx, -1));
 						// Use symmetry to avoid computing (i,j-1) separately
-						triplets.push_back(Mac2d::Triplet_t(cellidx + nx, cellidx, -1));
+						triplets.push_back(Mac3d::Triplet_t(cellidx + nx, cellidx, -1));
 				}
 			} // if is_fluid(i,j)
 		}
@@ -684,8 +832,8 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 		}
 
 		// Check if the particle enters in a solid
-		Mac2d::Pair_t prev_indices = MACGrid_->index_from_coord(pos_curr(0), pos_curr(1));
-		Mac2d::Pair_t new_indices = MACGrid_->index_from_coord(pos_next(0), pos_next(1));
+		Mac3d::Pair_t prev_indices = MACGrid_->index_from_coord(pos_curr(0), pos_curr(1));
+		Mac3d::Pair_t new_indices = MACGrid_->index_from_coord(pos_next(0), pos_next(1));
 		double sx = MACGrid_->get_cell_sizex();
 		double sy = MACGrid_->get_cell_sizey();
 		//TODO: correctly shift particles & velocities

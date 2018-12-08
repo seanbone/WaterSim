@@ -80,7 +80,7 @@ class WaterSim : public Simulation {
 
 	public:
 		//MAC grid data structure
-		Mac2d* p_mac_grid;
+		Mac3d* p_mac_grid;
 		
 		WaterSim(viewer_t& viewer, 
 				 const int res_x, const int res_y,

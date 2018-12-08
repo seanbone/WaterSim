@@ -30,7 +30,7 @@ WaterSim::WaterSim(viewer_t& viewer,
     // Index of ViewerData instance dedicated to particles
     m_particles_data_idx = viewer.append_mesh();
     
-    // Generate visualization mesh based on Mac2d
+    // Generate visualization mesh based on Mac3d
     initMacViz();
 
     // Index of ViewerData instance dedicated to MAC grid
@@ -270,7 +270,7 @@ void WaterSim::initParticles() {
 
 
 void WaterSim::initMacGrid() {
-    p_mac_grid = new Mac2d(m_res_x, m_res_y, m_len_x, m_len_y);
+    p_mac_grid = new Mac3d(m_res_x, m_res_y, m_len_x, m_len_y);
 }
 
 void WaterSim::initFLIP() {

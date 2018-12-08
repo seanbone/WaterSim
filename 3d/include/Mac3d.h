@@ -105,7 +105,7 @@ class Mac3d{
 		double get_v_star(const unsigned i, const unsigned j, const unsigned k);
 		double get_w_star(const unsigned i, const unsigned j, const unsigned k);
 		//Get the pressure in the mathematical point(i,j,k)
-		double get_pressure(const unsigned i, const unsigned j, const unsigned k);
+		double get_pressure(const unsigned i, const unsigned j, const unsigned k = 0);
 		//Return if the cell with center (i,j,k) is a solid cell
 		bool is_solid(const unsigned i, const unsigned j, const unsigned k);
 		//Return if the cell with center (i,j,k) is a fluid cell

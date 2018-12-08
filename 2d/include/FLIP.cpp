@@ -72,18 +72,19 @@ double FLIP::compute_timestep( const double dt ){
 		dt_new = dt;
 	} else {
 		dt_new = std::abs(MACGrid_->get_cell_sizex()/u_max);
-	}
-	
-	if ( v_max == 0 ){
 		if ( dt_new > dt){
 			dt_new = dt;
 		}
+	}
+	
+	if ( v_max == 0 ){
+		dt_new = dt;
 	} else {
-		double tmp = std::abs(MACGrid_->get_cell_sizex()/u_max);
+		double tmp = std::abs(MACGrid_->get_cell_sizey()/v_max);
 		if ( tmp < dt_new){
 			dt_new = tmp;
 		}
-		else if ( dt_new >= dt ){
+		if ( dt_new > dt ){
 			dt_new = dt;
 		}
 	}

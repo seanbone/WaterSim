@@ -58,6 +58,7 @@ double FLIP::compute_timestep( const double dt ){
 	Eigen::Vector3d vel;
 	double u_max = 0;
 	double v_max = 0;
+	double w_max = 0;
 	for( unsigned int n = 0; n < num_particles_; ++n ){
 		vel = (particles_ + n)->get_velocity();
 		if ( std::abs(vel(0)) > std::abs(u_max) ){
@@ -66,24 +67,40 @@ double FLIP::compute_timestep( const double dt ){
 		if ( std::abs(vel(1)) > std::abs(v_max) ){
 			v_max = vel(1);
 		}
+		if ( std::abs(vel(2)) > std::abs(w_max) ){
+			w_max = vel(2);
+		}
 	}
 	
 	if ( u_max == 0 ){
 		dt_new = dt;
 	} else {
 		dt_new = std::abs(MACGrid_->get_cell_sizex()/u_max);
-	}
-	
-	if ( v_max == 0 ){
 		if ( dt_new > dt){
 			dt_new = dt;
 		}
+	}
+	
+	if ( v_max == 0 ){
+		dt_new = dt;
 	} else {
-		double tmp = std::abs(MACGrid_->get_cell_sizex()/u_max);
+		double tmp = std::abs(MACGrid_->get_cell_sizey()/v_max);
 		if ( tmp < dt_new){
 			dt_new = tmp;
 		}
-		else if ( dt_new >= dt ){
+		if ( dt_new > dt ){
+			dt_new = dt;
+		}
+	}
+	
+	if ( w_max == 0 ){
+		dt_new = dt;
+	} else {
+		double tmp = std::abs(MACGrid_->get_cell_sizez()/w_max);
+		if ( tmp < dt_new){
+			dt_new = tmp;
+		}
+		if ( dt_new > dt ){
 			dt_new = dt;
 		}
 	}

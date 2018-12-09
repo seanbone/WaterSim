@@ -95,23 +95,23 @@ class Mac3d{
 		// Get size of the full grid
 		Eigen::Vector3d get_grid_size() const;
 		//Get the x-velocity in the mathematical point (i-1/2,j, k) 
-		double get_u(const unsigned i, const unsigned j, const unsigned k);
+		double get_u(const unsigned i, const unsigned j, const unsigned k = 0);
 		//Get the y-velocity in the mathematical point (i,j-1/2, k)
-		double get_v(const unsigned i, const unsigned j, const unsigned k);
+		double get_v(const unsigned i, const unsigned j, const unsigned k = 0);
 		//Get the z-velocity in the mathematical point (i,j-1/2, k-1/2)
-		double get_w(const unsigned i, const unsigned j, const unsigned k);
+		double get_w(const unsigned i, const unsigned j, const unsigned k = 0);
 		// Equivalent for intermediate field
-		double get_u_star(const unsigned i, const unsigned j, const unsigned k);
-		double get_v_star(const unsigned i, const unsigned j, const unsigned k);
-		double get_w_star(const unsigned i, const unsigned j, const unsigned k);
+		double get_u_star(const unsigned i, const unsigned j, const unsigned k = 0);
+		double get_v_star(const unsigned i, const unsigned j, const unsigned k = 0);
+		double get_w_star(const unsigned i, const unsigned j, const unsigned k = 0);
 		//Get the pressure in the mathematical point(i,j,k)
 		double get_pressure(const unsigned i, const unsigned j, const unsigned k = 0);
 		//Return if the cell with center (i,j,k) is a solid cell
-		bool is_solid(const unsigned i, const unsigned j, const unsigned k);
+		bool is_solid(const unsigned i, const unsigned j, const unsigned k = 0);
 		//Return if the cell with center (i,j,k) is a fluid cell
-		bool is_fluid(const unsigned i, const unsigned j, const unsigned k);
+		bool is_fluid(const unsigned i, const unsigned j, const unsigned k = 0);
 		//Return if the cell with center (i,j,k) is empty (not solid && not fluid)
-		bool is_empty(const unsigned i, const unsigned j, const unsigned k);
+		bool is_empty(const unsigned i, const unsigned j, const unsigned k = 0);
 
 		// Grid dimensions in #cells
 		unsigned get_num_cells_x();
@@ -126,20 +126,20 @@ class Mac3d{
 		const std::vector< Triplet_t >& get_a_diag();
 		
 		//Get the weights for u in the mathematical point (i-1/2,j,k) 
-		double get_weights_u(const unsigned i, const unsigned j, const unsigned k);
+		double get_weights_u(const unsigned i, const unsigned j, const unsigned k = 0);
 		//Get the weights for v in the mathematical point (i,j-1/2,k)
-		double get_weights_v(const unsigned i, const unsigned j, const unsigned k);
+		double get_weights_v(const unsigned i, const unsigned j, const unsigned k = 0);
 		//Get the weights for v in the mathematical point (i,j,k-1/2)
-		double get_weights_w(const unsigned i, const unsigned j, const unsigned k);
+		double get_weights_w(const unsigned i, const unsigned j, const unsigned k = 0);
 		
 		//Getters for the trilinear interpolation of u, v, w, u*, v*, w* in the point x,y,z
 		void assign_x(double x, int indices_x, int& ix0, int& ix1, double& x0, double& x1);
 		void assign_y(double y, int indices_y, int& iy0, int& iy1, double& y0, double& y1);
 		void assign_z(double z, int indices_z, int& iz0, int& iz1, double& z0, double& z1);
 		void assign_d(double& xd, double& yd, double& zd, double x0, double x1, double y0, double y1, double z0, double z1, double x, double y, double z);
-		double get_interp_u(double x, double y, double z, bool use_u_star);	// if use_u_star is true, then is the interpolation of u*!
-		double get_interp_v(double x, double y, double z, bool use_v_star); // if use_v_star is true, then is the interpolation of v*!
-		double get_interp_w(double x, double y, double z, bool use_w_star);	// if use_w_star is true, then is the interpolation of w*!	
+		double get_interp_u(double x, double y, double z, const bool use_u_star = false);	// if use_u_star is true, then is the interpolation of u*!
+		double get_interp_v(double x, double y, double z, const bool use_v_star = false); // if use_v_star is true, then is the interpolation of v*!
+		double get_interp_w(double x, double y, double z, const bool use_w_star = false);	// if use_w_star is true, then is the interpolation of w*!	
 
 
 		//SETTERS
@@ -171,9 +171,9 @@ class Mac3d{
 		void set_weights_to_zero();
 		
 		//Set the cell with center (i,j,k) as a solid cell
-		void set_solid(const unsigned i, const unsigned j, const unsigned k);
+		void set_solid(const unsigned i, const unsigned j, const unsigned k = 0);
 		//Set the cell with center (i,j,k) as a fluid cell
-		void set_fluid(const unsigned i, const unsigned j, const unsigned k);
+		void set_fluid(const unsigned i, const unsigned j, const unsigned k = 0);
 		// Reset all cells to not contain any fluid
 		void reset_fluid();
 

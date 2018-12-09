@@ -594,159 +594,159 @@ void FLIP::apply_boundary_conditions() {
 }
 
 
-/*** PRESSURE SOLVING ***/
-void FLIP::do_pressures(const double dt) {
-	// Compute & apply pressure gradients to field
+//~ /*** PRESSURE SOLVING ***/
+//~ void FLIP::do_pressures(const double dt) {
+	//~ // Compute & apply pressure gradients to field
 	
-	// Compute A matrix
-	compute_pressure_matrix();
+	//~ // Compute A matrix
+	//~ compute_pressure_matrix();
 
-	// Compute rhs d
-	compute_pressure_rhs(dt);
+	//~ // Compute rhs d
+	//~ compute_pressure_rhs(dt);
 
-	// Solve for p: Ap = d (MICCG(0))
-	using namespace Eigen;
-	//using solver_t = ConjugateGradient<SparseMatrix<double>, Lower|Upper>;
-	//using solver_t = SimplicialLDLT<SparseMatrix<double>, Lower|Upper>;
-	using solver_t = ConjugateGradient<SparseMatrix<double>, Lower|Upper, IncompleteCholesky<double> >;
+	//~ // Solve for p: Ap = d (MICCG(0))
+	//~ using namespace Eigen;
+	//~ //using solver_t = ConjugateGradient<SparseMatrix<double>, Lower|Upper>;
+	//~ //using solver_t = SimplicialLDLT<SparseMatrix<double>, Lower|Upper>;
+	//~ using solver_t = ConjugateGradient<SparseMatrix<double>, Lower|Upper, IncompleteCholesky<double> >;
 
-	//MatrixXd A = A_;
-	solver_t solver;
-	solver.setMaxIterations(100);
-	solver.compute(A_);
-	//VectorXd p = A.fullPivLu().solve(d_);
-	VectorXd p = solver.solve(d_);
+	//~ //MatrixXd A = A_;
+	//~ solver_t solver;
+	//~ solver.setMaxIterations(100);
+	//~ solver.compute(A_);
+	//~ //VectorXd p = A.fullPivLu().solve(d_);
+	//~ VectorXd p = solver.solve(d_);
 
-	// Copy pressures to MAC grid
-	MACGrid_->set_pressure(p);
+	//~ // Copy pressures to MAC grid
+	//~ MACGrid_->set_pressure(p);
 
-	// Apply pressure gradients to velocity field
-	//     -> see SIGGRAPH §4
-	apply_pressure_gradients(dt);
-}
+	//~ // Apply pressure gradients to velocity field
+	//~ //     -> see SIGGRAPH §4
+	//~ apply_pressure_gradients(dt);
+//~ }
 
-void FLIP::compute_pressure_matrix() {
-	// Compute matrix for pressure solve and store in A_
-	//  See eq. (4.19) and (4.24) in SIGGRAPH notes
+//~ void FLIP::compute_pressure_matrix() {
+	//~ // Compute matrix for pressure solve and store in A_
+	//~ //  See eq. (4.19) and (4.24) in SIGGRAPH notes
 	
-	std::vector< Mac3d::Triplet_t > triplets;
+	//~ std::vector< Mac3d::Triplet_t > triplets;
 	
-	unsigned nx = MACGrid_->get_num_cells_x();
-	unsigned ny = MACGrid_->get_num_cells_y();
+	//~ unsigned nx = MACGrid_->get_num_cells_x();
+	//~ unsigned ny = MACGrid_->get_num_cells_y();
 
-	unsigned cellidx = 0;
-	for (unsigned j = 0; j < ny; j++) {
-		for (unsigned i = 0; i < nx; i++, cellidx++) {
-			// Copy diagonal entry
-			auto& diag_e = MACGrid_->get_a_diag()[i + j*nx];
-			triplets.push_back(diag_e);
+	//~ unsigned cellidx = 0;
+	//~ for (unsigned j = 0; j < ny; j++) {
+		//~ for (unsigned i = 0; i < nx; i++, cellidx++) {
+			//~ // Copy diagonal entry
+			//~ auto& diag_e = MACGrid_->get_a_diag()[i + j*nx];
+			//~ triplets.push_back(diag_e);
 
-			// Compute off-diagonal entries
-			if (MACGrid_->is_fluid(i, j)) {
-				// x-adjacent cells
-				if (i+1 < nx && MACGrid_->is_fluid(i+1, j)) {
-						triplets.push_back(Mac3d::Triplet_t(cellidx, cellidx+1, -1));
-						// Use symmetry to avoid computing (i-1,j) separately
-						triplets.push_back(Mac3d::Triplet_t(cellidx+1, cellidx, -1));
-				}
-				// y-adjacent cells
-				if (j+1 < ny && MACGrid_->is_fluid(i, j+1)) {
-						triplets.push_back(Mac3d::Triplet_t(cellidx, cellidx + nx, -1));
-						// Use symmetry to avoid computing (i,j-1) separately
-						triplets.push_back(Mac3d::Triplet_t(cellidx + nx, cellidx, -1));
-				}
-			} // if is_fluid(i,j)
-		}
-	} // outer for
+			//~ // Compute off-diagonal entries
+			//~ if (MACGrid_->is_fluid(i, j)) {
+				//~ // x-adjacent cells
+				//~ if (i+1 < nx && MACGrid_->is_fluid(i+1, j)) {
+						//~ triplets.push_back(Mac3d::Triplet_t(cellidx, cellidx+1, -1));
+						//~ // Use symmetry to avoid computing (i-1,j) separately
+						//~ triplets.push_back(Mac3d::Triplet_t(cellidx+1, cellidx, -1));
+				//~ }
+				//~ // y-adjacent cells
+				//~ if (j+1 < ny && MACGrid_->is_fluid(i, j+1)) {
+						//~ triplets.push_back(Mac3d::Triplet_t(cellidx, cellidx + nx, -1));
+						//~ // Use symmetry to avoid computing (i,j-1) separately
+						//~ triplets.push_back(Mac3d::Triplet_t(cellidx + nx, cellidx, -1));
+				//~ }
+			//~ } // if is_fluid(i,j)
+		//~ }
+	//~ } // outer for
 
-	//TODO: only resize A_ and d_ at beginning of sim
-	A_.resize(nx*ny, nx*ny);
-	A_.setZero();
-	A_.setFromTriplets(triplets.begin(), triplets.end());
-}
+	//~ //TODO: only resize A_ and d_ at beginning of sim
+	//~ A_.resize(nx*ny, nx*ny);
+	//~ A_.setZero();
+	//~ A_.setFromTriplets(triplets.begin(), triplets.end());
+//~ }
 
-void FLIP::compute_pressure_rhs(const double dt) {
-	// Compute right-hand side of the pressure equations and store in d_
-	//  See eq. (4.19) and (4.24) in SIGGRAPH notes
-	//   Note: u_{solid} = 0
-	unsigned nx = MACGrid_->get_num_cells_x();
-	unsigned ny = MACGrid_->get_num_cells_y();
+//~ void FLIP::compute_pressure_rhs(const double dt) {
+	//~ // Compute right-hand side of the pressure equations and store in d_
+	//~ //  See eq. (4.19) and (4.24) in SIGGRAPH notes
+	//~ //   Note: u_{solid} = 0
+	//~ unsigned nx = MACGrid_->get_num_cells_x();
+	//~ unsigned ny = MACGrid_->get_num_cells_y();
 
-	// Alias for MAC grid
-	auto& g = MACGrid_;
+	//~ // Alias for MAC grid
+	//~ auto& g = MACGrid_;
 	
-	//TODO: only resize A_ and d_ at beginning of sim
-	d_.resize(nx*ny);
-	d_.setZero();
+	//~ //TODO: only resize A_ and d_ at beginning of sim
+	//~ d_.resize(nx*ny);
+	//~ d_.setZero();
 	
-	unsigned cellidx = 0;
-	for (unsigned j = 0; j < ny; j++) {
-		for (unsigned i = 0; i < nx; i++, cellidx++) {
-			if (g->is_fluid(i,j)) {
-				// get_u(i,j) = u_{ (i-1/2, j) }
-				double d_ij = -(g->get_u(i+1,j) - g->get_u(i,j));
-				d_ij -= g->get_v(i,j+1) - g->get_v(i,j);
+	//~ unsigned cellidx = 0;
+	//~ for (unsigned j = 0; j < ny; j++) {
+		//~ for (unsigned i = 0; i < nx; i++, cellidx++) {
+			//~ if (g->is_fluid(i,j)) {
+				//~ // get_u(i,j) = u_{ (i-1/2, j) }
+				//~ double d_ij = -(g->get_u(i+1,j) - g->get_u(i,j));
+				//~ d_ij -= g->get_v(i,j+1) - g->get_v(i,j);
 				
-				// Note: u_{solid} = 0
+				//~ // Note: u_{solid} = 0
 	
-				// Check each adjacent cell. If solid, alter term as in (4.24)
-				// Consider cells outside of the boundary as solid
-				// (i+1, j)
-				if ((i < (nx-1) && g->is_solid(i+1,j)) || i == nx-1) {
-					d_ij += g->get_u(i+1,j);
-				}
+				//~ // Check each adjacent cell. If solid, alter term as in (4.24)
+				//~ // Consider cells outside of the boundary as solid
+				//~ // (i+1, j)
+				//~ if ((i < (nx-1) && g->is_solid(i+1,j)) || i == nx-1) {
+					//~ d_ij += g->get_u(i+1,j);
+				//~ }
 				
-				// (i-1, j)
-				if ((i > 0 && g->is_solid(i-1,j)) || i == 0) {
-					d_ij += g->get_u(i,j);
-				}
+				//~ // (i-1, j)
+				//~ if ((i > 0 && g->is_solid(i-1,j)) || i == 0) {
+					//~ d_ij += g->get_u(i,j);
+				//~ }
 	
-				// (i, j+1)
-				if ((j < (ny-1) && g->is_solid(i,j+1)) || j == ny-1) {
-					d_ij += g->get_v(i,j+1);
-				}
+				//~ // (i, j+1)
+				//~ if ((j < (ny-1) && g->is_solid(i,j+1)) || j == ny-1) {
+					//~ d_ij += g->get_v(i,j+1);
+				//~ }
 				
-				// (i, j-1)
-				if ((j > 0 && g->is_solid(i,j-1)) || j == 0) {
-					d_ij += g->get_v(i,j);
-				}
+				//~ // (i, j-1)
+				//~ if ((j > 0 && g->is_solid(i,j-1)) || j == 0) {
+					//~ d_ij += g->get_v(i,j);
+				//~ }
 				
-				// *TODO: cell x and y size should always be the same -> enforce via sim params?
-				d_(cellidx) = fluid_density_ * g->get_cell_sizex() * d_ij / dt;
-			} else { // if is_fluid(i,j)
-				d_(cellidx) = 0;
-			}
-		}
-	}
-}
+				//~ // *TODO: cell x and y size should always be the same -> enforce via sim params?
+				//~ d_(cellidx) = fluid_density_ * g->get_cell_sizex() * d_ij / dt;
+			//~ } else { // if is_fluid(i,j)
+				//~ d_(cellidx) = 0;
+			//~ }
+		//~ }
+	//~ }
+//~ }
 
-void FLIP::apply_pressure_gradients(const double dt) {
-	// Apply pressure gradients to velocity field
-	unsigned nx = MACGrid_->get_num_cells_x();
-	unsigned ny = MACGrid_->get_num_cells_y();
-	// MACGrid alias
-	auto& g = MACGrid_;
-	// *TODO: correct cell dimensions
-	double dx = g->get_cell_sizex();
-	for (unsigned j = 0; j < ny; j++) {
-		for (unsigned i = 0; i < nx; i++) {
-			if (i != 0) {
-				// get_u(i,j) = u_{ (i-1/2, j) }
-				// See SIGGRAPH eq. (4.4)
-				double du = (g->get_pressure(i,j) - g->get_pressure(i-1,j));
-				du *= (dt/(dx*fluid_density_));
-				g->set_u(i,j, g->get_u(i,j) - du);
-			}
-			if (j != 0) {
-				// get_v(i,j) = v_{ (i, j-1/2) }
-				// See SIGGRAPH eq. (4.5)
-				double dv = (g->get_pressure(i,j) - g->get_pressure(i,j-1));
-				dv *= (dt/(dx*fluid_density_));
-				g->set_v(i,j, g->get_v(i,j) - dv);
-			}
-		}
-	}
-}
+//~ void FLIP::apply_pressure_gradients(const double dt) {
+	//~ // Apply pressure gradients to velocity field
+	//~ unsigned nx = MACGrid_->get_num_cells_x();
+	//~ unsigned ny = MACGrid_->get_num_cells_y();
+	//~ // MACGrid alias
+	//~ auto& g = MACGrid_;
+	//~ // *TODO: correct cell dimensions
+	//~ double dx = g->get_cell_sizex();
+	//~ for (unsigned j = 0; j < ny; j++) {
+		//~ for (unsigned i = 0; i < nx; i++) {
+			//~ if (i != 0) {
+				//~ // get_u(i,j) = u_{ (i-1/2, j) }
+				//~ // See SIGGRAPH eq. (4.4)
+				//~ double du = (g->get_pressure(i,j) - g->get_pressure(i-1,j));
+				//~ du *= (dt/(dx*fluid_density_));
+				//~ g->set_u(i,j, g->get_u(i,j) - du);
+			//~ }
+			//~ if (j != 0) {
+				//~ // get_v(i,j) = v_{ (i, j-1/2) }
+				//~ // See SIGGRAPH eq. (4.5)
+				//~ double dv = (g->get_pressure(i,j) - g->get_pressure(i,j-1));
+				//~ dv *= (dt/(dx*fluid_density_));
+				//~ g->set_v(i,j, g->get_v(i,j) - dv);
+			//~ }
+		//~ }
+	//~ }
+//~ }
 
 
 
@@ -759,13 +759,15 @@ void FLIP::grid_to_particle(){
 	double alpha = alpha_;
 	int nx = MACGrid_->get_num_cells_x();
 	int ny = MACGrid_->get_num_cells_y();
+	int nz = MACGrid_->get_num_cells_z();
 	
 	for(unsigned i = 0; i < num_particles_; ++i){
 		//Store the initial positions and velocities of the particles
 		Eigen::Vector3d initial_position = (particles_+i)->get_position();
 		Eigen::Vector3d initial_velocity = (particles_+i)->get_velocity();
 		auto initial_idx = MACGrid_->index_from_coord(initial_position(0), 
-													  initial_position(1));
+													  initial_position(1),
+													  initial_position(2));
 		
 		//Initialization of the variables
 		Eigen::Vector3d interp_u_star;
@@ -777,24 +779,29 @@ void FLIP::grid_to_particle(){
 
 		double x = initial_position[0];
 		double y = initial_position[1];
+		double z = initial_position[2];
 		
-		//With u* and v* we can make the interpolation interp(u*, x_p),
-		//with the new u and v we can make the interpolation interp(u_n1, x_p)
+		//With u*, v* and w* we can make the interpolation interp(u*, x_p),
+		//with the new u, v and w we can make the interpolation interp(u_n1, x_p)
 		
-		//Update the u-velocity (bilinear interpolation)
-		interp_u_star[0] = MACGrid_->get_interp_u_star(x,y);
-		interp_u_n1[0] = MACGrid_->get_interp_u(x,y);
+		//Update the u-velocity (trilinear interpolation)
+		interp_u_star[0] = MACGrid_->get_interp_u(x,y,z,true);
+		interp_u_n1[0] = MACGrid_->get_interp_u(x,y,z);
 		
-		//Update the v-velocity (bilinear interpolation)
-		interp_u_star[1] = MACGrid_->get_interp_v_star(x,y);
-		interp_u_n1[1] = MACGrid_->get_interp_v(x,y);
+		//Update the v-velocity (trilinear interpolation)
+		interp_u_star[1] = MACGrid_->get_interp_v(x,y,z,true);
+		interp_u_n1[1] = MACGrid_->get_interp_v(x,y,z);
 		
+		//Update the w-velocity (trilinear interpolation)
+		interp_u_star[2] = MACGrid_->get_interp_w(x,y,z,true);
+		interp_u_n1[2] = MACGrid_->get_interp_w(x,y,z);
 
 		//Update the final velocity of the particles
 		
-		// Use pure PIC on boundary, blend PIC+FLIP elsewhere
-		if (initial_idx.first == 0 or initial_idx.first == nx-1
-		 or initial_idx.second == 0 or initial_idx.second == ny-1){
+		// Use PIC on boundary, blend PIC+FLIP elsewhere
+		if (initial_idx(0) == 0 or initial_idx(0) == nx-1
+		 or initial_idx(1) == 0 or initial_idx(1) == ny-1
+		 or initial_idx(2) == 0 or initial_idx(2) == nz-1){
 			u_update = initial_velocity*(1 - std::min(1., 2*alpha)) + interp_u_n1 - interp_u_star*(1 - std::min(1., 2*alpha));
 		} else {
 			u_update = initial_velocity*(1 - alpha) + interp_u_n1 - interp_u_star*(1 - alpha);
@@ -820,22 +827,29 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 		
 		double size_x = MACGrid_->get_grid_size()(0);
 		double size_y = MACGrid_->get_grid_size()(1);
+		double size_z = MACGrid_->get_grid_size()(2);
 		double cell_sizex = MACGrid_->get_cell_sizex();
 		double cell_sizey = MACGrid_->get_cell_sizey();
+		double cell_sizez = MACGrid_->get_cell_sizez();
 		double x_half = pos_half(0);
 		double y_half = pos_half(1);
+		double z_half = pos_half(2);
 		
 		// Check if pos_half is out of the grid
-		if ((x_half <= -0.5*cell_sizex) or (x_half >= size_x - 0.5*cell_sizex) or (y_half <= -0.5*cell_sizey) or (y_half >= size_y - 0.5*cell_sizex)){
+		if ((x_half <= -0.5*cell_sizex) or (x_half >= size_x - 0.5*cell_sizex)
+		 or (y_half <= -0.5*cell_sizey) or (y_half >= size_y - 0.5*cell_sizey)
+		 or (z_half <= -0.5*cell_sizez) or (z_half >= size_z - 0.5*cell_sizez)){
 			continue;
 		}
 		
 		// RK2
-		pos_next(0) = pos_curr(0) + dt*MACGrid_->get_interp_u(x_half, y_half);
-		pos_next(1) = pos_curr(1) + dt*MACGrid_->get_interp_v(x_half, y_half);
+		pos_next(0) = pos_curr(0) + dt*MACGrid_->get_interp_u(x_half, y_half, z_half);
+		pos_next(1) = pos_curr(1) + dt*MACGrid_->get_interp_v(x_half, y_half, z_half);
+		pos_next(2) = pos_curr(2) + dt*MACGrid_->get_interp_w(x_half, y_half, z_half);
 		
 		double x = pos_next(0);
 		double y = pos_next(1);
+		double z = pos_next(2);
 		
 		// Check if the particle exits the grid
 		if (x <= -0.5*cell_sizex) {
@@ -847,26 +861,38 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 		if (y <= -0.5*cell_sizey) {
 			pos_next(1) = 0.;
 		}
-		if (y >= size_y - 0.5*cell_sizex) {
-			pos_next(1) = size_y - cell_sizex;
+		if (y >= size_y - 0.5*cell_sizey) {
+			pos_next(1) = size_y - cell_sizey;
+		}
+		if (z <= -0.5*cell_sizez) {
+			pos_next(2) = 0.;
+		}
+		if (z >= size_z - 0.5*cell_sizez) {
+			pos_next(2) = size_z - cell_sizez;
 		}
 
 		// Check if the particle enters in a solid
-		Mac3d::Pair_t prev_indices = MACGrid_->index_from_coord(pos_curr(0), pos_curr(1));
-		Mac3d::Pair_t new_indices = MACGrid_->index_from_coord(pos_next(0), pos_next(1));
+		auto prev_indices = MACGrid_->index_from_coord(pos_curr(0), pos_curr(1), pos_curr(2));
+		auto new_indices = MACGrid_->index_from_coord(pos_next(0), pos_next(1), pos_curr(2));
 		double sx = MACGrid_->get_cell_sizex();
 		double sy = MACGrid_->get_cell_sizey();
+		double sz = MACGrid_->get_cell_sizez();
 		//TODO: correctly shift particles & velocities
-		if (MACGrid_->is_solid(new_indices.first, new_indices.second)) {
-			if (prev_indices.first  > new_indices.first)
-				pos_next(0) = (prev_indices.first - 0.25) * sx;
-			else if (prev_indices.first < new_indices.first)
-				pos_next(0) = (prev_indices.first + 0.25) * sx;
+		if (MACGrid_->is_solid(new_indices(0), new_indices(1), new_indices(2))) {
+			if (prev_indices(0)  > new_indices(0))
+				pos_next(0) = (prev_indices(0) - 0.25) * sx;
+			else if (prev_indices(0) < new_indices(0))
+				pos_next(0) = (prev_indices(0) + 0.25) * sx;
 
-			if (prev_indices.second > new_indices.second)
-				pos_next(1) = (prev_indices.second - 0.25) * sy;
-			else if (prev_indices.second < new_indices.second)
-				pos_next(1) = (prev_indices.second + 0.25) * sy;
+			if (prev_indices(1) > new_indices(1))
+				pos_next(1) = (prev_indices(1) - 0.25) * sy;
+			else if (prev_indices(1) < new_indices(1))
+				pos_next(1) = (prev_indices(1) + 0.25) * sy;
+				
+			if (prev_indices(2) > new_indices(2))
+				pos_next(2) = (prev_indices(2) - 0.25) * sz;
+			else if (prev_indices(2) < new_indices(2))
+				pos_next(2) = (prev_indices(2) + 0.25) * sz;
 		}
 
 		(particles_ + n)->set_position(pos_next);

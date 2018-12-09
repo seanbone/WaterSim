@@ -237,7 +237,7 @@ double Mac3d::get_cell_sizez() {
 }
 
 //2. Velocities --------------------------------------------------------
-double Mac3d::get_u(const unsigned i, const unsigned j, const unsigned k = 0){
+double Mac3d::get_u(const unsigned i, const unsigned j, const unsigned k){
 	if (i < (N_+1) && j < M_ && k < L_)
 		return *(pu_ + (N_+1)*j + i + (N_+1)*M_*k);
 	else{ 
@@ -247,7 +247,7 @@ double Mac3d::get_u(const unsigned i, const unsigned j, const unsigned k = 0){
 	
 }
 
-double Mac3d::get_v(const unsigned i, const unsigned j, const unsigned k = 0){
+double Mac3d::get_v(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < (M_+1) && k < L_)
 		return *(pv_ + N_*j + i + N_*(M_+1)*k);
 	else{ 
@@ -256,7 +256,7 @@ double Mac3d::get_v(const unsigned i, const unsigned j, const unsigned k = 0){
 	}
 }
 
-double Mac3d::get_w(const unsigned i, const unsigned j, const unsigned k = 0){
+double Mac3d::get_w(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < (L_+1))
 		return *(pw_ + N_*j + i + N_*M_*k);
 	else{ 
@@ -265,7 +265,7 @@ double Mac3d::get_w(const unsigned i, const unsigned j, const unsigned k = 0){
 	}
 }
 
-double Mac3d::get_u_star(const unsigned i, const unsigned j, const unsigned k = 0) {
+double Mac3d::get_u_star(const unsigned i, const unsigned j, const unsigned k) {
 	if (i < (N_+1) && j < M_ && k < L_)
 		return *(pu_star_ + (N_+1)*j + i + (N_+1)*M_*k);
 	else{ 
@@ -274,7 +274,7 @@ double Mac3d::get_u_star(const unsigned i, const unsigned j, const unsigned k = 
 	}
 }
 
-double Mac3d::get_v_star(const unsigned i, const unsigned j, const unsigned k = 0) {
+double Mac3d::get_v_star(const unsigned i, const unsigned j, const unsigned k) {
 	if (i < N_ && j < (M_+1) && k < L_)
 		return *(pv_star_ + N_*j + i + N_*(M_+1)*k);
 	else{ 
@@ -283,7 +283,7 @@ double Mac3d::get_v_star(const unsigned i, const unsigned j, const unsigned k = 
 	}
 }
 
-double Mac3d::get_w_star(const unsigned i, const unsigned j, const unsigned k = 0) {
+double Mac3d::get_w_star(const unsigned i, const unsigned j, const unsigned k) {
 	if (i < N_ && j < M_ && k < (L_+1))
 		return *(pw_star_ + N_*j + i + N_*M_*k);
 	else{ 
@@ -346,7 +346,7 @@ void Mac3d::assign_d(double& xd, double& yd, double& zd, double x0, double x1,
 	return;
 }
 
-double Mac3d::get_interp_u(double x, double y, double z, bool use_u_star = false){
+double Mac3d::get_interp_u(double x, double y, double z, const bool use_u_star){
 	//Setting u or u*
 	double (Mac3d::*get_vel)(unsigned, unsigned, unsigned);
 	if (use_u_star)
@@ -464,7 +464,7 @@ double Mac3d::get_interp_u(double x, double y, double z, bool use_u_star = false
 	}
 }
 
-double Mac3d::get_interp_v(double x, double y, double z, bool use_v_star = false){
+double Mac3d::get_interp_v(double x, double y, double z, const bool use_v_star){
 	//Setting v or v*
 	double (Mac3d::*get_vel)(unsigned, unsigned, unsigned);
 	if (use_v_star)
@@ -582,7 +582,7 @@ double Mac3d::get_interp_v(double x, double y, double z, bool use_v_star = false
 	}
 }
 
-double Mac3d::get_interp_w(double x, double y, double z, bool use_w_star = false){
+double Mac3d::get_interp_w(double x, double y, double z, const bool use_w_star){
 	//Setting w or *
 	double (Mac3d::*get_vel)(unsigned, unsigned, unsigned);
 	if (use_w_star)
@@ -701,7 +701,7 @@ double Mac3d::get_interp_w(double x, double y, double z, bool use_w_star = false
 }
 
 //3. Pressures ---------------------------------------------------------
-double Mac3d::get_pressure(const unsigned i, const unsigned j, const unsigned k = 0){
+double Mac3d::get_pressure(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < L_)
 		return *(ppressure_ + N_*j + i + N_*M_*k);
 	else{ 
@@ -711,7 +711,7 @@ double Mac3d::get_pressure(const unsigned i, const unsigned j, const unsigned k 
 }
 
 //4. Physical properties -----------------------------------------------
-bool Mac3d::is_solid(const unsigned i, const unsigned j, const unsigned k = 0){
+bool Mac3d::is_solid(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < L_)
 		return *(psolid_ + N_*j + i + N_*M_*k);
 	else{ 
@@ -720,7 +720,7 @@ bool Mac3d::is_solid(const unsigned i, const unsigned j, const unsigned k = 0){
 	}
 }
 
-bool Mac3d::is_fluid(const unsigned i, const unsigned j, const unsigned k = 0){
+bool Mac3d::is_fluid(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < L_)
 		return *(pfluid_ + N_*j + i + N_*M_*k);
 	else{ 
@@ -729,7 +729,7 @@ bool Mac3d::is_fluid(const unsigned i, const unsigned j, const unsigned k = 0){
 	}
 }
 
-bool Mac3d::is_empty(const unsigned i, const unsigned j, const unsigned k = 0){
+bool Mac3d::is_empty(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < L_)
 		return (!is_fluid(i,j,k) && !is_solid(i,j,k));
 	else{ 
@@ -739,7 +739,7 @@ bool Mac3d::is_empty(const unsigned i, const unsigned j, const unsigned k = 0){
 }
 
 //5. Weights -----------------------------------------------------------
-double Mac3d::get_weights_u(const unsigned i, const unsigned j, const unsigned k = 0){
+double Mac3d::get_weights_u(const unsigned i, const unsigned j, const unsigned k){
 	if (i < (N_+1) && j < M_ && k < L_)
 		return *(pweights_u_ + (N_+1)*j + i + (N_+1)*M_*k);
 	else{ 
@@ -748,7 +748,7 @@ double Mac3d::get_weights_u(const unsigned i, const unsigned j, const unsigned k
 	}
 }
 
-double Mac3d::get_weights_v(const unsigned i, const unsigned j, const unsigned k = 0){
+double Mac3d::get_weights_v(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < (M_+1) && k < L_)
 		return *(pweights_v_ + N_*j + i + N_*(M_+1)*k);
 	else{ 
@@ -757,7 +757,7 @@ double Mac3d::get_weights_v(const unsigned i, const unsigned j, const unsigned k
 	}
 }
 
-double Mac3d::get_weights_w(const unsigned i, const unsigned j, const unsigned k = 0){
+double Mac3d::get_weights_w(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < (L_+1))
 		return *(pweights_w_ + N_*j + i + N_*M_*k);
 	else{ 
@@ -836,14 +836,14 @@ void Mac3d::set_pressure(const Eigen::VectorXd& p) {
 }
 
 //3. Physical properties -----------------------------------------------
-void Mac3d::set_solid(const unsigned i, const unsigned j, const unsigned k = 0){
+void Mac3d::set_solid(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < L_)
 		*(psolid_ + N_*j + i + N_*M_*k) = true;
 	else
 		std::cout << "Calling set_solid: Index out of bounds!" << std::endl;
 }
 
-void Mac3d::set_fluid(const unsigned i, const unsigned j, const unsigned k = 0){
+void Mac3d::set_fluid(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < L_)
 		*(pfluid_ + N_*j + i + N_*M_*k) = true;
 	else

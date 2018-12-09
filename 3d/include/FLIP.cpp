@@ -535,9 +535,9 @@ void FLIP::apply_forces(const double dt) {
 	const unsigned L = g->get_num_cells_z();
 	
 	// Iterate over cells & update: dv = dt*g
-	for(unsigned k = 0; k < L; ++k)
-		for (unsigned j = 0; j <= M; ++j) {
-			for (unsigned i = 0; i < N; ++i) {
+	for(unsigned k = 0; k < L; ++k){
+		for (unsigned j = 0; j <= M; ++j){
+			for (unsigned i = 0; i < N; ++i){
 				g->set_v(i, j, k, g->get_v(i,j,k) - dt*gravity_mag_);
 			}
 		}
@@ -550,29 +550,46 @@ void FLIP::apply_boundary_conditions() {
 	// Enforce boundary conditions for grid & solid boundaries
 	unsigned nx = MACGrid_->get_num_cells_x();
 	unsigned ny = MACGrid_->get_num_cells_y();
+	unsigned nz = MACGrid_->get_num_cells_z();
 	// Solid walls
-	for (unsigned j = 0; j < ny; j++) {
-		for (unsigned i = 0; i < nx; i++) {
-			bool ij_solid = MACGrid_->is_solid(i,j);
-			if (ij_solid || MACGrid_->is_solid(i+1,j))
-				MACGrid_->set_u(i+1, j, 0);
-			if (ij_solid || MACGrid_->is_solid(i,j+1))
-				MACGrid_->set_v(i, j+1, 0);
+	for(unsigned k = 0; k < nz; ++k){	
+		for(unsigned j = 0; j < ny; ++j){
+			for(unsigned i = 0; i < nx; ++i){
+				bool ijk_solid = MACGrid_->is_solid(i,j,k);
+				if (ijk_solid || MACGrid_->is_solid(i+1,j,k))
+					MACGrid_->set_u(i+1, j, k, 0);
+				if (ijk_solid || MACGrid_->is_solid(i,j+1,k))
+					MACGrid_->set_v(i, j+1, k, 0);
+				if (ijk_solid || MACGrid_->is_solid(i,j,k+1))
+					MACGrid_->set_w(i, j, k+1, 0);
+			}
 		}
 	}
 
 	// Outer (system) boundaries
-	for (unsigned i = 0; i < nx; i++) {
-		//if (MACGrid_->get_v(i, 0) < 0)
-			MACGrid_->set_v(i, 0, 0);
-		//if (MACGrid_->get_v(i, ny) > 0)
-			MACGrid_->set_v(i, ny, 0);
+	for (unsigned k = 0; k < nz; k++) {	
+		for (unsigned i = 0; i < nx; i++) {
+			//if (MACGrid_->get_v(i, 0, k) < 0)
+				MACGrid_->set_v(i, 0, k, 0);
+			//if (MACGrid_->get_v(i, ny, k) > 0)
+				MACGrid_->set_v(i, ny, k, 0);
+		}
+	}
+	for (unsigned k = 0; k < nz; k++) {	
+		for (unsigned j = 0; j < ny; j++) {
+			//if (MACGrid_->get_u(0, j, k) < 0)
+				MACGrid_->set_u(0, j, k, 0);
+			//if (MACGrid_->get_u(nx, j, k) > 0)
+				MACGrid_->set_u(nx, j, k, 0);
+		}
 	}
 	for (unsigned j = 0; j < ny; j++) {
-		//if (MACGrid_->get_u(0, j) < 0)
-			MACGrid_->set_u(0, j, 0);
-		//if (MACGrid_->get_u(nx, j) > 0)
-			MACGrid_->set_u(nx, j, 0);
+		for (unsigned i = 0; i < nx; i++) {
+			//if (MACGrid_->get_w(i, j, 0) < 0)
+				MACGrid_->set_w(i, j, 0, 0);
+			//if (MACGrid_->get_w(i, j, nz) > 0)
+				MACGrid_->set_w(i, j, nz, 0);
+		}
 	}
 }
 

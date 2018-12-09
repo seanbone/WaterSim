@@ -663,8 +663,8 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 		if (y <= -0.5*cell_sizey) {
 			pos_next(1) = 0.;
 		}
-		if (y >= size_y - 0.5*cell_sizex) {
-			pos_next(1) = size_y - cell_sizex;
+		if (y >= size_y - 0.5*cell_sizey) {
+			pos_next(1) = size_y - cell_sizey;
 		}
 
 		// Check if the particle enters in a solid

@@ -2,15 +2,15 @@
 
 
 WaterSim::WaterSim(viewer_t& viewer, 
-        const int res_x, const int res_y,
-        const double len_x, const double len_y,
+        const int res_x, const int res_y, const int res_z,
+        const double len_x, const double len_y, const int len_z,
         const double density, const double gravity,
         const double alpha,
         const bool show_pressures, const bool show_velocity_arrows,
         std::vector<bool> is_fluid, const bool jitter_particles,
         bool export_png, int png_sx, int png_sy, int max_pngs)
-        : Simulation(), p_viewer(&viewer), m_res_x(res_x), m_res_y(res_y),
-          m_len_x(len_y), m_len_y(len_y), m_fluid_density_(density),
+        : Simulation(), p_viewer(&viewer), m_res_x(res_x), m_res_y(res_y), m_res_z(res_z),
+          m_len_x(len_y), m_len_y(len_y), m_len_z(len_z), m_fluid_density_(density),
           m_gravity_mag_(gravity), m_alpha_(alpha),
           m_show_pressures(show_pressures),
           m_show_velocity_arrows(show_velocity_arrows),
@@ -39,6 +39,7 @@ WaterSim::WaterSim(viewer_t& viewer,
     // Index of ViewerData instance dedicated to the velocities
     m_velocity_u_idx = viewer.append_mesh();
     m_velocity_v_idx = viewer.append_mesh();
+    m_velocity_w_idx = viewer.append_mesh();
     
     // Update rendering geometry
     updateRenderGeometry();
@@ -66,7 +67,8 @@ void WaterSim::resetMembers() {
     
     //Velocity arrows
     p_viewer->data_list[m_velocity_u_idx].clear();
-    p_viewer->data_list[m_velocity_u_idx].clear();
+    p_viewer->data_list[m_velocity_v_idx].clear();
+    p_viewer->data_list[m_velocity_w_idx].clear();
 
     // PNG exporting
     m_png_num_ = 0;

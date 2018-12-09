@@ -27,8 +27,8 @@ class WaterSim : public Simulation {
 		viewer_t* const p_viewer;
 		
 		// MAC grid data structure
-		int m_res_x, m_res_y; // no. of cells in X and Y directions
-		double m_len_x, m_len_y; // size in [m] of full grid
+		int m_res_x, m_res_y, m_res_z; // no. of cells in X and Y directions
+		double m_len_x, m_len_y, m_len_z; // size in [m] of full grid
 
 		// Other params
 		double m_fluid_density_;
@@ -60,6 +60,7 @@ class WaterSim : public Simulation {
 		unsigned int m_grid_data_idx;
 		unsigned int m_velocity_u_idx;
 		unsigned int m_velocity_v_idx;
+		unsigned int m_velocity_w_idx;
 		
 
 		unsigned int m_num_particles;
@@ -83,8 +84,8 @@ class WaterSim : public Simulation {
 		Mac3d* p_mac_grid;
 		
 		WaterSim(viewer_t& viewer, 
-				 const int res_x, const int res_y,
-				 const double len_x, const double len_y,
+				 const int res_x, const int res_y, const int res_z,
+				 const double len_x, const double len_y, const double len_z,
 				 const double density, const double gravity,
 				 const double alpha,
 				 const bool show_pressures, const bool show_velocity_arrows,
@@ -105,8 +106,8 @@ class WaterSim : public Simulation {
 		/*
 		 * Update simulation parameters. Requires a reset to take effect.
 		 */
-		void updateParams(const int res_x, const int res_y, 
-						  const double len_x, const double len_y,
+		void updateParams(const int res_x, const int res_y, const int res_z,
+						  const double len_x, const double len_y, const int len_z,
 						  const double density, const double gravity, const double alpha,
 						  const bool show_pressures, const bool show_velocity_arrows,
 						  std::vector<bool> is_fluid, const bool jitter_particles,

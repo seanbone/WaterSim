@@ -555,6 +555,7 @@ void FLIP::apply_boundary_conditions() {
 	for(unsigned k = 0; k < nz; ++k){	
 		for(unsigned j = 0; j < ny; ++j){
 			for(unsigned i = 0; i < nx; ++i){
+				//~ ERROR: Is wrong because for example is_solid(i+1,j,k) can go out of bounds
 				bool ijk_solid = MACGrid_->is_solid(i,j,k);
 				if (ijk_solid || MACGrid_->is_solid(i+1,j,k))
 					MACGrid_->set_u(i+1, j, k, 0);

@@ -107,7 +107,7 @@ class WaterSim : public Simulation {
 		 * Update simulation parameters. Requires a reset to take effect.
 		 */
 		void updateParams(const int res_x, const int res_y, const int res_z,
-						  const double len_x, const double len_y, const int len_z,
+						  const double len_x, const double len_y, const double len_z,
 						  const double density, const double gravity, const double alpha,
 						  const bool show_pressures, const bool show_velocity_arrows,
 						  std::vector<bool> is_fluid, const bool jitter_particles,

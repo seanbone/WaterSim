@@ -1,9 +1,9 @@
 #include "WaterSim.h"
 
-
+//~ HERE
 WaterSim::WaterSim(viewer_t& viewer, 
         const int res_x, const int res_y, const int res_z,
-        const double len_x, const double len_y, const int len_z,
+        const double len_x, const double len_y, const double len_z,
         const double density, const double gravity,
         const double alpha,
         const bool show_pressures, const bool show_velocity_arrows,
@@ -49,6 +49,7 @@ WaterSim::WaterSim(viewer_t& viewer,
 /*
  * Reset class variables to reset the simulation.
  */
+//~ HERE
 void WaterSim::resetMembers() {
     // MAC grid
     delete p_mac_grid;
@@ -75,17 +76,19 @@ void WaterSim::resetMembers() {
 }
 
 
-
-void WaterSim::updateParams(const int res_x, const int res_y, 
-                  const double len_x, const double len_y,
+//~ HERE
+void WaterSim::updateParams(const int res_x, const int res_y, const int res_z,
+                  const double len_x, const double len_y, const double len_z,
                   const double density, const double gravity, const double alpha,
                   const bool show_pressures, const bool show_velocity_arrows,
                   std::vector<bool> is_fluid, const bool jitter_particles,
                   bool export_png, int png_sx, int png_sy, int max_pngs) {
     m_res_x = res_x;
     m_res_y = res_y;
+    m_res_z = res_z
     m_len_x = len_x;
     m_len_y = len_y;
+    m_len_z = len_z
     m_fluid_density_ = density;
     m_gravity_mag_ = gravity;
     m_alpha_ = alpha;
@@ -270,9 +273,9 @@ void WaterSim::initParticles() {
     std::move(particles.begin(), particles.end(), flip_particles);
 }
 
-
+//~ HERE
 void WaterSim::initMacGrid() {
-    p_mac_grid = new Mac3d(m_res_x, m_res_y, m_len_x, m_len_y);
+    p_mac_grid = new Mac3d(m_res_x, m_res_y, m_res_z, m_len_x, m_len_y, m_len_z);
 }
 
 void WaterSim::initFLIP() {

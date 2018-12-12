@@ -76,114 +76,141 @@ void Mac3d::initAdiag() {
 				int count = 0;
 				if (i == 0){
 					if (j == 0){
-						if (k == 0)
+						if (k == 0){
 							count = !is_solid(i+1,j,k) + !is_solid(i,j+1,k) 
 									+ !is_solid(i,j,k+1);
-						else if (k == L_-1)
+						}
+						else if (k == L_-1){
 							count = !is_solid(i+1,j,k) + !is_solid(i,j+1,k) 
 									+ !is_solid(i,j,k-1);
-						else
+						}
+						else{
 							count = !is_solid(i+1,j,k) + !is_solid(i,j+1,k) 
 									+ !is_solid(i,j,k-1) + !is_solid(i,j,k+1);
+						}
 					}
 					else if (j == M_-1){
-						if(k == 0)
+						if(k == 0){
 							count = !is_solid(i+1,j,k) + !is_solid(i,j-1,k) 
 									+ !is_solid(i,j,k+1);
-						else if (k == L_-1)
+						}
+						else if (k == L_-1){
 							count = !is_solid(i+1,j,k) + !is_solid(i,j-1,k) 
 									+ !is_solid(i,j,k-1);
-						else
+						}
+						else{
 							count = !is_solid(i+1,j,k) + !is_solid(i,j-1,k) 
 									+ !is_solid(i,j,k-1) + !is_solid(i,j,k+1);
+						}
 					}
 					else{
-						if (k == 0)
+						if (k == 0){
 							count = !is_solid(i+1,j,k) + !is_solid(i,j-1,k) 
 									+ !is_solid(i,j+1,k) + !is_solid(i,j,k+1);
-						else if (k == L_-1)
+						}
+						else if (k == L_-1){
 							count = !is_solid(i+1,j,k) + !is_solid(i,j-1,k) 
 									+ !is_solid(i,j+1,k) + !is_solid(i,j,k-1);
-						else
+						}
+						else{
 							count = !is_solid(i+1,j,k) + !is_solid(i,j-1,k) 
 									+ !is_solid(i,j+1,k) + !is_solid(i,j,k-1) 
 									+ !is_solid(i,j,k+1);
+						}
 					}
 				}
 				else if (i == N_ - 1){
 					if (j == 0){
-						if (k == 0)
+						if (k == 0){
 							count = !is_solid(i-1,j,k) + !is_solid(i,j+1,k) 
 									+ !is_solid(i,j,k+1);
-						else if (k == L_-1)
+						}
+						else if (k == L_-1){
 							count = !is_solid(i-1,j,k) + !is_solid(i,j+1,k) 
 									+ !is_solid(i,j,k-1);
-						else
+						}
+						else{
 							count = !is_solid(i-1,j,k) + !is_solid(i,j+1,k) 
 									+ !is_solid(i,j,k-1) + !is_solid(i,j,k+1);
+						}
 					}
 					else if (j == M_-1){
-						if(k == 0)
+						if(k == 0){
 							count = !is_solid(i-1,j,k) + !is_solid(i,j-1,k) 
 									+ !is_solid(i,j,k+1);
-						else if (k == L_-1)
+						}
+						else if (k == L_-1){
 							count = !is_solid(i-1,j,k) + !is_solid(i,j-1,k) 
 									+ !is_solid(i,j,k-1);
-						else
+						}
+						else{
 							count = !is_solid(i-1,j,k) + !is_solid(i,j-1,k) 
 									+ !is_solid(i,j,k-1) + !is_solid(i,j,k+1);
+						}
 					}
 					else{
-						if(k == 0)
+						if(k == 0){
 							count = !is_solid(i-1,j,k) + !is_solid(i,j-1,k) 
 									+ !is_solid(i,j+1,k) + !is_solid(i,j,k+1);
-						else if (k == L_-1)
+						}
+						else if (k == L_-1){
 							count = !is_solid(i-1,j,k) + !is_solid(i,j-1,k) 
 									+ !is_solid(i,j+1,k) + !is_solid(i,j,k-1);
-						else
+						}
+						else{
 							count = !is_solid(i-1,j,k) + !is_solid(i,j-1,k) 
 									+ !is_solid(i,j+1,k) + !is_solid(i,j,k-1) 
 									+ !is_solid(i,j,k+1);
+						}
 					}
 				}
 				else {
 					if (j == 0){
-						if(k == 0)
+						if(k == 0){
 							count = !is_solid(i+1,j,k) + !is_solid(i-1,j,k) 
 									+ !is_solid(i,j+1,k) + !is_solid(i,j,k+1);
-						else if (k == L_-1)
+						}
+						else if (k == L_-1){
 							count = !is_solid(i+1,j,k) + !is_solid(i-1,j,k) 
 									+ !is_solid(i,j+1,k) + !is_solid(i,j,k-1);
-						else
+						}
+						else{
 							count = !is_solid(i+1,j,k) + !is_solid(i-1,j,k) 
 									+ !is_solid(i,j+1,k) + !is_solid(i,j,k-1) 
 									+ !is_solid(i,j,k+1);
+						}
 					}
 					else if (j == M_ - 1){
-						if(k == 0)
+						if(k == 0){
 							count = !is_solid(i+1,j,k) + !is_solid(i-1,j,k) 
 									+ !is_solid(i,j-1,k) + !is_solid(i,j,k+1);
-						else if (k == L_-1)
+						}
+						else if (k == L_-1){
 							count = !is_solid(i+1,j,k) + !is_solid(i-1,j,k) 
 									+ !is_solid(i,j-1,k) + !is_solid(i,j,k-1);
-						else
+						}
+						else{
 							count = !is_solid(i+1,j,k) + !is_solid(i-1,j,k) 
 									+ !is_solid(i,j-1,k) + !is_solid(i,j,k-1) 
 									+ !is_solid(i,j,k+1);
+						}
 					}
 					else{
-						if(k == 0)
+						if(k == 0){
 							count = !is_solid(i-1,j,k) + !is_solid(i+1,j,k) 
 									+ !is_solid(i,j-1,k) + !is_solid(i,j+1,k) 
 									+ !is_solid(i,j,k+1);
-						else if (k == L_-1)
+						}
+						else if (k == L_-1){
 							count = !is_solid(i-1,j,k) + !is_solid(i+1,j,k) 
 									+ !is_solid(i,j-1,k) + !is_solid(i,j+1,k) 
 									+ !is_solid(i,j,k-1);
-						else
+						}
+						else{
 							count = !is_solid(i-1,j,k) + !is_solid(i+1,j,k) 
 									+ !is_solid(i,j-1,k) + !is_solid(i,j+1,k) 
 									+ !is_solid(i,j,k-1) + !is_solid(i,j,k+1);
+						}
 					}
 				}
 				A_diag_.push_back(Triplet_t(index, index, count));
@@ -260,6 +287,7 @@ double Mac3d::get_w(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < (L_+1))
 		return *(pw_ + N_*j + i + N_*M_*k);
 	else{ 
+		std::cout << i << " " << j << " " << k << std::endl;
 		std::cout << "Calling get_w: Index out of bounds!" << std::endl;
 		return 0;
 	}
@@ -508,7 +536,7 @@ double Mac3d::get_interp_v(double x, double y, double z, const bool use_v_star){
 			return v0*(1-zd) + v1*zd;
 		}
 		else if (z < 0){
-			assign_y(y, indices[1], iy0, iy1, y0, y1);
+			assign_x(x, indices[0], ix0, ix1, x0, x1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);			
 			v00 = (this->*get_vel)(ix0,iy0, 0);
 			v01 = (this->*get_vel)(ix0,iy1, 0);
@@ -519,7 +547,7 @@ double Mac3d::get_interp_v(double x, double y, double z, const bool use_v_star){
 			return v0*(1-yd) + v1*yd;
 		}
 		else{
-			assign_y(y, indices[1], iy0, iy1, y0, y1);
+			assign_x(x, indices[0], ix0, ix1, x0, x1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
 			v00 = (this->*get_vel)(ix0,iy0, L_-1);
 			v01 = (this->*get_vel)(ix0,iy1, L_-1);
@@ -583,7 +611,7 @@ double Mac3d::get_interp_v(double x, double y, double z, const bool use_v_star){
 }
 
 double Mac3d::get_interp_w(double x, double y, double z, const bool use_w_star){
-	//Setting w or *
+	//Setting w or w*
 	double (Mac3d::*get_vel)(unsigned, unsigned, unsigned);
 	if (use_w_star)
 		get_vel = &Mac3d::get_w_star;
@@ -608,7 +636,7 @@ double Mac3d::get_interp_w(double x, double y, double z, const bool use_w_star){
 		if(y >= 0 && y <= sizey_ - cell_sizey_){
 			assign_x(x, indices[0], ix0, ix1, x0, x1);
 			assign_y(y, indices[1], iy0, iy1, y0, y1);
-			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);			
+			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);		
 			w000 = (this->*get_vel)(ix0, iy0, iz0);
 			w100 = (this->*get_vel)(ix1, iy0, iz0);
 			w010 = (this->*get_vel)(ix0, iy1, iz0);
@@ -637,7 +665,7 @@ double Mac3d::get_interp_w(double x, double y, double z, const bool use_w_star){
 			return w0*(1-zd) + w1*zd;
 		}
 		else{
-			assign_y(y, indices[1], iy0, iy1, y0, y1);
+			assign_x(x, indices[0], ix0, ix1, x0, x1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
 			w00 = (this->*get_vel)(ix0, M_-1, iz0);
 			w01 = (this->*get_vel)(ix0, M_-1, iz1);
@@ -675,7 +703,7 @@ double Mac3d::get_interp_w(double x, double y, double z, const bool use_w_star){
 	}
 	else{
 		if(y >= 0 && y <= sizey_ - cell_sizey_){
-			assign_z(z, indices[2], iz0, iz1, z0, z1);
+			assign_y(y, indices[1], iy0, iy1, y0, y1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);			
 			w00 = (this->*get_vel)(N_-1, iy0, iz0);
 			w01 = (this->*get_vel)(N_-1, iy0, iz1);

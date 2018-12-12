@@ -551,21 +551,21 @@ void FLIP::apply_boundary_conditions() {
 	unsigned nx = MACGrid_->get_num_cells_x();
 	unsigned ny = MACGrid_->get_num_cells_y();
 	unsigned nz = MACGrid_->get_num_cells_z();
-	// Solid walls
-	for(unsigned k = 0; k < nz; ++k){	
-		for(unsigned j = 0; j < ny; ++j){
-			for(unsigned i = 0; i < nx; ++i){
-				//~ ERROR: Is wrong because for example is_solid(i+1,j,k) can go out of bounds
-				bool ijk_solid = MACGrid_->is_solid(i,j,k);
-				if (ijk_solid || MACGrid_->is_solid(i+1,j,k))
-					MACGrid_->set_u(i+1, j, k, 0);
-				if (ijk_solid || MACGrid_->is_solid(i,j+1,k))
-					MACGrid_->set_v(i, j+1, k, 0);
-				if (ijk_solid || MACGrid_->is_solid(i,j,k+1))
-					MACGrid_->set_w(i, j, k+1, 0);
-			}
-		}
-	}
+	//~ // Solid walls
+	//~ for(unsigned k = 0; k < nz; ++k){	
+		//~ for(unsigned j = 0; j < ny; ++j){
+			//~ for(unsigned i = 0; i < nx; ++i){
+				//~ // ERROR: Is wrong because for example is_solid(i+1,j,k) can go out of bounds
+				//~ bool ijk_solid = MACGrid_->is_solid(i,j,k);
+				//~ if (ijk_solid || MACGrid_->is_solid(i+1,j,k))
+					//~ MACGrid_->set_u(i+1, j, k, 0);
+				//~ if (ijk_solid || MACGrid_->is_solid(i,j+1,k))
+					//~ MACGrid_->set_v(i, j+1, k, 0);
+				//~ if (ijk_solid || MACGrid_->is_solid(i,j,k+1))
+					//~ MACGrid_->set_w(i, j, k+1, 0);
+			//~ }
+		//~ }
+	//~ }
 
 	// Outer (system) boundaries
 	for (unsigned k = 0; k < nz; k++) {	

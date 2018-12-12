@@ -16,19 +16,15 @@
 std::vector<bool> select_fluid_cells(size_t nx, size_t ny, size_t nz) {
 	std::vector<bool> is_fluid(nx*ny*nz, false);
 
-	/*for (unsigned j = ny/4; j < 3*ny/4; j++) {
-		for (unsigned i = nx/4; i < 3*nx/4; i++) {
-			is_fluid[i + j*nx] = true;
-		}
-	}*/
+	std::fill(is_fluid.begin(), is_fluid.end(), true);
 	
-	for (unsigned k = 3; k < 8; k++) {
+	/*for (unsigned k = 3; k < 8; k++) {
 		for (unsigned j = 3; j < 8; j++) {
 			for (unsigned i = 3; i < 8; i++) {
 				is_fluid[i + j*nx + nx*ny*k] = true;
 			}
 		}
-	}
+	}*/
 
    return is_fluid;
 }
@@ -48,13 +44,13 @@ private:
 
 	double m_system_size_x = 10; // X dimension of system in m
 	double m_system_size_y = 10; // Y dimension of system in m
-	double m_system_size_z = 10; // Z dimension of system in m
+	double m_system_size_z = 1; // Z dimension of system in m
 
 	int m_grid_res_x = 10; // Number of cells on X axis
 	int m_grid_res_y = 10; // Number of cells on Y axis
-	int m_grid_res_z = 10; // Number of cells on Z axis
+	int m_grid_res_z = 1; // Number of cells on Z axis
 	// Whether to randomize particle positions
-	bool m_jitter_particles = true; 
+	bool m_jitter_particles = false; 
 
 	double m_dt = 0.025;
 
@@ -84,7 +80,7 @@ public:
 
 
 		// create a new simulation instance
-		p_waterSim = new WaterSim(m_viewer, m_grid_res_x, m_grid_res_y, m_grid_res_z,
+		p_waterSim = new WaterSim(m_viewer, m_display_grid, m_grid_res_x, m_grid_res_y, m_grid_res_z,
 								  m_system_size_x, m_system_size_y, m_system_size_z,
 								  m_density, m_gravity, m_alpha,
 								  m_show_pressures, m_display_velocity_arrows,
@@ -108,7 +104,7 @@ public:
 		auto is_fluid = select_fluid_cells(m_grid_res_x, m_grid_res_y, m_grid_res_z);
 
 		p_waterSim->setTimestep(m_dt);
-		p_waterSim->updateParams(m_grid_res_x, m_grid_res_y, m_grid_res_z,
+		p_waterSim->updateParams(m_display_grid, m_grid_res_x, m_grid_res_y, m_grid_res_z,
 								 m_system_size_x, m_system_size_y, m_system_size_z,
 								 m_density, m_gravity, m_alpha, m_show_pressures, 
 								 m_display_velocity_arrows, std::move(is_fluid),
@@ -120,6 +116,7 @@ public:
 	* Add parameter controls to the GUI
 	*/
 	virtual void drawSimulationParameterMenu() override {
+		ImGui::Checkbox("Display grid", &m_display_grid);
 		ImGui::Checkbox("Export meshes", &m_export_meshes);
 		ImGui::Checkbox("Show pressure field", &m_show_pressures);
 		ImGui::Checkbox("Display velocity arrows", &m_display_velocity_arrows);      
@@ -134,7 +131,6 @@ public:
 		ImGui::InputDouble("X Size [m]", &m_system_size_x, 0, 0);
 		ImGui::InputDouble("Y Size [m]", &m_system_size_y, 0, 0);
 		ImGui::InputDouble("Z Size [m]", &m_system_size_z, 0, 0);
-		ImGui::Checkbox("Display grid", &m_display_grid);
 		ImGui::Checkbox("Export PNGs (Warning: lags GUI!)", &m_export_png);
 		ImGui::InputInt("PNG size x", &m_png_sx, 0, 0);
 		ImGui::InputInt("PNG size y", &m_png_sy, 0, 0);

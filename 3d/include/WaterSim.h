@@ -35,6 +35,7 @@ class WaterSim : public Simulation {
 		double m_gravity_mag_;
 		double m_alpha_;
 		bool m_show_pressures;
+		bool m_display_grid;
 		bool m_show_velocity_arrows;
 
 		// PNG export params
@@ -83,7 +84,7 @@ class WaterSim : public Simulation {
 		//MAC grid data structure
 		Mac3d* p_mac_grid;
 		
-		WaterSim(viewer_t& viewer, 
+		WaterSim(viewer_t& viewer, const bool display_grid,
 				 const int res_x, const int res_y, const int res_z,
 				 const double len_x, const double len_y, const double len_z,
 				 const double density, const double gravity,
@@ -106,7 +107,7 @@ class WaterSim : public Simulation {
 		/*
 		 * Update simulation parameters. Requires a reset to take effect.
 		 */
-		void updateParams(const int res_x, const int res_y, const int res_z,
+		void updateParams(const bool display_grid, const int res_x, const int res_y, const int res_z,
 						  const double len_x, const double len_y, const double len_z,
 						  const double density, const double gravity, const double alpha,
 						  const bool show_pressures, const bool show_velocity_arrows,

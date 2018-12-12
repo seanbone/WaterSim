@@ -44,11 +44,11 @@ private:
 
 	double m_system_size_x = 10; // X dimension of system in m
 	double m_system_size_y = 10; // Y dimension of system in m
-	double m_system_size_z = 2; // Z dimension of system in m
+	double m_system_size_z = 10; // Z dimension of system in m
 
 	int m_grid_res_x = 10; // Number of cells on X axis
 	int m_grid_res_y = 10; // Number of cells on Y axis
-	int m_grid_res_z = 2; // Number of cells on Z axis
+	int m_grid_res_z = 10; // Number of cells on Z axis
 	// Whether to randomize particle positions
 	bool m_jitter_particles = false; 
 

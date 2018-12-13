@@ -346,7 +346,7 @@ void WaterSim::initMacViz() {
     // Edges parallel to x axis <=> normal to yz plane
     for (unsigned z = 0; z <= nz; z++) {
         for (unsigned y = 0; y <= ny; y++, i++) {
-            auto a = y*(ny+1) + z*(nx+1)*(ny+1);
+            auto a = y*(nx+1) + z*(nx+1)*(ny+1);
             m_renderE.row(i) << a, a + nx;
         }
     }

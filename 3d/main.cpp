@@ -54,7 +54,7 @@ private:
 
 	double m_dt = 0.025;
 
-	double m_alpha = 0.05;
+	double m_alpha = 0.01;
 
 	double m_density = 1000.0;  // Fluid density in kg/m^3
 	double m_gravity = 9.81; // Acceleration of gravity in m/s^2

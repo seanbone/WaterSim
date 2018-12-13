@@ -287,7 +287,6 @@ double Mac3d::get_w(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < (L_+1))
 		return *(pw_ + N_*j + i + N_*M_*k);
 	else{ 
-		std::cout << i << " " << j << " " << k << std::endl;
 		std::cout << "Calling get_w: Index out of bounds!" << std::endl;
 		return 0;
 	}
@@ -396,8 +395,8 @@ double Mac3d::get_interp_u(double x, double y, double z, const bool use_u_star){
 	
 	//Assigning of the indices and the values in y and z
 	//and trilinear interpolation
-	if(y >= 0 && y <= sizey_ - cell_sizey_){
-		if(z >= 0 && z <= sizez_ - cell_sizez_){
+	if(y > 0 && y < sizey_ - cell_sizey_){
+		if(z > 0 && z < sizez_ - cell_sizez_){
 			assign_y(y, indices[1], iy0, iy1, y0, y1);
 			assign_z(z, indices[2], iz0, iz1, z0, z1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);			
@@ -417,7 +416,7 @@ double Mac3d::get_interp_u(double x, double y, double z, const bool use_u_star){
 			u1 = u01*(1-yd) + u11*yd;			
 			return u0*(1-zd) + u1*zd;
 		}
-		else if (z < 0){
+		else if (z <= 0){
 			assign_y(y, indices[1], iy0, iy1, y0, y1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);			
 			u00 = (this->*get_vel)(ix0,iy0, 0);
@@ -440,8 +439,8 @@ double Mac3d::get_interp_u(double x, double y, double z, const bool use_u_star){
 			return u0*(1-yd) + u1*yd;
 		}
 	}
-	else if (y < 0){
-		if(z >= 0 && z <= sizez_ - cell_sizez_){
+	else if (y <= 0){
+		if(z > 0 && z < sizez_ - cell_sizez_){
 			assign_z(z, indices[2], iz0, iz1, z0, z1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
 			u00 = (this->*get_vel)(ix0, 0, iz0);
@@ -452,7 +451,7 @@ double Mac3d::get_interp_u(double x, double y, double z, const bool use_u_star){
 			u1 = u01*(1-xd) + u11*xd;
 			return u0*(1-zd) + u1*zd;
 		}
-		else if (z < 0){
+		else if (z <= 0){
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
 			u0 = (this->*get_vel)(x0, 0, 0);
 			u1 = (this->*get_vel)(x1, 0, 0);
@@ -466,7 +465,7 @@ double Mac3d::get_interp_u(double x, double y, double z, const bool use_u_star){
 		}
 	}
 	else{
-		if(z >= 0 && z <= sizez_ - cell_sizez_){
+		if(z > 0 && z < sizez_ - cell_sizez_){
 			assign_z(z, indices[2], iz0, iz1, z0, z1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);			
 			u00 = (this->*get_vel)(ix0, M_-1, iz0);
@@ -477,7 +476,7 @@ double Mac3d::get_interp_u(double x, double y, double z, const bool use_u_star){
 			u1 = u01*(1-xd) + u11*xd;			
 			return u0*(1-zd) + u1*zd;
 		}
-		else if (z < 0){
+		else if (z <= 0){
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
 			u0 = (this->*get_vel)(x0, M_-1, 0);
 			u1 = (this->*get_vel)(x1, M_-1, 0);
@@ -514,8 +513,8 @@ double Mac3d::get_interp_v(double x, double y, double z, const bool use_v_star){
 	
 	//Assigning of the indices and the values in y and z
 	//and trilinear interpolation
-	if(x >= 0 && x <= sizex_ - cell_sizex_){
-		if(z >= 0 && z <= sizez_ - cell_sizez_){
+	if(x > 0 && x < sizex_ - cell_sizex_){
+		if(z > 0 && z < sizez_ - cell_sizez_){
 			assign_x(x, indices[0], ix0, ix1, x0, x1);
 			assign_z(z, indices[2], iz0, iz1, z0, z1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);			
@@ -535,7 +534,7 @@ double Mac3d::get_interp_v(double x, double y, double z, const bool use_v_star){
 			v1 = v01*(1-yd) + v11*yd;			
 			return v0*(1-zd) + v1*zd;
 		}
-		else if (z < 0){
+		else if (z <= 0){
 			assign_x(x, indices[0], ix0, ix1, x0, x1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);			
 			v00 = (this->*get_vel)(ix0,iy0, 0);
@@ -558,8 +557,8 @@ double Mac3d::get_interp_v(double x, double y, double z, const bool use_v_star){
 			return v0*(1-yd) + v1*yd;
 		}
 	}
-	else if (x < 0){
-		if(z >= 0 && z <= sizez_ - cell_sizez_){
+	else if (x <= 0){
+		if(z > 0 && z < sizez_ - cell_sizez_){
 			assign_z(z, indices[2], iz0, iz1, z0, z1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
 			v00 = (this->*get_vel)(0, iy0, iz0);
@@ -570,7 +569,7 @@ double Mac3d::get_interp_v(double x, double y, double z, const bool use_v_star){
 			v1 = v01*(1-yd) + v11*yd;
 			return v0*(1-zd) + v1*zd;
 		}
-		else if (z < 0){
+		else if (z <= 0){
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
 			v0 = (this->*get_vel)(0, y0, 0);
 			v1 = (this->*get_vel)(0, y1, 0);
@@ -584,7 +583,7 @@ double Mac3d::get_interp_v(double x, double y, double z, const bool use_v_star){
 		}
 	}
 	else{
-		if(z >= 0 && z <= sizez_ - cell_sizez_){
+		if(z > 0 && z < sizez_ - cell_sizez_){
 			assign_z(z, indices[2], iz0, iz1, z0, z1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);			
 			v00 = (this->*get_vel)(N_-1, iy0, iz0);
@@ -595,7 +594,7 @@ double Mac3d::get_interp_v(double x, double y, double z, const bool use_v_star){
 			v1 = v01*(1-yd) + v11*yd;
 			return v0*(1-zd) + v1*zd;
 		}
-		else if (z < 0){
+		else if (z <= 0){
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
 			v0 = (this->*get_vel)(N_-1, y0, 0);
 			v1 = (this->*get_vel)(N_-1, y1, 0);
@@ -632,11 +631,11 @@ double Mac3d::get_interp_w(double x, double y, double z, const bool use_w_star){
 	
 	//Assigning of the indices and the values in y and z
 	//and trilinear interpolation
-	if(x >= 0 && x <= sizex_ - cell_sizex_){
-		if(y >= 0 && y <= sizey_ - cell_sizey_){
+	if(x > 0 && x < sizex_ - cell_sizex_){
+		if(y > 0 && y < sizey_ - cell_sizey_){
 			assign_x(x, indices[0], ix0, ix1, x0, x1);
 			assign_y(y, indices[1], iy0, iy1, y0, y1);
-			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);		
+			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
 			w000 = (this->*get_vel)(ix0, iy0, iz0);
 			w100 = (this->*get_vel)(ix1, iy0, iz0);
 			w010 = (this->*get_vel)(ix0, iy1, iz0);
@@ -653,7 +652,7 @@ double Mac3d::get_interp_w(double x, double y, double z, const bool use_w_star){
 			w1 = w01*(1-yd) + w11*yd;			
 			return w0*(1-zd) + w1*zd;
 		}
-		else if (y < 0){
+		else if (y <= 0){
 			assign_x(x, indices[0], ix0, ix1, x0, x1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);			
 			w00 = (this->*get_vel)(ix0, 0, iz0);
@@ -676,8 +675,8 @@ double Mac3d::get_interp_w(double x, double y, double z, const bool use_w_star){
 			return w0*(1-zd) + w1*zd;
 		}
 	}
-	else if (x < 0){
-		if(y >= 0 && y <= sizey_ - cell_sizey_){
+	else if (x <= 0){
+		if(y > 0 && y < sizey_ - cell_sizey_){
 			assign_y(y, indices[1], iy0, iy1, y0, y1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
 			w00 = (this->*get_vel)(0, iy0, iz0);
@@ -688,7 +687,7 @@ double Mac3d::get_interp_w(double x, double y, double z, const bool use_w_star){
 			w1 = w01*(1-yd) + w11*yd;
 			return w0*(1-zd) + w1*zd;
 		}
-		else if (y < 0){
+		else if (y <= 0){
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
 			w0 = (this->*get_vel)(0, 0, z0);
 			w1 = (this->*get_vel)(0, 0, z1);
@@ -702,7 +701,7 @@ double Mac3d::get_interp_w(double x, double y, double z, const bool use_w_star){
 		}
 	}
 	else{
-		if(y >= 0 && y <= sizey_ - cell_sizey_){
+		if(y > 0 && y < sizey_ - cell_sizey_){
 			assign_y(y, indices[1], iy0, iy1, y0, y1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);			
 			w00 = (this->*get_vel)(N_-1, iy0, iz0);
@@ -713,7 +712,7 @@ double Mac3d::get_interp_w(double x, double y, double z, const bool use_w_star){
 			w1 = w01*(1-yd) + w11*yd;
 			return w0*(1-zd) + w1*zd;
 		}
-		else if (y < 0){
+		else if (y <= 0){
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
 			w0 = (this->*get_vel)(N_-1, 0, z0);
 			w1 = (this->*get_vel)(N_-1, 0, z1);

@@ -258,7 +258,7 @@ void WaterSim::initParticles() {
 
     // Initialize particles_per_cell particles per fluid cell
     for (unsigned z = 3; z < 7; z++) {
-        for (unsigned y = 3; y < 7; y++) {
+        for (unsigned y = 5; y < 9; y++) {
             for (unsigned x = 3; x < 7; x++) {
 
                 if (!is_fluid_[x + y*nx + z*nx*ny])

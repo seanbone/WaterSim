@@ -257,9 +257,9 @@ void WaterSim::initParticles() {
         rnd = Eigen::VectorXd::Zero(3*particles_per_cell*nx*ny*nz);
 
     // Initialize particles_per_cell particles per fluid cell
-    for (unsigned z = 3; z < 7; z++) {
-        for (unsigned y = 5; y < 9; y++) {
-            for (unsigned x = 3; x < 7; x++) {
+    for (unsigned z = 0; z < nz; z++) {
+        for (unsigned y = 0; y < ny; y++) {
+            for (unsigned x = 0; x < nx; x++) {
 
                 if (!is_fluid_[x + y*nx + z*nx*ny])
                     continue;

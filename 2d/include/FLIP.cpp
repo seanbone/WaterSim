@@ -33,9 +33,9 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	// 2.
 	apply_forces(dt);
 	
-	if ( step >= 5 and step <= 20 ){
-		explode(dt, step, 300);
-	}
+	//~ if ( step >= 5 and step <= 20 ){
+		//~ explode(dt, step, 300);
+	//~ }
 	
 	// 3.
 	apply_boundary_conditions();
@@ -615,7 +615,8 @@ void FLIP::grid_to_particle(){
 		// Use pure PIC on boundary, blend PIC+FLIP elsewhere
 		if (initial_idx.first == 0 or initial_idx.first == nx-1
 		 or initial_idx.second == 0 or initial_idx.second == ny-1){
-			u_update = initial_velocity*(1 - std::min(1., 2*alpha)) + interp_u_n1 - interp_u_star*(1 - std::min(1., 2*alpha));
+			//~ u_update = initial_velocity*(1 - std::min(1., 2*alpha)) + interp_u_n1 - interp_u_star*(1 - std::min(1., 2*alpha));
+			u_update = initial_velocity*(1 - alpha) + interp_u_n1 - interp_u_star*(1 - alpha);
 		} else {
 			u_update = initial_velocity*(1 - alpha) + interp_u_n1 - interp_u_star*(1 - alpha);
 		}

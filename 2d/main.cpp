@@ -22,8 +22,8 @@ std::vector<bool> select_fluid_cells(size_t nx, size_t ny) {
       }
    }*/
 
-   for (unsigned j = 0; j < 5; j++) {
-      for (unsigned i = 0; i < nx; i++) {
+   for (unsigned j = 5; j < 9; j++) {
+      for (unsigned i = 3; i < 7; i++) {
          is_fluid[i + j*nx] = true;
       }
    }

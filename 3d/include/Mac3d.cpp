@@ -732,7 +732,7 @@ double Mac3d::get_pressure(const unsigned i, const unsigned j, const unsigned k)
 	if (i < N_ && j < M_ && k < L_)
 		return *(ppressure_ + N_*j + i + N_*M_*k);
 	else{ 
-		std::cout << "Calling get_u: Index out of bounds!" << std::endl;
+		std::cout << "Calling get_pressure: Index out of bounds!" << std::endl;
 		return 0;
 	}
 }

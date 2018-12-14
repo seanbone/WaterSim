@@ -18,23 +18,9 @@ std::vector<bool> select_fluid_cells(size_t nx, size_t ny, size_t nz) {
 
 	//~ std::fill(is_fluid.begin(), is_fluid.end(), true);
 	
-<<<<<<< HEAD
-	//~ for (unsigned k = 0; k < 1; k++) {
-		//~ for (unsigned j = 0; j < 3; j++) {
-			//~ for (unsigned i = 0; i < nx; i++) {
-				//~ is_fluid[i + j*nx + nx*ny*k] = true;
-			//~ }
-		//~ }
-	//~ }
-	
-	for (unsigned k = 0; k < 1; k++) {
-		for (unsigned j = 0; j < 3; j++) {
-			for (unsigned i = 0; i < 10; i++) {
-=======
-	for (unsigned k = 3; k < 13; k++) {
-		for (unsigned j = 5; j < ny; j++) {
-			for (unsigned i = 3; i < 13; i++) {
->>>>>>> ed2f5633e7205a6cae83a341c73a75c50029f0aa
+	for (unsigned k = nz/3; k < nz-nz/3; k++) {
+		for (unsigned j = ny/3; j < ny-ny/3; j++) {
+			for (unsigned i = nx/3; i < nx-nx/3; i++) {
 				is_fluid[i + j*nx + nx*ny*k] = true;
 			}
 		}
@@ -58,19 +44,11 @@ private:
 
 	double m_system_size_x = 10; // X dimension of system in m
 	double m_system_size_y = 10; // Y dimension of system in m
-<<<<<<< HEAD
-	double m_system_size_z = 2; // Z dimension of system in m
-
-	int m_grid_res_x = 10; // Number of cells on X axis
-	int m_grid_res_y = 10; // Number of cells on Y axis
-	int m_grid_res_z = 2; // Number of cells on Z axis
-=======
 	double m_system_size_z = 10; // Z dimension of system in m
 
 	int m_grid_res_x = 15; // Number of cells on X axis
 	int m_grid_res_y = 15; // Number of cells on Y axis
 	int m_grid_res_z = 15; // Number of cells on Z axis
->>>>>>> ed2f5633e7205a6cae83a341c73a75c50029f0aa
 	// Whether to randomize particle positions
 	bool m_jitter_particles = false; 
 
@@ -93,6 +71,13 @@ private:
 	int m_cells_y;
 	int m_cells_z;
 
+	// Maximum number of particles to display
+	// Needed to prevent GUI lag for large sims
+	// If smaller than total number of particles,
+	// they will be selected with a stride of num_particles/max_p_disp
+	// to visualize the state of the sim.
+	int m_max_p_disp = 4242;
+
 public:
 	WaterSim *p_waterSim = NULL;  // pointer to the simulation
 
@@ -108,7 +93,7 @@ public:
 								  m_show_pressures, m_display_velocity_arrows,
 								  std::move(is_fluid), m_jitter_particles,
 								  m_export_png, m_png_sx, m_png_sy, m_max_pngs,
-								  m_export_meshes);
+								  m_export_meshes, m_max_p_disp);
 
 		// set this simulation as the simulation that is running in our GUI
 		setSimulation(p_waterSim);
@@ -133,7 +118,7 @@ public:
 								 m_display_velocity_arrows, std::move(is_fluid),
 								 m_jitter_particles,
 								 m_export_png, m_png_sx, m_png_sy, m_max_pngs,
-								 m_export_meshes);
+								 m_export_meshes, m_max_p_disp);
 	};
 
 	/**
@@ -145,6 +130,7 @@ public:
 		ImGui::Checkbox("Show pressure field", &m_show_pressures);
 		ImGui::Checkbox("Display velocity arrows", &m_display_velocity_arrows);      
 		ImGui::Checkbox("Randomize particles", &m_jitter_particles);
+		ImGui::InputInt("Max particles display", &m_max_p_disp, 0, 0);
 		ImGui::InputDouble("Alpha", &m_alpha, 0, 0);
 		ImGui::InputDouble("Timestep [s]", &m_dt, 0, 0);
 		ImGui::InputDouble("Density [kg/m^3]", &m_density, 0, 0);

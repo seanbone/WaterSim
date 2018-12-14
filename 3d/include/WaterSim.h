@@ -46,6 +46,7 @@ class WaterSim : public Simulation {
 		std::string m_png_dirname_ = "PNG_out";
 		unsigned m_png_num_ = 0;
 		unsigned m_max_pngs_;
+		unsigned m_max_p_disp;
 
 		bool m_export_meshes;
 
@@ -97,7 +98,7 @@ class WaterSim : public Simulation {
 				 const double alpha,
 				 const bool show_pressures, const bool show_velocity_arrows,
 				 std::vector<bool> is_fluid, const bool jitter_particles,
-				 bool export_png, int png_sx, int png_sy, int max_pngs, bool export_meshes);
+				 bool export_png, int png_sx, int png_sy, int max_pngs, bool export_meshes, unsigned max_p);
 
 		~WaterSim() {
 			delete p_mac_grid;
@@ -118,7 +119,7 @@ class WaterSim : public Simulation {
 						  const double density, const double gravity, const double alpha,
 						  const bool show_pressures, const bool show_velocity_arrows,
 						  std::vector<bool> is_fluid, const bool jitter_particles,
-						  bool export_png, int png_sx, int png_sy, int max_pngs, bool export_meshes);
+						  bool export_png, int png_sx, int png_sy, int max_pngs, bool export_meshes, unsigned max_p);
 
 		/*
 		 * Update the rendering data structures. This method will be called in

@@ -9,7 +9,7 @@ WaterSim::WaterSim(viewer_t& viewer, const bool display_grid,
         const bool show_pressures, const bool show_velocity_arrows,
         std::vector<bool> is_fluid, const bool jitter_particles,
         bool export_png, int png_sx, int png_sy, int max_pngs,
-        bool export_meshes)
+        bool export_meshes, unsigned max_p)
         : Simulation(), p_viewer(&viewer), m_display_grid(display_grid),
           m_res_x(res_x), m_res_y(res_y), m_res_z(res_z),
           m_len_x(len_x), m_len_y(len_y), m_len_z(len_z), m_fluid_density_(density),
@@ -18,7 +18,7 @@ WaterSim::WaterSim(viewer_t& viewer, const bool display_grid,
           m_show_velocity_arrows(show_velocity_arrows),
           is_fluid_(is_fluid), m_jitter_particles(jitter_particles),
           m_export_png_(export_png), m_png_sx_(png_sx), m_png_sy_(png_sy), m_max_pngs_(max_pngs),
-          m_export_meshes(export_meshes) {
+          m_export_meshes(export_meshes), m_max_p_disp(max_p) {
 
 
     // Initialize MAC grid
@@ -92,7 +92,7 @@ void WaterSim::updateParams(const bool display_grid,
                   const double density, const double gravity, const double alpha,
                   const bool show_pressures, const bool show_velocity_arrows,
                   std::vector<bool> is_fluid, const bool jitter_particles,
-                  bool export_png, int png_sx, int png_sy, int max_pngs, bool export_meshes) {
+                  bool export_png, int png_sx, int png_sy, int max_pngs, bool export_meshes, unsigned max_p) {
     m_display_grid = display_grid;
     m_res_x = res_x;
     m_res_y = res_y;
@@ -112,18 +112,28 @@ void WaterSim::updateParams(const bool display_grid,
     m_png_sy_ = png_sy;
     m_max_pngs_ = max_pngs;
     m_export_meshes = export_meshes;
+    m_max_p_disp = max_p;
     std::cout << "\nParams updated\n";
 }
 
 
 void WaterSim::updateRenderGeometry() {
     // Copy particle positions from FLIP's data structure
-    m_particles.resize(m_num_particles, 3);
-    for (unsigned i = 0; i < m_num_particles; i++) {
-        m_particles.row(i) = flip_particles[i].get_position();//.transpose();
+    unsigned disp_particles = m_num_particles;
+    unsigned particle_step = 1;
+    if (m_num_particles > m_max_p_disp) {
+        disp_particles = m_max_p_disp;
+        particle_step = m_num_particles / m_max_p_disp;
+    }
+     
+    m_particles.resize(disp_particles, 3);
+    for (unsigned i = 0, j=0; j < disp_particles && i < m_num_particles; j++, i += particle_step) {
+        m_particles.row(j) = flip_particles[i].get_position();
     }
 
-    m_particle_colors.resize(m_num_particles, 3);
+    std::cout << "Num particles: " << m_num_particles << "\nParticle step: " << particle_step << "\n";
+
+    m_particle_colors.resize(disp_particles, 3);
     m_particle_colors.setZero();
     m_particle_colors.col(2).setOnes();
     
@@ -210,13 +220,13 @@ bool WaterSim::advance() {
     // Perform a FLIP step
     p_flip->step_FLIP(m_dt, m_step);
     
-<<<<<<< HEAD
-    if(m_step % 10 == 0){
-		exp->MeshExporter::level_set();
-		igl::copyleft::marching_cubes(exp->plevel_set_, exp->points_, m_res_x, m_res_y, m_res_z, exp->vertices_, exp->faces_);
-		igl::writeOBJ("mesh.obj", exp->vertices_, exp->faces_);
-	}
-=======
+//<<<<<<< HEAD
+//    if(m_step % 10 == 0){
+//		exp->MeshExporter::level_set();
+//		igl::copyleft::marching_cubes(exp->plevel_set_, exp->points_, m_res_x, m_res_y, m_res_z, exp->vertices_, exp->faces_);
+//		igl::writeOBJ("mesh.obj", exp->vertices_, exp->faces_);
+//	}
+//=======
     //if (m_step % 10 == 0){
 //      exp->MeshExporter::level_set_easy();
 //      igl::copyleft::marching_cubes(exp->plevel_set_, exp->points_, m_res_x, m_res_y, m_res_z, exp->vertices_, exp->faces_);
@@ -225,7 +235,6 @@ bool WaterSim::advance() {
     if (m_export_meshes)
         exp->export_mesh();
 
->>>>>>> ed2f5633e7205a6cae83a341c73a75c50029f0aa
     // advance step
     m_step++;
     m_time += m_dt;

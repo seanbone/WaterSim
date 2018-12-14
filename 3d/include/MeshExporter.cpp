@@ -44,7 +44,6 @@ void MeshExporter::level_set_easy(){
 	}
 }
 
-<<<<<<< HEAD
 void MeshExporter::level_set(){
 	int N = pMacGrid_->get_num_cells_x();
 	int M = pMacGrid_->get_num_cells_y();
@@ -61,9 +60,9 @@ void MeshExporter::level_set(){
 	//~ double r_avrg_num = 0;
 	//~ double r_avrg_den = 0;
 	
-	for(int i = 0; i < N; ++i){
+	for(int k = 0; k < L; ++k){
 		for(int j = 0; j < M; ++j){
-			for(int k = 0; k < L; ++k){
+			for(int i = 0; i < N; ++i){
 				Eigen::Vector3d x_avrg_num = Eigen::Vector3d::Zero();
 				double x_avrg_den = 0;
 				double r_avrg_num = 0;
@@ -97,17 +96,8 @@ void MeshExporter::level_set(){
 			}
 		}
 	}
-	
-	//~ for(int i = 0; i < N; ++i){
-		//~ for(int j = 0; j < M; ++j){
-			//~ for(int k = 0; k < L; ++k){
-				//~ int index = i + j*N+ k*N*M;
-				//~ if(k == 0)
-					//~ std::cout << i << " " << j << " " << k << "   " << plevel_set_[index] << std::endl;
-			//~ }
-		//~ }
-	//~ }
-=======
+}
+
 
 void MeshExporter::export_mesh() {
 	const unsigned pad_width = 6;
@@ -131,5 +121,4 @@ void MeshExporter::export_mesh() {
 	std::cout << "Exported " << filename.str() << std::endl;
 
 	num_exported_++;
->>>>>>> ed2f5633e7205a6cae83a341c73a75c50029f0aa
 }

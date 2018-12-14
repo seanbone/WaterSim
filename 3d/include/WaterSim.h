@@ -3,10 +3,12 @@
 
 #include "Simulation.h"
 #include "FLIP.h"
+#include "MeshExporter.h"
 
 #include <sys/stat.h> // mkdir
 #include <igl/opengl/glfw/Viewer.h>
 #include <igl/png/writePNG.h>
+#include <igl/copyleft/marching_cubes.h>
 
 /**
  * This class manages the water simulation.
@@ -46,10 +48,6 @@ class WaterSim : public Simulation {
 		unsigned m_png_num_ = 0;
 		unsigned m_max_pngs_;
 
-		// List of Particles
-		Particle* flip_particles;
-		std::vector<bool> is_fluid_;
-
 		// FLIP simulator
 		FLIP* p_flip;
 
@@ -83,6 +81,13 @@ class WaterSim : public Simulation {
 	public:
 		//MAC grid data structure
 		Mac3d* p_mac_grid;
+		
+		// List of Particles
+		Particle* flip_particles;
+		std::vector<bool> is_fluid_;
+		
+		//MeshExporter
+		MeshExporter* exp;
 		
 		WaterSim(viewer_t& viewer, const bool display_grid,
 				 const int res_x, const int res_y, const int res_z,
@@ -154,6 +159,12 @@ class WaterSim : public Simulation {
 		 * Note: does not delete previous instance!
 		 */
 		void initMacGrid();
+		
+		/*
+		 * Initialize a new instance of the Mesh Exporter
+		 * Note: does not delete previous instance!
+		 */
+		void initMeshExp();
 
 		/*
 		 * Initialize a new instance of the FLIP simulator

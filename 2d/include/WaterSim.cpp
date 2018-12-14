@@ -66,7 +66,7 @@ void WaterSim::resetMembers() {
     
     //Velocity arrows
     p_viewer->data_list[m_velocity_u_idx].clear();
-    p_viewer->data_list[m_velocity_u_idx].clear();
+    p_viewer->data_list[m_velocity_v_idx].clear();
 
     // PNG exporting
     m_png_num_ = 0;

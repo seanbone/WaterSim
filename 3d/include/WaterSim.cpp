@@ -24,7 +24,7 @@ WaterSim::WaterSim(viewer_t& viewer, const bool display_grid,
 
     // Initialize particles
     initParticles();
-
+	
     // Initialize FLIP object
     initFLIP();
     
@@ -42,6 +42,9 @@ WaterSim::WaterSim(viewer_t& viewer, const bool display_grid,
     m_velocity_v_idx = viewer.append_mesh();
     m_velocity_w_idx = viewer.append_mesh();
     */
+    
+    // Initialize Mesh Exporter
+	initMeshExp();
     
     // Update rendering geometry
     updateRenderGeometry();
@@ -66,6 +69,10 @@ void WaterSim::resetMembers() {
     // FLIP simulator
     delete p_flip;
     initFLIP();
+    
+    // MeshExporter
+    delete exp;
+    initMeshExp();
     
     //Velocity arrows
 //    p_viewer->data_list[m_velocity_u_idx].clear();
@@ -194,10 +201,17 @@ void WaterSim::updateRenderGeometry() {
 }
 
 
+
+
 bool WaterSim::advance() {
     // Perform a FLIP step
     p_flip->step_FLIP(m_dt, m_step);
     
+    if(m_step % 10 == 0){
+		exp->MeshExporter::level_set_easy();
+		igl::copyleft::marching_cubes(exp->plevel_set_, exp->points_, m_res_x, m_res_y, m_res_z, exp->vertices_, exp->faces_);
+		igl::writeOBJ("mesh.obj", exp->vertices_, exp->faces_);
+	}
     // advance step
     m_step++;
     m_time += m_dt;
@@ -258,8 +272,8 @@ void WaterSim::initParticles() {
 
     // Initialize particles_per_cell particles per fluid cell
     for (unsigned z = 0; z < nz; z++) {
-        for (unsigned y = 3; y < 8; y++) {
-            for (unsigned x = 3; x < 8; x++) {
+        for (unsigned y = 0; y < ny; y++) {
+            for (unsigned x = 0; x < nx; x++) {
 
                 if (!is_fluid_[x + y*nx + z*nx*ny])
                     continue;
@@ -298,6 +312,10 @@ void WaterSim::initParticles() {
 
 void WaterSim::initMacGrid() {
     p_mac_grid = new Mac3d(m_res_x, m_res_y, m_res_z, m_len_x, m_len_y, m_len_z);
+}
+
+void WaterSim::initMeshExp(){
+	exp = new MeshExporter(p_mac_grid, flip_particles, m_num_particles);
 }
 
 void WaterSim::initFLIP() {

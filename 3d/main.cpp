@@ -16,15 +16,15 @@
 std::vector<bool> select_fluid_cells(size_t nx, size_t ny, size_t nz) {
 	std::vector<bool> is_fluid(nx*ny*nz, false);
 
-	std::fill(is_fluid.begin(), is_fluid.end(), true);
+	//std::fill(is_fluid.begin(), is_fluid.end(), true);
 	
-	/*for (unsigned k = 3; k < 8; k++) {
-		for (unsigned j = 3; j < 8; j++) {
-			for (unsigned i = 3; i < 8; i++) {
+	for (unsigned k = 0; k < 2; k++) {
+		for (unsigned j = 2; j < 4; j++) {
+			for (unsigned i = 1; i < 4; i++) {
 				is_fluid[i + j*nx + nx*ny*k] = true;
 			}
 		}
-	}*/
+	}
 
    return is_fluid;
 }

@@ -8,7 +8,8 @@ WaterSim::WaterSim(viewer_t& viewer, const bool display_grid,
         const double alpha,
         const bool show_pressures, const bool show_velocity_arrows,
         std::vector<bool> is_fluid, const bool jitter_particles,
-        bool export_png, int png_sx, int png_sy, int max_pngs)
+        bool export_png, int png_sx, int png_sy, int max_pngs,
+        bool export_meshes)
         : Simulation(), p_viewer(&viewer), m_display_grid(display_grid),
           m_res_x(res_x), m_res_y(res_y), m_res_z(res_z),
           m_len_x(len_x), m_len_y(len_y), m_len_z(len_z), m_fluid_density_(density),
@@ -16,7 +17,8 @@ WaterSim::WaterSim(viewer_t& viewer, const bool display_grid,
           m_show_pressures(show_pressures),
           m_show_velocity_arrows(show_velocity_arrows),
           is_fluid_(is_fluid), m_jitter_particles(jitter_particles),
-          m_export_png_(export_png), m_png_sx_(png_sx), m_png_sy_(png_sy), m_max_pngs_(max_pngs) {
+          m_export_png_(export_png), m_png_sx_(png_sx), m_png_sy_(png_sy), m_max_pngs_(max_pngs),
+          m_export_meshes(export_meshes) {
 
 
     // Initialize MAC grid
@@ -90,7 +92,7 @@ void WaterSim::updateParams(const bool display_grid,
                   const double density, const double gravity, const double alpha,
                   const bool show_pressures, const bool show_velocity_arrows,
                   std::vector<bool> is_fluid, const bool jitter_particles,
-                  bool export_png, int png_sx, int png_sy, int max_pngs) {
+                  bool export_png, int png_sx, int png_sy, int max_pngs, bool export_meshes) {
     m_display_grid = display_grid;
     m_res_x = res_x;
     m_res_y = res_y;
@@ -109,6 +111,7 @@ void WaterSim::updateParams(const bool display_grid,
     m_png_sx_ = png_sx;
     m_png_sy_ = png_sy;
     m_max_pngs_ = max_pngs;
+    m_export_meshes = export_meshes;
     std::cout << "\nParams updated\n";
 }
 
@@ -207,11 +210,14 @@ bool WaterSim::advance() {
     // Perform a FLIP step
     p_flip->step_FLIP(m_dt, m_step);
     
-    if(m_step % 10 == 0){
-		exp->MeshExporter::level_set_easy();
-		igl::copyleft::marching_cubes(exp->plevel_set_, exp->points_, m_res_x, m_res_y, m_res_z, exp->vertices_, exp->faces_);
-		igl::writeOBJ("mesh.obj", exp->vertices_, exp->faces_);
-	}
+    //if (m_step % 10 == 0){
+//      exp->MeshExporter::level_set_easy();
+//      igl::copyleft::marching_cubes(exp->plevel_set_, exp->points_, m_res_x, m_res_y, m_res_z, exp->vertices_, exp->faces_);
+//      igl::writeOBJ("mesh.obj", exp->vertices_, exp->faces_);
+    //}
+    if (m_export_meshes)
+        exp->export_mesh();
+
     // advance step
     m_step++;
     m_time += m_dt;

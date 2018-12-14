@@ -8,12 +8,23 @@
 #include <queue>
 #include <limits>
 #include <algorithm>
+#include <sstream>
+#include <iomanip>  
+#include <sys/stat.h>
+
+#include <igl/copyleft/marching_cubes.h>
+#include <igl/writeOBJ.h>
 
 class MeshExporter{
 	private:
 		Mac3d* pMacGrid_;
 		Particle* pparticles_;
 		unsigned num_particles_;
+		unsigned num_exported_ = 0;
+
+		// Name of folder to export file to
+		std::string folder_ = "../out_meshes/";
+		std::string file_prefix_ = "mesh_";
 	
 	public:
 		Eigen::VectorXd plevel_set_;
@@ -21,29 +32,7 @@ class MeshExporter{
 		Eigen::MatrixXd vertices_;
 		Eigen::MatrixXi faces_;
 		
-		MeshExporter(){}
-		
-		MeshExporter(Mac3d* Grid, Particle* particles, const int n)
-			:pMacGrid_(Grid), pparticles_(particles), num_particles_(n){
-			
-			int N = pMacGrid_->get_num_cells_x();
-			int M = pMacGrid_->get_num_cells_y();
-			int L = pMacGrid_->get_num_cells_z();
-			points_.resize(N*M*L, 3);
-			double dx = pMacGrid_->get_cell_sizex();
-			double dy = pMacGrid_->get_cell_sizey();
-			double dz = pMacGrid_->get_cell_sizez();
-			
-			for(int k = 0; k < L; ++k){
-				for(int j = 0; j < M; ++j){
-					for(int i = 0; i < N; ++i){
-						int index = i + j*N + k*N*M;
-						Eigen::RowVector3d temp = Eigen::RowVector3d(i*dx, j*dy, k*dz);
-						points_.row(index) = temp;
-					}
-				}
-			}	
-		}
+		MeshExporter(Mac3d* Grid, Particle* particles, const int n);
 		
 		~MeshExporter(){
 			num_particles_ = 0;
@@ -51,6 +40,8 @@ class MeshExporter{
 		
 		void level_set();
 		void level_set_easy();
+
+		void export_mesh();
 };
 
 #endif //MESHEXPORTER_H

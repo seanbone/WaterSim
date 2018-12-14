@@ -6,7 +6,7 @@ Mac3d::Mac3d(const unsigned n, const unsigned m, const unsigned l,
 	: N_(n), M_(m), L_(l), sizex_(dx), sizey_(dy), sizez_(dz), 
 	  cell_sizex_(sizex_/(1.*N_)), cell_sizey_(sizey_/(1.*M_)), 
 	  cell_sizez_(sizez_/(1.*L_)){
-
+	
 	initArrays();
 
 	// Initialize solid cells as a "box"
@@ -453,14 +453,14 @@ double Mac3d::get_interp_u(double x, double y, double z, const bool use_u_star){
 		}
 		else if (z < 0){
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
-			u0 = (this->*get_vel)(x0, 0, 0);
-			u1 = (this->*get_vel)(x1, 0, 0);
+			u0 = (this->*get_vel)(ix0, 0, 0);
+			u1 = (this->*get_vel)(ix1, 0, 0);
 			return u0*(1-xd) + u1*xd;				
 		}
 		else{
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
-			u0 = (this->*get_vel)(x0, 0, L_-1);
-			u1 = (this->*get_vel)(x1, 0, L_-1);
+			u0 = (this->*get_vel)(ix0, 0, L_-1);
+			u1 = (this->*get_vel)(ix1, 0, L_-1);
 			return u0*(1-xd) + u1*xd;
 		}
 	}
@@ -478,14 +478,14 @@ double Mac3d::get_interp_u(double x, double y, double z, const bool use_u_star){
 		}
 		else if (z < 0){
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
-			u0 = (this->*get_vel)(x0, M_-1, 0);
-			u1 = (this->*get_vel)(x1, M_-1, 0);
+			u0 = (this->*get_vel)(ix0, M_-1, 0);
+			u1 = (this->*get_vel)(ix1, M_-1, 0);
 			return u0*(1-xd) + u1*xd;
 		}
 		else{
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
-			u0 = (this->*get_vel)(x0, M_-1, L_-1);
-			u1 = (this->*get_vel)(x1, M_-1, L_-1);
+			u0 = (this->*get_vel)(ix0, M_-1, L_-1);
+			u1 = (this->*get_vel)(ix1, M_-1, L_-1);
 			return u0*(1-xd) + u1*xd;
 		}
 	}
@@ -571,14 +571,14 @@ double Mac3d::get_interp_v(double x, double y, double z, const bool use_v_star){
 		}
 		else if (z < 0){
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
-			v0 = (this->*get_vel)(0, y0, 0);
-			v1 = (this->*get_vel)(0, y1, 0);
+			v0 = (this->*get_vel)(0, iy0, 0);
+			v1 = (this->*get_vel)(0, iy1, 0);
 			return v0*(1-yd) + v1*yd;				
 		}
 		else{
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
-			v0 = (this->*get_vel)(0, y0, L_-1);
-			v1 = (this->*get_vel)(0, y1, L_-1);
+			v0 = (this->*get_vel)(0, iy0, L_-1);
+			v1 = (this->*get_vel)(0, iy1, L_-1);
 			return v0*(1-yd) + v1*yd;
 		}
 	}
@@ -596,14 +596,14 @@ double Mac3d::get_interp_v(double x, double y, double z, const bool use_v_star){
 		}
 		else if (z < 0){
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
-			v0 = (this->*get_vel)(N_-1, y0, 0);
-			v1 = (this->*get_vel)(N_-1, y1, 0);
+			v0 = (this->*get_vel)(N_-1, iy0, 0);
+			v1 = (this->*get_vel)(N_-1, iy1, 0);
 			return v0*(1-yd) + v1*yd;
 		}
 		else{
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
-			v0 = (this->*get_vel)(N_-1, y0, L_-1);
-			v1 = (this->*get_vel)(N_-1, y1, L_-1);
+			v0 = (this->*get_vel)(N_-1, iy0, L_-1);
+			v1 = (this->*get_vel)(N_-1, iy1, L_-1);
 			return v0*(1-yd) + v1*yd;
 		}
 	}
@@ -689,14 +689,14 @@ double Mac3d::get_interp_w(double x, double y, double z, const bool use_w_star){
 		}
 		else if (y < 0){
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
-			w0 = (this->*get_vel)(0, 0, z0);
-			w1 = (this->*get_vel)(0, 0, z1);
+			w0 = (this->*get_vel)(0, 0, iz0);
+			w1 = (this->*get_vel)(0, 0, iz1);
 			return w0*(1-zd) + w1*zd;				
 		}
 		else{
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
-			w0 = (this->*get_vel)(0, M_-1, z0);
-			w1 = (this->*get_vel)(0, M_-1, z1);
+			w0 = (this->*get_vel)(0, M_-1, iz0);
+			w1 = (this->*get_vel)(0, M_-1, iz1);
 			return w0*(1-zd) + w1*zd;
 		}
 	}
@@ -714,14 +714,14 @@ double Mac3d::get_interp_w(double x, double y, double z, const bool use_w_star){
 		}
 		else if (y < 0){
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
-			w0 = (this->*get_vel)(N_-1, 0, z0);
-			w1 = (this->*get_vel)(N_-1, 0, z1);
+			w0 = (this->*get_vel)(N_-1, 0, iz0);
+			w1 = (this->*get_vel)(N_-1, 0, iz1);
 			return w0*(1-zd) + w1*zd;
 		}
 		else{
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
-			w0 = (this->*get_vel)(N_-1, M_-1, z0);
-			w1 = (this->*get_vel)(N_-1, M_-1, z1);
+			w0 = (this->*get_vel)(N_-1, M_-1, iz0);
+			w1 = (this->*get_vel)(N_-1, M_-1, iz1);
 			return w0*(1-zd) + w1*zd;
 		}
 	}

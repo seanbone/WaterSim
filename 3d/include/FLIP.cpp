@@ -1,5 +1,4 @@
 #include "FLIP.h"
-#include <chrono>
 
 FLIP::FLIP(Particle* particles, const unsigned num_particles, Mac3d* MACGrid,
 		   const double density, const double gravity, const double alpha) 
@@ -27,15 +26,6 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	
 	// 1.
 	compute_velocity_field();
-	//~ for( unsigned i = 0; i < MACGrid_->get_num_cells_x(); ++i ){
-		//~ std::cout << MACGrid_->get_u(i,2,0) << std::endl;
-	//~ }
-	
-	std::cout << MACGrid_->get_u(5,4,0) << std::endl;
-	std::cout << MACGrid_->get_u(6,4,0) << std::endl;
-	std::cout << MACGrid_->get_u(5,5,0) << std::endl;
-	std::cout << MACGrid_->get_u(6,5,0) << std::endl;
-	//~ // Error is in grid to particle
 	
 	// 1a.
 	MACGrid_->set_uvw_star();
@@ -51,9 +41,6 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 
 	// 5.
 	grid_to_particle();
-	for( unsigned n = 0; n < num_particles_; ++n ){
-		std::cout << "Particles:\n" << (particles_ + n)->get_velocity() << std::endl;
-	}
 	
 	// 6. subsample time interval to satisfy CFL condition
 	double dt_new = compute_timestep(dt);
@@ -843,8 +830,6 @@ void FLIP::grid_to_particle(){
 		interp_u_star[0] = MACGrid_->get_interp_u(x,y,z,true);
 		interp_u_n1[0] = MACGrid_->get_interp_u(x,y,z);
 		
-		std::cout << "interp_u :" << interp_u_n1[0] << std::endl;
-		
 		//Update the v-velocity (trilinear interpolation)
 		interp_u_star[1] = MACGrid_->get_interp_v(x,y,z,true);
 		interp_u_n1[1] = MACGrid_->get_interp_v(x,y,z);
@@ -859,8 +844,7 @@ void FLIP::grid_to_particle(){
 		if (initial_idx(0) == 0 or initial_idx(0) == nx-1
 		 or initial_idx(1) == 0 or initial_idx(1) == ny-1
 		 or initial_idx(2) == 0 or initial_idx(2) == nz-1){
-			//~ u_update = initial_velocity*(1 - std::min(1., 2*alpha)) + interp_u_n1 - interp_u_star*(1 - std::min(1., 2*alpha));
-			u_update = initial_velocity*(1 - alpha) + interp_u_n1 - interp_u_star*(1 - alpha);
+			u_update = initial_velocity*(1 - std::min(1., 2*alpha)) + interp_u_n1 - interp_u_star*(1 - std::min(1., 2*alpha));
 		} else {
 			u_update = initial_velocity*(1 - alpha) + interp_u_n1 - interp_u_star*(1 - alpha);
 		}

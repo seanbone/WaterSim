@@ -127,8 +127,8 @@ public:
 	virtual void drawSimulationParameterMenu() override {
 		ImGui::Checkbox("Display grid", &m_display_grid);
 		ImGui::Checkbox("Export meshes", &m_export_meshes);
-		ImGui::Checkbox("Show pressure field", &m_show_pressures);
-		ImGui::Checkbox("Display velocity arrows", &m_display_velocity_arrows);      
+	//	ImGui::Checkbox("Show pressure field", &m_show_pressures);
+	//	ImGui::Checkbox("Display velocity arrows", &m_display_velocity_arrows);      
 		ImGui::Checkbox("Randomize particles", &m_jitter_particles);
 		ImGui::InputInt("Max particles display", &m_max_p_disp, 0, 0);
 		ImGui::InputDouble("Alpha", &m_alpha, 0, 0);

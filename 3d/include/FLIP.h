@@ -2,7 +2,7 @@
 #define FLIP_H
 
 #include "Particle.h"
-#include "Mac2d.h"
+#include "Mac3d.h"
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
 #include <cmath>
@@ -22,7 +22,7 @@ class FLIP {
 	 * - num_particles is the size of particles list
 	 * - MACGrid is an initialized MAC grid
 	 */
-	FLIP(Particle* particles, const unsigned num_particles, Mac2d* MACGrid,
+	FLIP(Particle* particles, const unsigned num_particles, Mac3d* MACGrid,
 		 const double density, const double gravity, const double alpha);
 	
 	/** Perform one FLIP step
@@ -46,7 +46,7 @@ class FLIP {
 	const double alpha_;
 	
 	// MAC Grid
-	Mac2d* MACGrid_;
+	Mac3d* MACGrid_;
 	
 	// Pressure-Matrix
 	SparseMat_t A_;
@@ -77,7 +77,8 @@ class FLIP {
 					   const Eigen::Vector3d& grid_coord,
 					   const double h,
 					   const int i,
-					   const int j );
+					   const int j,
+					   const int k );
 	
 	// Accumulate velocities and weights for v
 	void accumulate_v( const Eigen::Vector3d& pos,
@@ -85,7 +86,17 @@ class FLIP {
 					   const Eigen::Vector3d& grid_coord,
 					   const double h,
 					   const int i,
-					   const int j );
+					   const int j, 
+					   const int k );
+					   
+	// Accumulate velocities and weights for w
+	void accumulate_w( const Eigen::Vector3d& pos,
+					   const Eigen::Vector3d& vel,
+					   const Eigen::Vector3d& grid_coord,
+					   const double h,
+					   const int i,
+					   const int j, 
+					   const int k );
 					   
 	// Normalize accumulated horizontal velocities
 	void normalize_accumulated_u( bool* const visited_u );
@@ -93,11 +104,17 @@ class FLIP {
 	// Normalize accumulated vertical velocities
 	void normalize_accumulated_v( bool* const visited_v );
 	
+	// Normalize accumulated outgoing velocities
+	void normalize_accumulated_w( bool* const visited_w );
+	
 	// Extrapolate horizontal velocities into air cells
 	void extrapolate_u( const bool* const visited_u );
 	
 	// Extrapolate vertical velocities into air cells
 	void extrapolate_v( const bool* const visited_v );
+	
+	// Extrapolate outgoing velocities into air cells
+	void extrapolate_w( const bool* const visited_w );
 	
 	// Apply external forces to velocities on grid
 	void apply_forces(const double dt);

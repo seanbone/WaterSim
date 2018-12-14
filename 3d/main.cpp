@@ -18,21 +18,21 @@ std::vector<bool> select_fluid_cells(size_t nx, size_t ny, size_t nz) {
 
 	//~ std::fill(is_fluid.begin(), is_fluid.end(), true);
 	
-	for (unsigned k = 0; k < 1; k++) {
-		for (unsigned j = 0; j < 3; j++) {
-			for (unsigned i = 0; i < nx; i++) {
-				is_fluid[i + j*nx + nx*ny*k] = true;
-			}
-		}
-	}
-	
 	//~ for (unsigned k = 0; k < 1; k++) {
-		//~ for (unsigned j = 7; j < 9; j++) {
-			//~ for (unsigned i = 4; i < 6; i++) {
+		//~ for (unsigned j = 0; j < 3; j++) {
+			//~ for (unsigned i = 0; i < nx; i++) {
 				//~ is_fluid[i + j*nx + nx*ny*k] = true;
 			//~ }
 		//~ }
 	//~ }
+	
+	for (unsigned k = 0; k < 1; k++) {
+		for (unsigned j = 5; j < 9; j++) {
+			for (unsigned i = 3; i < 7; i++) {
+				is_fluid[i + j*nx + nx*ny*k] = true;
+			}
+		}
+	}
 
    return is_fluid;
 }
@@ -52,11 +52,11 @@ private:
 
 	double m_system_size_x = 10; // X dimension of system in m
 	double m_system_size_y = 10; // Y dimension of system in m
-	double m_system_size_z = 10; // Z dimension of system in m
+	double m_system_size_z = 1; // Z dimension of system in m
 
 	int m_grid_res_x = 10; // Number of cells on X axis
 	int m_grid_res_y = 10; // Number of cells on Y axis
-	int m_grid_res_z = 10; // Number of cells on Z axis
+	int m_grid_res_z = 1; // Number of cells on Z axis
 	// Whether to randomize particle positions
 	bool m_jitter_particles = false; 
 

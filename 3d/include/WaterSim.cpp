@@ -208,7 +208,7 @@ bool WaterSim::advance() {
     p_flip->step_FLIP(m_dt, m_step);
     
     if(m_step % 10 == 0){
-		exp->MeshExporter::level_set_easy();
+		exp->MeshExporter::level_set();
 		igl::copyleft::marching_cubes(exp->plevel_set_, exp->points_, m_res_x, m_res_y, m_res_z, exp->vertices_, exp->faces_);
 		igl::writeOBJ("mesh.obj", exp->vertices_, exp->faces_);
 	}

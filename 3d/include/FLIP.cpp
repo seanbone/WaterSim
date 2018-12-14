@@ -1,4 +1,5 @@
 #include "FLIP.h"
+#include <chrono>
 
 FLIP::FLIP(Particle* particles, const unsigned num_particles, Mac3d* MACGrid,
 		   const double density, const double gravity, const double alpha) 
@@ -26,7 +27,16 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	
 	// 1.
 	compute_velocity_field();
-
+	//~ for( unsigned i = 0; i < MACGrid_->get_num_cells_x(); ++i ){
+		//~ std::cout << MACGrid_->get_u(i,2,0) << std::endl;
+	//~ }
+	
+	std::cout << MACGrid_->get_u(5,4,0) << std::endl;
+	std::cout << MACGrid_->get_u(6,4,0) << std::endl;
+	std::cout << MACGrid_->get_u(5,5,0) << std::endl;
+	std::cout << MACGrid_->get_u(6,5,0) << std::endl;
+	//~ // Error is in grid to particle
+	
 	// 1a.
 	MACGrid_->set_uvw_star();
 
@@ -41,6 +51,9 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 
 	// 5.
 	grid_to_particle();
+	for( unsigned n = 0; n < num_particles_; ++n ){
+		std::cout << "Particles:\n" << (particles_ + n)->get_velocity() << std::endl;
+	}
 	
 	// 6. subsample time interval to satisfy CFL condition
 	double dt_new = compute_timestep(dt);
@@ -197,7 +210,7 @@ void FLIP::compute_velocity_field() {
 							grid_coord(1) = (j - 0.5) * cell_sizey;
 							grid_coord(2) = k * cell_sizez;
 							accumulate_v(pos, vel, grid_coord, h, i, j, k);
-						}
+						}						
 						
 						if ( ( i < nx and j < ny and k <= nz ) ){
 							
@@ -244,8 +257,17 @@ double FLIP::compute_weight( const Eigen::Vector3d& particle_coord,
 							 const double h )
 {
 	double r = (particle_coord - grid_coord).norm();
-	double diff = std::pow(h, 2) - std::pow(r, 2);
-	return ( (315/(64 * M_PI * std::pow(h, 9))) * std::pow(diff, 3) );
+	
+	double h2 = h*h;
+	double h4 = h2 * h2;
+	double h9 = h4 * h4 * h;
+	
+	double diff = h2 - r*r;
+	double diff3 = diff*diff*diff;
+	
+	double coeff = 315/(64 * M_PI * h9);
+	
+	return coeff * diff3;
 }
 
 // Accumulate velocities and weights for u					
@@ -256,7 +278,7 @@ void FLIP::accumulate_u( const Eigen::Vector3d& pos,
 						 const int i,
 						 const int j,
 						 const int k )
-{
+{	
 	if ( check_threshold(pos, grid_coord, h) ){
 		double u_prev = MACGrid_->get_u(i, j, k);
 		double W_u = compute_weight(pos, grid_coord, h);
@@ -362,7 +384,7 @@ void FLIP::normalize_accumulated_w( bool* const visited_w ){
 	unsigned N = MACGrid_->get_num_cells_x();
 	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned L = MACGrid_->get_num_cells_z();
-	for( unsigned k = 0; k < (L+1); ++k ){	
+	for( unsigned k = 0; k < L+1; ++k ){
 		for( unsigned j = 0; j < M; ++j ){
 			for( unsigned i = 0; i < N; ++i ){
 				double W_w = MACGrid_->get_weights_w(i, j, k);
@@ -821,6 +843,8 @@ void FLIP::grid_to_particle(){
 		interp_u_star[0] = MACGrid_->get_interp_u(x,y,z,true);
 		interp_u_n1[0] = MACGrid_->get_interp_u(x,y,z);
 		
+		std::cout << "interp_u :" << interp_u_n1[0] << std::endl;
+		
 		//Update the v-velocity (trilinear interpolation)
 		interp_u_star[1] = MACGrid_->get_interp_v(x,y,z,true);
 		interp_u_n1[1] = MACGrid_->get_interp_v(x,y,z);
@@ -835,7 +859,8 @@ void FLIP::grid_to_particle(){
 		if (initial_idx(0) == 0 or initial_idx(0) == nx-1
 		 or initial_idx(1) == 0 or initial_idx(1) == ny-1
 		 or initial_idx(2) == 0 or initial_idx(2) == nz-1){
-			u_update = initial_velocity*(1 - std::min(1., 2*alpha)) + interp_u_n1 - interp_u_star*(1 - std::min(1., 2*alpha));
+			//~ u_update = initial_velocity*(1 - std::min(1., 2*alpha)) + interp_u_n1 - interp_u_star*(1 - std::min(1., 2*alpha));
+			u_update = initial_velocity*(1 - alpha) + interp_u_n1 - interp_u_star*(1 - alpha);
 		} else {
 			u_update = initial_velocity*(1 - alpha) + interp_u_n1 - interp_u_star*(1 - alpha);
 		}

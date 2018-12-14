@@ -287,7 +287,6 @@ double Mac3d::get_w(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < (L_+1))
 		return *(pw_ + N_*j + i + N_*M_*k);
 	else{ 
-		std::cout << i << " " << j << " " << k << std::endl;
 		std::cout << "Calling get_w: Index out of bounds!" << std::endl;
 		return 0;
 	}
@@ -322,7 +321,7 @@ double Mac3d::get_w_star(const unsigned i, const unsigned j, const unsigned k) {
 
 //This function is used for the interpolations
 void Mac3d::assign_x(double x, int indices_x, int& ix0, int& ix1, double& x0, double& x1){
-	if(x > indices_x * cell_sizex_){
+	if(x > indices_x * cell_sizex_ or  x == 0){
 		ix0 = indices_x;
 		ix1 = ix0 + 1;
 	}
@@ -337,7 +336,7 @@ void Mac3d::assign_x(double x, int indices_x, int& ix0, int& ix1, double& x0, do
 
 //This function is used for the interpolations
 void Mac3d::assign_y(double y, int indices_y, int& iy0, int& iy1, double& y0, double& y1){
-	if(y > indices_y * cell_sizey_){
+	if(y > indices_y * cell_sizey_ or  y == 0){
 		iy0 = indices_y;
 		iy1 = iy0 + 1;
 	}
@@ -352,7 +351,7 @@ void Mac3d::assign_y(double y, int indices_y, int& iy0, int& iy1, double& y0, do
 
 //This function is used for the interpolations
 void Mac3d::assign_z(double z, int indices_z, int& iz0, int& iz1, double& z0, double& z1){
-	if(z > indices_z * cell_sizez_){
+	if(z > indices_z * cell_sizez_ or  z == 0){
 		iz0 = indices_z;
 		iz1 = iz0 + 1;
 	}
@@ -636,7 +635,7 @@ double Mac3d::get_interp_w(double x, double y, double z, const bool use_w_star){
 		if(y >= 0 && y <= sizey_ - cell_sizey_){
 			assign_x(x, indices[0], ix0, ix1, x0, x1);
 			assign_y(y, indices[1], iy0, iy1, y0, y1);
-			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);		
+			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
 			w000 = (this->*get_vel)(ix0, iy0, iz0);
 			w100 = (this->*get_vel)(ix1, iy0, iz0);
 			w010 = (this->*get_vel)(ix0, iy1, iz0);
@@ -733,7 +732,7 @@ double Mac3d::get_pressure(const unsigned i, const unsigned j, const unsigned k)
 	if (i < N_ && j < M_ && k < L_)
 		return *(ppressure_ + N_*j + i + N_*M_*k);
 	else{ 
-		std::cout << "Calling get_u: Index out of bounds!" << std::endl;
+		std::cout << "Calling get_pressure: Index out of bounds!" << std::endl;
 		return 0;
 	}
 }
@@ -744,7 +743,7 @@ bool Mac3d::is_solid(const unsigned i, const unsigned j, const unsigned k){
 		return *(psolid_ + N_*j + i + N_*M_*k);
 	else{ 
 		std::cout << "Calling is_solid: Index out of bounds!" << std::endl;
-		return 0;
+		return 1;
 	}
 }
 

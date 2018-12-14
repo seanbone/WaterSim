@@ -16,11 +16,19 @@
 std::vector<bool> select_fluid_cells(size_t nx, size_t ny, size_t nz) {
 	std::vector<bool> is_fluid(nx*ny*nz, false);
 
-	//std::fill(is_fluid.begin(), is_fluid.end(), true);
+	//~ std::fill(is_fluid.begin(), is_fluid.end(), true);
 	
-	for (unsigned k = 0; k < 2; k++) {
-		for (unsigned j = 2; j < 4; j++) {
-			for (unsigned i = 1; i < 4; i++) {
+	//~ for (unsigned k = 0; k < 1; k++) {
+		//~ for (unsigned j = 0; j < 3; j++) {
+			//~ for (unsigned i = 0; i < nx; i++) {
+				//~ is_fluid[i + j*nx + nx*ny*k] = true;
+			//~ }
+		//~ }
+	//~ }
+	
+	for (unsigned k = 0; k < 1; k++) {
+		for (unsigned j = 5; j < 9; j++) {
+			for (unsigned i = 3; i < 7; i++) {
 				is_fluid[i + j*nx + nx*ny*k] = true;
 			}
 		}
@@ -44,17 +52,17 @@ private:
 
 	double m_system_size_x = 10; // X dimension of system in m
 	double m_system_size_y = 10; // Y dimension of system in m
-	double m_system_size_z = 2; // Z dimension of system in m
+	double m_system_size_z = 1; // Z dimension of system in m
 
 	int m_grid_res_x = 10; // Number of cells on X axis
 	int m_grid_res_y = 10; // Number of cells on Y axis
-	int m_grid_res_z = 2; // Number of cells on Z axis
+	int m_grid_res_z = 1; // Number of cells on Z axis
 	// Whether to randomize particle positions
 	bool m_jitter_particles = false; 
 
 	double m_dt = 0.025;
 
-	double m_alpha = 0.05;
+	double m_alpha = 0.01;
 
 	double m_density = 1000.0;  // Fluid density in kg/m^3
 	double m_gravity = 9.81; // Acceleration of gravity in m/s^2

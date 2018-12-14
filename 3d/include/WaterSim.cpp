@@ -11,7 +11,7 @@ WaterSim::WaterSim(viewer_t& viewer, const bool display_grid,
         bool export_png, int png_sx, int png_sy, int max_pngs)
         : Simulation(), p_viewer(&viewer), m_display_grid(display_grid),
           m_res_x(res_x), m_res_y(res_y), m_res_z(res_z),
-          m_len_x(len_y), m_len_y(len_y), m_len_z(len_z), m_fluid_density_(density),
+          m_len_x(len_x), m_len_y(len_y), m_len_z(len_z), m_fluid_density_(density),
           m_gravity_mag_(gravity), m_alpha_(alpha),
           m_show_pressures(show_pressures),
           m_show_velocity_arrows(show_velocity_arrows),
@@ -364,7 +364,7 @@ void WaterSim::initMacViz() {
     // Edges parallel to x axis <=> normal to yz plane
     for (unsigned z = 0; z <= nz; z++) {
         for (unsigned y = 0; y <= ny; y++, i++) {
-            auto a = y*(ny+1) + z*(nx+1)*(ny+1);
+            auto a = y*(nx+1) + z*(nx+1)*(ny+1);
             m_renderE.row(i) << a, a + nx;
         }
     }

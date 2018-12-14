@@ -18,6 +18,7 @@ std::vector<bool> select_fluid_cells(size_t nx, size_t ny, size_t nz) {
 
 	//~ std::fill(is_fluid.begin(), is_fluid.end(), true);
 	
+<<<<<<< HEAD
 	//~ for (unsigned k = 0; k < 1; k++) {
 		//~ for (unsigned j = 0; j < 3; j++) {
 			//~ for (unsigned i = 0; i < nx; i++) {
@@ -29,6 +30,11 @@ std::vector<bool> select_fluid_cells(size_t nx, size_t ny, size_t nz) {
 	for (unsigned k = 0; k < 1; k++) {
 		for (unsigned j = 0; j < 3; j++) {
 			for (unsigned i = 0; i < 10; i++) {
+=======
+	for (unsigned k = 3; k < 13; k++) {
+		for (unsigned j = 5; j < ny; j++) {
+			for (unsigned i = 3; i < 13; i++) {
+>>>>>>> ed2f5633e7205a6cae83a341c73a75c50029f0aa
 				is_fluid[i + j*nx + nx*ny*k] = true;
 			}
 		}
@@ -52,11 +58,19 @@ private:
 
 	double m_system_size_x = 10; // X dimension of system in m
 	double m_system_size_y = 10; // Y dimension of system in m
+<<<<<<< HEAD
 	double m_system_size_z = 2; // Z dimension of system in m
 
 	int m_grid_res_x = 10; // Number of cells on X axis
 	int m_grid_res_y = 10; // Number of cells on Y axis
 	int m_grid_res_z = 2; // Number of cells on Z axis
+=======
+	double m_system_size_z = 10; // Z dimension of system in m
+
+	int m_grid_res_x = 15; // Number of cells on X axis
+	int m_grid_res_y = 15; // Number of cells on Y axis
+	int m_grid_res_z = 15; // Number of cells on Z axis
+>>>>>>> ed2f5633e7205a6cae83a341c73a75c50029f0aa
 	// Whether to randomize particle positions
 	bool m_jitter_particles = false; 
 
@@ -84,7 +98,7 @@ public:
 
 	WaterGui() {
 		// Initialize fluid flags
-		std::vector<bool> is_fluid = select_fluid_cells(m_system_size_x, m_system_size_y, m_system_size_z);
+		std::vector<bool> is_fluid = select_fluid_cells(m_grid_res_x, m_grid_res_y, m_grid_res_z);
 
 
 		// create a new simulation instance
@@ -93,7 +107,8 @@ public:
 								  m_density, m_gravity, m_alpha,
 								  m_show_pressures, m_display_velocity_arrows,
 								  std::move(is_fluid), m_jitter_particles,
-								  m_export_png, m_png_sx, m_png_sy, m_max_pngs);
+								  m_export_png, m_png_sx, m_png_sy, m_max_pngs,
+								  m_export_meshes);
 
 		// set this simulation as the simulation that is running in our GUI
 		setSimulation(p_waterSim);
@@ -117,7 +132,8 @@ public:
 								 m_density, m_gravity, m_alpha, m_show_pressures, 
 								 m_display_velocity_arrows, std::move(is_fluid),
 								 m_jitter_particles,
-								 m_export_png, m_png_sx, m_png_sy, m_max_pngs);
+								 m_export_png, m_png_sx, m_png_sy, m_max_pngs,
+								 m_export_meshes);
 	};
 
 	/**

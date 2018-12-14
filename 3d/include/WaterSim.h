@@ -8,7 +8,6 @@
 #include <sys/stat.h> // mkdir
 #include <igl/opengl/glfw/Viewer.h>
 #include <igl/png/writePNG.h>
-#include <igl/copyleft/marching_cubes.h>
 
 /**
  * This class manages the water simulation.
@@ -47,6 +46,8 @@ class WaterSim : public Simulation {
 		std::string m_png_dirname_ = "PNG_out";
 		unsigned m_png_num_ = 0;
 		unsigned m_max_pngs_;
+
+		bool m_export_meshes;
 
 		// FLIP simulator
 		FLIP* p_flip;
@@ -96,7 +97,7 @@ class WaterSim : public Simulation {
 				 const double alpha,
 				 const bool show_pressures, const bool show_velocity_arrows,
 				 std::vector<bool> is_fluid, const bool jitter_particles,
-				 bool export_png, int png_sx, int png_sy, int max_pngs);
+				 bool export_png, int png_sx, int png_sy, int max_pngs, bool export_meshes);
 
 		~WaterSim() {
 			delete p_mac_grid;
@@ -117,7 +118,7 @@ class WaterSim : public Simulation {
 						  const double density, const double gravity, const double alpha,
 						  const bool show_pressures, const bool show_velocity_arrows,
 						  std::vector<bool> is_fluid, const bool jitter_particles,
-						  bool export_png, int png_sx, int png_sy, int max_pngs);
+						  bool export_png, int png_sx, int png_sy, int max_pngs, bool export_meshes);
 
 		/*
 		 * Update the rendering data structures. This method will be called in

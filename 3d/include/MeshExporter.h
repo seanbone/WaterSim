@@ -31,6 +31,9 @@ class MeshExporter{
 		Eigen::MatrixXd points_;
 		Eigen::MatrixXd vertices_;
 		Eigen::MatrixXi faces_;
+		std::vector<Eigen::Vector3d> x_avrg_num;
+		double* r_avrg_num;
+		double* den;
 		
 		MeshExporter(Mac3d* Grid, Particle* particles, const int n);
 		

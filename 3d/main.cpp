@@ -50,9 +50,9 @@ private:
 	bool m_display_velocity_arrows = false;
 	int m_export_fps = 30;
 
-	double m_system_size_x = 10; // X dimension of system in m
-	double m_system_size_y = 10; // Y dimension of system in m
-	double m_system_size_z = 10; // Z dimension of system in m
+	double m_system_size_x = 100.0; // X dimension of system in m
+	double m_system_size_y = 50.0; // Y dimension of system in m
+	double m_system_size_z = 15.0; // Z dimension of system in m
 
 	int m_grid_res_x = 10; // Number of cells on X axis
 	int m_grid_res_y = 10; // Number of cells on Y axis
@@ -74,7 +74,7 @@ private:
 	int m_max_pngs = 500;
 
 	// Other members
-	bool m_display_grid = true;
+	bool m_display_grid = false;
 	int m_cells_x;
 	int m_cells_y;
 	int m_cells_z;
@@ -135,8 +135,8 @@ public:
 	virtual void drawSimulationParameterMenu() override {
 		ImGui::Checkbox("Display grid", &m_display_grid);
 		ImGui::Checkbox("Export meshes", &m_export_meshes);
-		ImGui::Checkbox("Show pressure field", &m_show_pressures);
-		ImGui::Checkbox("Display velocity arrows", &m_display_velocity_arrows);      
+	//	ImGui::Checkbox("Show pressure field", &m_show_pressures);
+	//	ImGui::Checkbox("Display velocity arrows", &m_display_velocity_arrows);      
 		ImGui::Checkbox("Randomize particles", &m_jitter_particles);
 		ImGui::InputInt("Max particles display", &m_max_p_disp, 0, 0);
 		ImGui::InputDouble("Alpha", &m_alpha, 0, 0);
@@ -149,10 +149,10 @@ public:
 		ImGui::InputDouble("X Size [m]", &m_system_size_x, 0, 0);
 		ImGui::InputDouble("Y Size [m]", &m_system_size_y, 0, 0);
 		ImGui::InputDouble("Z Size [m]", &m_system_size_z, 0, 0);
-		ImGui::Checkbox("Export PNGs (Warning: lags GUI!)", &m_export_png);
-		ImGui::InputInt("PNG size x", &m_png_sx, 0, 0);
-		ImGui::InputInt("PNG size y", &m_png_sy, 0, 0);
-		ImGui::InputInt("Max PNGs", &m_max_pngs, 0, 0);
+		//ImGui::Checkbox("Export PNGs (Warning: lags GUI!)", &m_export_png);
+		//ImGui::InputInt("PNG size x", &m_png_sx, 0, 0);
+		//ImGui::InputInt("PNG size y", &m_png_sy, 0, 0);
+		//ImGui::InputInt("Max PNGs", &m_max_pngs, 0, 0);
 	}
       
 	/**
@@ -166,8 +166,8 @@ public:
 		unsigned ny = (*p_waterSim).p_mac_grid->get_num_cells_y();
 		unsigned nz = (*p_waterSim).p_mac_grid->get_num_cells_z();
 		for (unsigned k = 0; k < nz; k++) {	
-			for (unsigned j = 0; j < nx; j++) {
-				for (unsigned i = 0; i < ny; i++) {
+			for (unsigned j = 0; j < ny; j++) {
+				for (unsigned i = 0; i < nx; i++) {
 					double temp = (*p_waterSim).p_mac_grid->get_pressure(i, j, k);
 					if(i == 0 && j == 0 && k == 0){
 						pressure_max = temp;

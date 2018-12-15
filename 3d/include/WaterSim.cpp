@@ -131,7 +131,7 @@ void WaterSim::updateRenderGeometry() {
         m_particles.row(j) = flip_particles[i].get_position();
     }
 
-    std::cout << "Num particles: " << m_num_particles << "\nParticle step: " << particle_step << "\n";
+    //~ std::cout << "Num particles: " << m_num_particles << "\nParticle step: " << particle_step << "\n";
 
     m_particle_colors.resize(disp_particles, 3);
     m_particle_colors.setZero();

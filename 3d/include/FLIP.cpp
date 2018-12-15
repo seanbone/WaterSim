@@ -32,6 +32,10 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 
 	// 2.
 	apply_forces(dt);
+	
+	if ( step >= 5 and step <= 15 ){
+		explode(dt, step, 5, 0, 5, 300);
+	}
 
 	// 3.
 	apply_boundary_conditions();
@@ -939,4 +943,149 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 
 		(particles_ + n)->set_position(pos_next);
 	}
+}
+
+void FLIP::explode(const double dt, const unsigned long step, const int x, const int y, const int z, const double value){
+	// Apply external forces to simulate meteorite crash
+	const double alpha = 2;
+	const double beta = 5;
+	const double force = value;
+	const double spin = -0.25*value;
+	const double slope_x = 2;
+	const double slope_y = 1;
+	const double slope_z = 2;
+	const double sty = slope_y*(step - 5);
+	const double stx = slope_x*sty;
+	const double stz = slope_z*sty;
+	
+	// Coordinates of the bottom left point of the square containing the meteorite
+	const int x_bl = x + slope_x*8;
+	const int y_bl = y + slope_y*8;
+	const int z_bl = z + slope_z*8;
+	
+	// Bottom
+	MACGrid_->set_v(x_bl+1-stx, y_bl-sty, z_bl-stz, MACGrid_->get_v(x_bl+1-stx,y_bl-sty,z_bl-stz) - dt*force*alpha);
+	MACGrid_->set_v(x_bl+2-stx, y_bl-sty, z_bl-stz, MACGrid_->get_v(x_bl+2-stx,y_bl-sty,z_bl-stz) - dt*force*alpha);
+	MACGrid_->set_v(x_bl+1-stx, y_bl-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+1-stx,y_bl-sty,z_bl-1-stz) - dt*force*alpha);
+	MACGrid_->set_v(x_bl+2-stx, y_bl-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+2-stx,y_bl-sty,z_bl-1-stz) - dt*force*alpha);
+	
+	// Bottom Half
+	MACGrid_->set_v(x_bl-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_v(x_bl-stx,y_bl+1-sty,z_bl-stz) - dt*force*alpha);
+	MACGrid_->set_v(x_bl+1-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+1-sty,z_bl-stz) - dt*force*beta);
+	MACGrid_->set_v(x_bl+2-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+1-sty,z_bl-stz) - dt*force*beta);
+	MACGrid_->set_v(x_bl+3-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_v(x_bl+3-stx,y_bl+1-sty,z_bl-stz) - dt*force*alpha);
+	MACGrid_->set_v(x_bl-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_v(x_bl-stx,y_bl+1-sty,z_bl+1-stz) - dt*force*alpha);
+	MACGrid_->set_v(x_bl+1-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+1-sty,z_bl+1-stz) - dt*force*beta);
+	MACGrid_->set_v(x_bl+2-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+1-sty,z_bl+1-stz) - dt*force*beta);
+	MACGrid_->set_v(x_bl+3-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+3-stx,y_bl+1-sty,z_bl+1-stz) - dt*force*alpha);
+	
+	// Half
+	MACGrid_->set_v(x_bl-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_v(x_bl-stx,y_bl+2-sty,z_bl-stz) - dt*spin);
+	MACGrid_->set_v(x_bl+1-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+2-sty,z_bl-stz) - dt*spin*beta);
+	MACGrid_->set_v(x_bl+2-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+2-sty,z_bl-stz) + dt*spin*beta);
+	MACGrid_->set_v(x_bl+3-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_v(x_bl+3-stx,y_bl+2-sty,z_bl-stz) + dt*spin);
+	MACGrid_->set_v(x_bl-stx, y_bl+2-sty,z_bl+1-stz, MACGrid_->get_v(x_bl-stx,y_bl+2-sty,z_bl+1-stz) - dt*spin);
+	MACGrid_->set_v(x_bl+1-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+2-sty,z_bl+1-stz) - dt*spin*beta);
+	MACGrid_->set_v(x_bl+2-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+2-sty,z_bl+1-stz) + dt*spin*beta);
+	MACGrid_->set_v(x_bl+3-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+3-stx,y_bl+2-sty,z_bl+1-stz) + dt*spin);
+	
+	// Top Half
+	MACGrid_->set_v(x_bl-stx, y_bl+3-sty, z_bl-stz, MACGrid_->get_v(x_bl-stx,y_bl+3-sty,z_bl-stz) + dt*force);
+	MACGrid_->set_v(x_bl+1-stx, y_bl+3-sty, z_bl-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+3-sty,z_bl-stz) + dt*force*beta);
+	MACGrid_->set_v(x_bl+2-stx, y_bl+3-sty, z_bl-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+3-sty,z_bl-stz) + dt*force*beta);
+	MACGrid_->set_v(x_bl+3-stx, y_bl+3-sty, z_bl-stz, MACGrid_->get_v(x_bl+3-stx,y_bl+3-sty,z_bl-stz) + dt*force);
+	MACGrid_->set_v(x_bl-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_v(x_bl-stx,y_bl+3-sty,z_bl+1-stz) + dt*force);
+	MACGrid_->set_v(x_bl+1-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+3-sty,z_bl+1-stz) + dt*force*beta);
+	MACGrid_->set_v(x_bl+2-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+3-sty,z_bl+1-stz) + dt*force*beta);
+	MACGrid_->set_v(x_bl+3-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+3-stx,y_bl+3-sty,z_bl+1-stz) + dt*force);
+	
+	// Top
+	MACGrid_->set_v(x_bl+1-stx, y_bl+4-sty, z_bl-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+4-sty,z_bl-stz) + dt*force);
+	MACGrid_->set_v(x_bl+2-stx, y_bl+4-sty, z_bl-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+4-sty,z_bl-stz) + dt*force);
+	MACGrid_->set_v(x_bl+1-stx, y_bl+4-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+4-sty,z_bl+1-stz) + dt*force);
+	MACGrid_->set_v(x_bl+2-stx, y_bl+4-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+4-sty,z_bl+1-stz) + dt*force);
+	
+	// Left
+	MACGrid_->set_u(x_bl-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_u(x_bl-stx,y_bl+1-sty,z_bl-stz) - dt*force*alpha);
+	MACGrid_->set_u(x_bl-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_u(x_bl-stx,y_bl+2-sty,z_bl-stz) - dt*force*alpha);
+	MACGrid_->set_u(x_bl-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_u(x_bl-stx,y_bl+1-sty,z_bl+1-stz) - dt*force*alpha);
+	MACGrid_->set_u(x_bl-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_u(x_bl-stx,y_bl+2-sty,z_bl+1-stz) - dt*force*alpha);
+	
+	// Left Half
+	MACGrid_->set_u(x_bl+1-stx, y_bl-sty, z_bl-stz, MACGrid_->get_u(x_bl+1-stx,y_bl-sty,z_bl-stz) - dt*force*alpha);
+	MACGrid_->set_u(x_bl+1-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+1-sty,z_bl-stz) - dt*force*beta);
+	MACGrid_->set_u(x_bl+1-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+2-sty,z_bl-stz) - dt*force*beta);
+	MACGrid_->set_u(x_bl+1-stx, y_bl+3-sty, z_bl-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+3-sty,z_bl-stz) - dt*force*alpha);
+	MACGrid_->set_u(x_bl+1-stx, y_bl-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+1-stx,y_bl-sty,z_bl+1-stz) - dt*force*alpha);
+	MACGrid_->set_u(x_bl+1-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+1-sty,z_bl+1-stz) - dt*force*beta);
+	MACGrid_->set_u(x_bl+1-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+2-sty,z_bl+1-stz) - dt*force*beta);
+	MACGrid_->set_u(x_bl+1-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+3-sty,z_bl+1-stz) - dt*force*alpha);
+	
+	// Half
+	MACGrid_->set_u(x_bl+2-stx, y_bl-sty, z_bl-stz, MACGrid_->get_u(x_bl+2-stx,y_bl-sty,z_bl-stz) + dt*spin);
+	MACGrid_->set_u(x_bl+2-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_u(x_bl+2-stx,y_bl+1-sty,z_bl-stz) + dt*spin*beta);
+	MACGrid_->set_u(x_bl+2-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_u(x_bl+2-stx,y_bl+2-sty,z_bl-stz) - dt*spin*beta);
+	MACGrid_->set_u(x_bl+2-stx, y_bl+3-sty, z_bl-stz, MACGrid_->get_u(x_bl+2-stx,y_bl+3-sty,z_bl-stz) - dt*spin);
+	MACGrid_->set_u(x_bl+2-stx, y_bl-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+2-stx,y_bl-sty,z_bl+1-stz) + dt*spin);
+	MACGrid_->set_u(x_bl+2-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+2-stx,y_bl+1-sty,z_bl+1-stz) + dt*spin*beta);
+	MACGrid_->set_u(x_bl+2-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+2-stx,y_bl+2-sty,z_bl+1-stz) - dt*spin*beta);
+	MACGrid_->set_u(x_bl+2-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+2-stx,y_bl+3-sty,z_bl+1-stz) - dt*spin);
+	
+	// Right Half
+	MACGrid_->set_u(x_bl+3-stx, y_bl-sty, z_bl-stz, MACGrid_->get_u(x_bl+3-stx,y_bl-sty,z_bl-stz) + dt*force);
+	MACGrid_->set_u(x_bl+3-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_u(x_bl+3-stx,y_bl+1-sty,z_bl-stz) + dt*force*beta);
+	MACGrid_->set_u(x_bl+3-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_u(x_bl+3-stx,y_bl+2-sty,z_bl-stz) + dt*force*beta);
+	MACGrid_->set_u(x_bl+3-stx, y_bl+3-sty, z_bl-stz, MACGrid_->get_u(x_bl+3-stx,y_bl+3-sty,z_bl-stz) + dt*force);
+	MACGrid_->set_u(x_bl+3-stx, y_bl-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+3-stx,y_bl-sty,z_bl+1-stz) + dt*force);
+	MACGrid_->set_u(x_bl+3-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+3-stx,y_bl+1-sty,z_bl+1-stz) + dt*force*beta);
+	MACGrid_->set_u(x_bl+3-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+3-stx,y_bl+2-sty,z_bl+1-stz) + dt*force*beta);
+	MACGrid_->set_u(x_bl+3-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+3-stx,y_bl+3-sty,z_bl+1-stz) + dt*force);
+	
+	// Right
+	MACGrid_->set_u(x_bl+4-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_u(x_bl+4-stx,y_bl+1-sty,z_bl-stz) + dt*force);
+	MACGrid_->set_u(x_bl+4-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_u(x_bl+4-stx,y_bl+2-sty,z_bl-stz) + dt*force);
+	MACGrid_->set_u(x_bl+4-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+4-stx,y_bl+1-sty,z_bl+1-stz) + dt*force);
+	MACGrid_->set_u(x_bl+4-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+4-stx,y_bl+2-sty,z_bl+1-stz) + dt*force);
+	
+	// Behind
+	MACGrid_->set_w(x_bl-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_u(x_bl-stx,y_bl+1-sty,z_bl-stz) - dt*force*alpha);
+	MACGrid_->set_w(x_bl-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_u(x_bl-stx,y_bl+2-sty,z_bl-stz) - dt*force*alpha);
+	MACGrid_->set_w(x_bl+1-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+1-sty,z_bl-stz) - dt*force*alpha);
+	MACGrid_->set_w(x_bl+1-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+2-sty,z_bl-stz) - dt*force*alpha);
+	
+	// Behind Half
+	MACGrid_->set_w(x_bl-stx, y_bl-sty, z_bl+1-stz, MACGrid_->get_u(x_bl-stx,y_bl-sty,z_bl+1-stz) - dt*force*alpha);
+	MACGrid_->set_w(x_bl-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_u(x_bl-stx,y_bl+1-sty,z_bl+1-stz) - dt*force*beta);
+	MACGrid_->set_w(x_bl-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_u(x_bl-stx,y_bl+2-sty,z_bl+1-stz) - dt*force*beta);
+	MACGrid_->set_w(x_bl-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_u(x_bl-stx,y_bl+3-sty,z_bl+1-stz) - dt*force*alpha);
+	MACGrid_->set_w(x_bl+1-stx, y_bl-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+1-stx,y_bl-sty,z_bl+1-stz) - dt*force*alpha);
+	MACGrid_->set_w(x_bl+1-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+1-sty,z_bl+1-stz) - dt*force*beta);
+	MACGrid_->set_w(x_bl+1-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+2-sty,z_bl+1-stz) - dt*force*beta);
+	MACGrid_->set_w(x_bl+1-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+3-sty,z_bl+1-stz) - dt*force*alpha);
+	
+	// Half
+	MACGrid_->set_w(x_bl-stx, y_bl-sty, z_bl+2-stz, MACGrid_->get_u(x_bl-stx,y_bl-sty,z_bl+2-stz) + dt*spin);
+	MACGrid_->set_w(x_bl-stx, y_bl+1-sty, z_bl+2-stz, MACGrid_->get_u(x_bl-stx,y_bl+1-sty,z_bl+2-stz) + dt*spin*beta);
+	MACGrid_->set_w(x_bl-stx, y_bl+2-sty, z_bl+2-stz, MACGrid_->get_u(x_bl-stx,y_bl+2-sty,z_bl+2-stz) - dt*spin*beta);
+	MACGrid_->set_w(x_bl-stx, y_bl+3-sty, z_bl+2-stz, MACGrid_->get_u(x_bl-stx,y_bl+3-sty,z_bl+2-stz) - dt*spin);
+	MACGrid_->set_w(x_bl+1-stx, y_bl-sty, z_bl+2-stz, MACGrid_->get_u(x_bl+1-stx,y_bl-sty,z_bl+2-stz) + dt*spin);
+	MACGrid_->set_w(x_bl+1-stx, y_bl+1-sty, z_bl+2-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+1-sty,z_bl+2-stz) + dt*spin*beta);
+	MACGrid_->set_w(x_bl+1-stx, y_bl+2-sty, z_bl+2-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+2-sty,z_bl+2-stz) - dt*spin*beta);
+	MACGrid_->set_w(x_bl+1-stx, y_bl+3-sty, z_bl+2-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+3-sty,z_bl+2-stz) - dt*spin);
+	
+	// Forward Half
+	MACGrid_->set_w(x_bl-stx, y_bl-sty, z_bl+3-stz, MACGrid_->get_u(x_bl-stx,y_bl-sty,z_bl+3-stz) + dt*force);
+	MACGrid_->set_w(x_bl-stx, y_bl+1-sty, z_bl+3-stz, MACGrid_->get_u(x_bl-stx,y_bl+1-sty,z_bl+3-stz) + dt*force*beta);
+	MACGrid_->set_w(x_bl-stx, y_bl+2-sty, z_bl+3-stz, MACGrid_->get_u(x_bl-stx,y_bl+2-sty,z_bl+3-stz) + dt*force*beta);
+	MACGrid_->set_w(x_bl-stx, y_bl+3-sty, z_bl+3-stz, MACGrid_->get_u(x_bl-stx,y_bl+3-sty,z_bl+3-stz) + dt*force);
+	MACGrid_->set_w(x_bl+1-stx, y_bl-sty, z_bl+3-stz, MACGrid_->get_u(x_bl+1-stx,y_bl-sty,z_bl+3-stz) + dt*force);
+	MACGrid_->set_w(x_bl+1-stx, y_bl+1-sty, z_bl+3-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+1-sty,z_bl+3-stz) + dt*force*beta);
+	MACGrid_->set_w(x_bl+1-stx, y_bl+2-sty, z_bl+3-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+2-sty,z_bl+3-stz) + dt*force*beta);
+	MACGrid_->set_w(x_bl+1-stx, y_bl+3-sty, z_bl+3-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+3-sty,z_bl+3-stz) + dt*force);
+	
+	// Forward
+	MACGrid_->set_w(x_bl-stx, y_bl+1-sty, z_bl+4-stz, MACGrid_->get_u(x_bl-stx,y_bl+1-sty,z_bl+4-stz) + dt*force);
+	MACGrid_->set_w(x_bl-stx, y_bl+2-sty, z_bl+4-stz, MACGrid_->get_u(x_bl-stx,y_bl+2-sty,z_bl+4-stz) + dt*force);
+	MACGrid_->set_w(x_bl+1-stx, y_bl+1-sty, z_bl+4-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+1-sty,z_bl+4-stz) + dt*force);
+	MACGrid_->set_w(x_bl+1-stx, y_bl+2-sty, z_bl+4-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+2-sty,z_bl+4-stz) + dt*force);
 }

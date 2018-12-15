@@ -245,8 +245,8 @@ bool WaterSim::advance() {
 void WaterSim::renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) {
     if (m_display_grid)
         viewer.data_list[m_grid_data_idx].set_edges(m_renderV, m_renderE, m_renderEC);
-    else
-        viewer.data_list[m_grid_data_idx].clear();
+    //else
+    //    viewer.data_list[m_grid_data_idx].clear();
 
     //viewer.data_list[m_grid_data_idx].set_mesh(m_renderV, m_renderF);
     //viewer.data_list[m_grid_data_idx].set_colors(m_renderC);
@@ -348,6 +348,9 @@ void WaterSim::initFLIP() {
 
 
 void WaterSim::initMacViz() {
+
+    if (!m_display_grid)
+        return;
 
     unsigned nx = p_mac_grid->get_num_cells_x();
     unsigned ny = p_mac_grid->get_num_cells_y();

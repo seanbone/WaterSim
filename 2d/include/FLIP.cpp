@@ -33,9 +33,9 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	// 2.
 	apply_forces(dt);
 	
-	//~ if ( step >= 5 and step <= 20 ){
-		//~ explode(dt, step, 300);
-	//~ }
+	if ( step >= 5 and step <= 20 ){
+		explode(dt, step, 300);
+	}
 	
 	// 3.
 	apply_boundary_conditions();

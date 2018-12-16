@@ -191,7 +191,7 @@ void MeshExporter::export_mesh() {
 	filename << ".obj";
 
 	// Perform calculation of mesh
-	MeshExporter::level_set_open();
+	MeshExporter::level_set_easy();
 	igl::copyleft::marching_cubes(plevel_set_, points_, nx, ny, nz, vertices_, faces_);
 
 	// Export mesh to OBJ file

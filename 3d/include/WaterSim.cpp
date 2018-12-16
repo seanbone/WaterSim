@@ -217,23 +217,17 @@ void WaterSim::updateRenderGeometry() {
 
 
 bool WaterSim::advance() {
+
+    std::cout << "\n\nBegin FLIP step #" << m_step << std::endl;
+
     // Perform a FLIP step
     p_flip->step_FLIP(m_dt, m_step);
     
-//<<<<<<< HEAD
-//    if(m_step % 10 == 0){
-//		exp->MeshExporter::level_set();
-//		igl::copyleft::marching_cubes(exp->plevel_set_, exp->points_, m_res_x, m_res_y, m_res_z, exp->vertices_, exp->faces_);
-//		igl::writeOBJ("mesh.obj", exp->vertices_, exp->faces_);
-//	}
-//=======
-    //if (m_step % 10 == 0){
-//      exp->MeshExporter::level_set_easy();
-//      igl::copyleft::marching_cubes(exp->plevel_set_, exp->points_, m_res_x, m_res_y, m_res_z, exp->vertices_, exp->faces_);
-//      igl::writeOBJ("mesh.obj", exp->vertices_, exp->faces_);
-    //}
-    if (m_export_meshes)
+
+    if (m_export_meshes) {
+        std::cout << "\nExport mesh..." << std::endl;
         exp->export_mesh();
+    }
 
     // advance step
     m_step++;

@@ -24,7 +24,7 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	 * 6. Update particle positions
 	 */
 
-	std::cout << "num particles: " << num_particles_ << std::endl;
+	std::cout << " * Particle-to-grid\n";
 	
 	// 1.
 	compute_velocity_field();
@@ -32,21 +32,31 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	// 1a.
 	MACGrid_->set_uvw_star();
 
+	std::cout << " * Apply external forces\n";
+	
 	// 2.
 	apply_forces(dt);
 	
-	if ( step >= 0 and step <= 20 ){
-		explode(dt, step, 5, 0, 5, 1, 300);
+	if ( step >= 0 and step <= 200 ){
+		explode(dt, step, 15, 0, 15, 2, 600);
 	}
 
+	std::cout << " * Apply boundary conditions\n";
+	
 	// 3.
 	apply_boundary_conditions();
 
+	std::cout << " * Calculate pressures\n";
+	
 	// 4.
 	do_pressures(dt);
 
+	std::cout << " * Particle to grid\n";
+	
 	// 5.
 	grid_to_particle();
+	
+	std::cout << " * Particle advection\n";
 	
 	// 6. subsample time interval to satisfy CFL condition
 	double dt_new = compute_timestep(dt);

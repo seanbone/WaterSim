@@ -58,13 +58,13 @@ private:
 	bool m_display_velocity_arrows = false;
 	int m_export_fps = 30;
 
-	double m_system_size_x = 10; // X dimension of system in m
-	double m_system_size_y = 10; // Y dimension of system in m
-	double m_system_size_z = 10; // Z dimension of system in m
+	double m_system_size_x = 100; // X dimension of system in m
+	double m_system_size_y = 100; // Y dimension of system in m
+	double m_system_size_z = 100; // Z dimension of system in m
 
-	int m_grid_res_x = 10; // Number of cells on X axis
-	int m_grid_res_y = 10; // Number of cells on Y axis
-	int m_grid_res_z = 10; // Number of cells on Z axis
+	int m_grid_res_x = 40; // Number of cells on X axis
+	int m_grid_res_y = 40; // Number of cells on Y axis
+	int m_grid_res_z = 40; // Number of cells on Z axis
 	// Whether to randomize particle positions
 	bool m_jitter_particles = false; 
 

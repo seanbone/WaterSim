@@ -134,7 +134,7 @@ class FLIP {
 	// Apply forward euler or RK2 to update particle positions
 	void advance_particles(const double dt, const unsigned step);
 	
-	void explode(const double dt, const unsigned long step, const int x, const int y, const int z, const double value);
+	void explode(const double dt, const unsigned long step, const int x, const int y, const int z, const double r, const double value);
 };
 
 #endif

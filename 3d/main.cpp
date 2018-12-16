@@ -50,9 +50,9 @@ private:
 	bool m_display_velocity_arrows = false;
 	int m_export_fps = 30;
 
-	double m_system_size_x = 100.0; // X dimension of system in m
-	double m_system_size_y = 50.0; // Y dimension of system in m
-	double m_system_size_z = 15.0; // Z dimension of system in m
+	double m_system_size_x = 10; // X dimension of system in m
+	double m_system_size_y = 10; // Y dimension of system in m
+	double m_system_size_z = 10; // Z dimension of system in m
 
 	int m_grid_res_x = 10; // Number of cells on X axis
 	int m_grid_res_y = 10; // Number of cells on Y axis

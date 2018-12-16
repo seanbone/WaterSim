@@ -23,6 +23,8 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	 * 5. Update particle velocities
 	 * 6. Update particle positions
 	 */
+
+	std::cout << "num particles: " << num_particles_ << std::endl;
 	
 	// 1.
 	compute_velocity_field();
@@ -33,9 +35,9 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	// 2.
 	apply_forces(dt);
 	
-	if ( step >= 5 and step <= 15 ){
-		explode(dt, step, 5, 0, 5, 300);
-	}
+	//if ( step >= 5 and step <= 15 ){
+	//	explode(dt, step, 25, 0, 25, 300);
+	//}
 
 	// 3.
 	apply_boundary_conditions();

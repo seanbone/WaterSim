@@ -41,7 +41,7 @@ class MeshExporter{
 			num_particles_ = 0;
 		}
 		
-		void level_set();
+		void level_set_open();
 		void level_set_easy();
 
 		void export_mesh();

@@ -6,26 +6,16 @@ MeshExporter::MeshExporter(Mac3d* Grid, Particle* particles, const int n)
 	int N = pMacGrid_->get_num_cells_x();
 	int M = pMacGrid_->get_num_cells_y();
 	int L = pMacGrid_->get_num_cells_z();
-	points_.resize((N)*(M)*(L), 3);
+	points_.resize((N+2)*(M+2)*(L+2), 3);
 	points_.setZero();
 	double dx = pMacGrid_->get_cell_sizex();
 	double dy = pMacGrid_->get_cell_sizey();
 	double dz = pMacGrid_->get_cell_sizez();
 	
-	//~ for(int k = 0; k < L + 2; ++k){
-		//~ for(int j = 0; j < M + 2; ++j){
-			//~ for(int i = 0; i < N + 2; ++i){
-				//~ int index = i + j*(N+2) + k*(N+2)*(M+2);
-				//~ Eigen::RowVector3d temp = Eigen::RowVector3d(i*dx, j*dy, k*dz);
-				//~ points_.row(index) = temp;
-			//~ }
-		//~ }
-	//~ }
-	
-	for(int k = 0; k < L; ++k){
-		for(int j = 0; j < M; ++j){
-			for(int i = 0; i < N; ++i){
-				int index = i + j*(N) + k*(N)*(M);
+	for(int k = -1; k < L+1; ++k){
+		for(int j = -1; j < M+1; ++j){
+			for(int i = -1; i < N+1; ++i){
+				int index = (i+1) + (j+1)*(N+2) + (k+1)*(N+2)*(M+2);
 				Eigen::RowVector3d temp = Eigen::RowVector3d(i*dx, j*dy, k*dz);
 				points_.row(index) = temp;
 			}
@@ -61,11 +51,11 @@ void MeshExporter::level_set_easy(){
 	}
 }
 
-void MeshExporter::level_set_open(){
+void MeshExporter::level_set(){
 	int N = pMacGrid_->get_num_cells_x();
 	int M = pMacGrid_->get_num_cells_y();
 	int L = pMacGrid_->get_num_cells_z();
-	plevel_set_.resize(N*M*L);
+	plevel_set_.resize((N+2)*(M+2)*(L+2));
 	plevel_set_.setZero();
 	std::fill(x_avrg_num.begin(), x_avrg_num.end(), Eigen::Vector3d::Zero());
 	std::fill(r_avrg_num, r_avrg_num+N*M*L, 0);
@@ -75,48 +65,6 @@ void MeshExporter::level_set_open(){
 	double dz = pMacGrid_->get_cell_sizez();
 	double h = dx;
 	
-	
-	//~ //VERSIONE LENTA, SUPERFICIE APERTA CHE "FUNZIONA"
-	//~ for(int k = 0; k < L; ++k){
-		//~ for(int j = 0; j < M; ++j){
-			//~ for(int i = 0; i < N; ++i){
-				//~ Eigen::Vector3d x_avrg_num = Eigen::Vector3d::Zero();
-				//~ double x_avrg_den = 0;
-				//~ double r_avrg_num = 0;
-				//~ double r_avrg_den = 0;
-				//~ int index = i + j*N + k*N*M;
-				//~ Eigen::Vector3d cell_pos = Eigen::Vector3d(i*dx, j*dy, k*dz);
-				//~ for(unsigned it_particle = 0; it_particle < num_particles_; ++it_particle){
-					//~ Eigen::Vector3d particle_pos = (pparticles_+it_particle)->get_position();
-					//~ double temp = (cell_pos - particle_pos).norm()/h;
-					//~ if (temp < 1){
-						//~ double W_surf = (1-temp*temp)*(1-temp*temp)*(1-temp*temp);
-						//~ //double W_surf = (1-temp)*(1-temp)*(1-temp);
-						//~ //double W_surf = 1-temp*temp*temp;
-						//~ x_avrg_num += W_surf*particle_pos;
-						//~ x_avrg_den += W_surf;
-						//~ r_avrg_num += W_surf*(0.6*dx);
-						//~ r_avrg_den += W_surf;
-					//~ }	
-				//~ }
-				//~ Eigen::Vector3d x_avrg = x_avrg_num/x_avrg_den;
-				//~ double r_avrg = r_avrg_num/r_avrg_den;
-				//~ //*(plevel_set_ + index) = (cell_pos - x_avrg).norm() - r_avrg; 
-				//~ if(x_avrg_den != 0)
-					//~ plevel_set_[index] = ((cell_pos - x_avrg).norm() - r_avrg);
-				//~ else{
-					//~ if(pMacGrid_->is_fluid(i,j,k))
-						//~ plevel_set_[index] = -100;
-					//~ else
-						//~ plevel_set_[index] = 100;
-				//~ }
-				//~ if(k == 9)
-					//~ std::cout << i << " " << j << " " << k << "    " << plevel_set_[index] << std::endl;
-			//~ }
-		//~ }
-	//~ }
-	
-	//VERSIONE VELOCE, SUPERFICIE APERTA: NON FUNZIONA
 	for(unsigned it_particle = 0; it_particle < num_particles_; ++it_particle){
 		Eigen::Vector3d particle_pos = (pparticles_+it_particle)->get_position();
 		Eigen::Vector3d init_cell = pMacGrid_->index_from_coord(particle_pos[0], particle_pos[1], particle_pos[2]);
@@ -143,55 +91,33 @@ void MeshExporter::level_set_open(){
 		}
 	}
 	
-	for(int k = 0; k < L; ++k){
-		for(int j = 0; j < M; ++j){
-			for(int i = 0; i < N; ++i){
-				int index = i + j*N + k*N*M;
-				double temp = *(den+index);
-				Eigen::Vector3d x_avrg = x_avrg_num[index]/temp;
-				//~ double r_avrg = *(r_avrg_num+index)/temp;
-				double r_avrg = 0.6*dx;
-				Eigen::Vector3d cell_pos = Eigen::Vector3d(i*dx, j*dy, k*dz);
-				if(*(den+index) != 0)
-					plevel_set_[index] = (cell_pos - x_avrg).norm() - r_avrg;
+	for(int k = -1; k < L+1; ++k){
+		for(int j = -1; j < M+1; ++j){
+			for(int i = -1; i < N+1; ++i){
+				int index = (i+1) + (j+1)*(N+2) + (k+1)*(N+2)*(M+2);
+				if(i == -1 || i == N || j == -1 || j == M || k == -1 || k == L){
+					plevel_set_[index] = 0.5*dx;
+				}
 				else{
-					if(pMacGrid_->is_fluid(i,j,k))
-						plevel_set_[index] = -1;
-					else
-						plevel_set_[index] = 1;
+					int index2 = i + j*N + k*N*M;
+					double temp = *(den+index2);
+					Eigen::Vector3d x_avrg = x_avrg_num[index2]/temp;
+					//~ double r_avrg = *(r_avrg_num+index)/temp;
+					double r_avrg = 0.6*dx;
+					Eigen::Vector3d cell_pos = Eigen::Vector3d(i*dx, j*dy, k*dz);
+					if(*(den+index2) != 0)
+						plevel_set_[index] = (cell_pos - x_avrg).norm() - r_avrg;
+					else{
+						if(pMacGrid_->is_fluid(i,j,k))
+							plevel_set_[index] = -1;
+						else
+							plevel_set_[index] = 1;
+					}
+					
 				}
 			}
 		}
 	}
-	
-	//VERSIONE CON LA SUPERFICIE CHIUSA: NON FUNZIONA
-	//~ for(int k = 0; k < L+2; ++k){
-		//~ for(int j = 0; j < M+2; ++j){
-			//~ for(int i = 0; i < N+2; ++i){
-				//~ if(i == 0 || i == N+1 || j == 0 || j == M+1 || k == 0 || k == L+1){
-					//~ int index = i + j*(N+2) + k*(N+2)*(M+2);
-					//~ plevel_set_[index] = 100;
-				//~ }
-				//~ else{
-					//~ int index1 = (i-1) + (j-1)*N + (k-1)*N*M;
-					//~ int index2 = i + j*(N+2) + k*(N+2)*(M+2);
-					
-					//~ double temp = *(den+index1);
-					//~ Eigen::Vector3d x_avrg = x_avrg_num[index1]/temp;
-					//~ double r_avrg = *(r_avrg_num+index1)/temp;
-					//~ Eigen::Vector3d cell_pos = Eigen::Vector3d((i-1)*dx, (j-1)*dy, (k-1)*dz);
-					//~ if(*(den+index1) != 0)
-						//~ plevel_set_[index2] = 2*((cell_pos - x_avrg).norm() - r_avrg);
-					//~ else{
-						//~ if(pMacGrid_->is_fluid(i-1,j-1,k-1))
-							//~ plevel_set_[index2] = -100;
-						//~ else
-							//~ plevel_set_[index2] = 100;
-					//~ }
-				//~ }
-			//~ }
-		//~ }
-	//~ }
 }
 
 
@@ -209,8 +135,8 @@ void MeshExporter::export_mesh() {
 	filename << ".obj";
 
 	// Perform calculation of mesh
-	level_set_open();
-	igl::copyleft::marching_cubes(plevel_set_, points_, nx, ny, nz, vertices_, faces_);
+	level_set();
+	igl::copyleft::marching_cubes(plevel_set_, points_, nx+2, ny+2, nz+2, vertices_, faces_);
 
 	// Export mesh to OBJ file
 	igl::writeOBJ(filename.str(), vertices_, faces_);

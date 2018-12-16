@@ -43,7 +43,7 @@ class MeshExporter{
 			delete[] den;
 		}
 		
-		void level_set_open();
+		void level_set();
 		void level_set_easy();
 
 		void export_mesh();

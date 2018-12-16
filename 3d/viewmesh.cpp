@@ -13,19 +13,15 @@ Eigen::MatrixXi F;
 int main(int argc, char *argv[])
 
 {
-
       // Load a mesh in OBJ format
       
-      igl::readOBJ("../out_meshes/mesh_000000.obj", V, F);
+      igl::readOBJ("../out_meshes/mesh_000030.obj", V, F);
       
+      // Plot the mesh
       
+      igl::opengl::glfw::Viewer viewer;
       
-        // Plot the mesh
+      viewer.data().set_mesh(V, F);
       
-        igl::opengl::glfw::Viewer viewer;
-      
-        viewer.data().set_mesh(V, F);
-      
-        viewer.launch();
-      
+      viewer.launch(); 
 }

@@ -39,6 +39,8 @@ class MeshExporter{
 		
 		~MeshExporter(){
 			num_particles_ = 0;
+			delete[] r_avrg_num;
+			delete[] den;
 		}
 		
 		void level_set_open();

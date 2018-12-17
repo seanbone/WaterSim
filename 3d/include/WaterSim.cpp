@@ -218,16 +218,41 @@ void WaterSim::updateRenderGeometry() {
 
 bool WaterSim::advance() {
 
+    if (m_step == 0)
+        std::cout << "Starting simluation with " << m_num_particles << " particles.\n\n";
+
     std::cout << "\n\nBegin FLIP step #" << m_step << std::endl;
+
+    using timer_t = std::chrono::high_resolution_clock;
+    using tpoint_t = timer_t::time_point;
+    using namespace std::chrono;
+    using ticks_t = std::chrono::microseconds;
+    double timer_scale = 1e6;
+    auto timer_unit = "s";
+    
+    tpoint_t t1 = timer_t::now();
 
     // Perform a FLIP step
     p_flip->step_FLIP(m_dt, m_step);
     
 
+    tpoint_t t2 = timer_t::now();
+    auto flip_duration = duration_cast<ticks_t>( t2 - t1 ).count() / timer_scale;
+    std::cout << "\nFLIP duration: " << flip_duration << timer_unit <<  std::endl;
+
+
     if (m_export_meshes) {
         std::cout << "\nExport mesh..." << std::endl;
         exp->export_mesh();
+        tpoint_t t3 = timer_t::now();
+        auto export_duration = duration_cast<ticks_t>( t3 - t2 ).count() / timer_scale;
+        std::cout << "\nExport duration: " << export_duration << timer_unit <<  std::endl;
     }
+
+
+    tpoint_t tf = timer_t::now();
+    auto tot_duration = duration_cast<ticks_t>( tf - t1 ).count() / timer_scale;
+    std::cout << "\nTotal duration: " << tot_duration << timer_unit <<  std::endl;
 
     // advance step
     m_step++;

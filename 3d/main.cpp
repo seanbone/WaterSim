@@ -53,7 +53,7 @@ std::vector<bool> select_fluid_cells(size_t nx, size_t ny, size_t nz) {
 class WaterGui : public Gui {
 private:
 	// Simulation parameters
-	bool m_export_meshes = false;
+	bool m_export_meshes = true;
 	bool m_show_pressures = false;
 	bool m_display_velocity_arrows = false;
 	int m_export_fps = 30;
@@ -66,7 +66,7 @@ private:
 	int m_grid_res_y = 40; // Number of cells on Y axis
 	int m_grid_res_z = 40; // Number of cells on Z axis
 	// Whether to randomize particle positions
-	bool m_jitter_particles = false; 
+	bool m_jitter_particles = true; 
 
 	double m_dt = 0.025;
 

@@ -24,7 +24,7 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	 * 6. Update particle positions
 	 */
 
-	std::cout << " * Particle-to-grid\n";
+	std::cout << " * Particle to grid\n";
 	
 	// 1.
 	compute_velocity_field();
@@ -51,7 +51,7 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	// 4.
 	do_pressures(dt);
 
-	std::cout << " * Particle to grid\n";
+	std::cout << " * Grid to particle\n";
 	
 	// 5.
 	grid_to_particle();

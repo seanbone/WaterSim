@@ -8,6 +8,7 @@
 #include <sys/stat.h> // mkdir
 #include <igl/opengl/glfw/Viewer.h>
 #include <igl/png/writePNG.h>
+#include <chrono>
 
 /**
  * This class manages the water simulation.

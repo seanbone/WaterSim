@@ -8,6 +8,7 @@
 #include <cmath>
 #include <algorithm> // std::copy
 #include <Eigen/IterativeLinearSolvers> // solve sparse systems
+#include <chrono>
 
 class FLIP {
 	public:

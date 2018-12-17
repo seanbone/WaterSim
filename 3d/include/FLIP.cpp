@@ -7,9 +7,7 @@ FLIP::FLIP(Particle* particles, const unsigned num_particles, Mac3d* MACGrid,
 	
 }
 
-/**
- * Advance FLIP simulation by one frame
- */
+/*** PERFORM ONE STEP ***/
 void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	/** One FLIP step:
 	 * 1. Compute velocity field (particle-to-grid transfer)
@@ -20,8 +18,9 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	 * 2. Apply external forces (fwd euler on field)
 	 * 3. Enforce boundary conditions for grid & solid boundaries
 	 * 4. Compute & apply pressure gradients
-	 * 5. Update particle velocities
-	 * 6. Update particle positions
+	 * 5. Update particle velocities from grid-velocities
+	 * 6. Subsample time interval to satisfy CFL condition
+	 * 7. Update particle positions
 	 */
 
 	std::cout << " * Particle-to-grid\n";
@@ -37,7 +36,7 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	// 2.
 	apply_forces(dt);
 	
-	if ( step >= 0 and step <= 200 ){
+	if ( step <= 200 ){
 		explode(dt, step, 15, 0, 15, 2, 800);
 	}
 
@@ -58,7 +57,7 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	
 	std::cout << " * Particle advection\n";
 	
-	// 6. subsample time interval to satisfy CFL condition
+	// 6.
 	double dt_new = compute_timestep(dt);
 	double num_substeps = std::ceil(dt/dt_new);
 	for( int s = 0; s < num_substeps ; ++s ){
@@ -69,9 +68,14 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 }
 
 double FLIP::compute_timestep( const double dt ){
+	
+	// New timestep that satisfies CFL condition
 	double dt_new;
 	
+	// Particle velocity
 	Eigen::Vector3d vel;
+	
+	// Get the maximal particle velocity components
 	double u_max = 0;
 	double v_max = 0;
 	double w_max = 0;
@@ -88,6 +92,8 @@ double FLIP::compute_timestep( const double dt ){
 		}
 	}
 	
+	// Check if the fastest particles travel a distance larger than the 
+	// length of an edge of a cell
 	if ( u_max == 0 ){
 		dt_new = dt;
 	} else {
@@ -126,11 +132,6 @@ double FLIP::compute_timestep( const double dt ){
 
 /*** COMPUTE VELOCITY FIELD ***/
 void FLIP::compute_velocity_field() {
-	// TODO: 1. Compute the velocity field (velocities on grid)
-	//  1a. particle-to-grid transfer
-	//  1b. classify nonsolid cells as fluid or air
-	//  1c. extrapolate velocity field to air cells
-	//    -> see SIGGRAPH §6.3
 	
 /**********************************
  * Particle-to-Grid Transfer

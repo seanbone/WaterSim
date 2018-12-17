@@ -16,24 +16,6 @@
 std::vector<bool> select_fluid_cells(size_t nx, size_t ny, size_t nz) {
 	std::vector<bool> is_fluid(nx*ny*nz, false);
 
-	//~ std::fill(is_fluid.begin(), is_fluid.end(), true);
-	
-	//~ for (unsigned k = nz/3; k < nz-nz/3; k++) {
-		//~ for (unsigned j = ny/3; j < ny-ny/3; j++) {
-			//~ for (unsigned i = nx/3; i < nx-nx/3; i++) {
-				//~ is_fluid[i + j*nx + nx*ny*k] = true;
-			//~ }
-		//~ }
-	//~ }
-	
-	//for (unsigned k = nz/4; k < nz-nz/4; k++) {
-	//	for (unsigned j = ny/4; j < ny-ny/4; j++) {
-	//		for (unsigned i = nx/4; i < nx-nx/4; i++) {
-	//			is_fluid[i + j*nx + nx*ny*k] = true;
-	//		}
-	//	}
-	//}
-
 	for (unsigned k = 0; k < nz; k++) {
 		for (unsigned j = 0; j < ny/4; j++) {
 			for (unsigned i = 0; i < nx; i++) {

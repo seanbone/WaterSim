@@ -871,7 +871,7 @@ void FLIP::grid_to_particle(){
 }
 
 
-void FLIP::advance_particles(const double dt, const unsigned step) {
+void FLIP::advance_particles(const double dt, const unsigned long step) {
 	//Se una particles esce dal sistema o entra in un solido, rispingerla dentro.
 	// TODO: update particle positions 
 	//  - Use RK2 interpolator	

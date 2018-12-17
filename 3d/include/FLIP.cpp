@@ -51,7 +51,7 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	apply_forces(dt);
 	
 	if ( step >= 0 and step <= 200 ){
-		explode(dt, step, 15, 0, 15, 2, 800);
+		explode(dt, step, 100, 0, 100, 2, 800);
 	}
 
 	tpoint_t t3 = timer_t::now();

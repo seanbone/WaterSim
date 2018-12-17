@@ -218,6 +218,9 @@ void WaterSim::updateRenderGeometry() {
 
 bool WaterSim::advance() {
 
+    if (m_step == 0)
+        std::cout << "Starting simluation with " << m_num_particles << " particles.\n\n";
+
     std::cout << "\n\nBegin FLIP step #" << m_step << std::endl;
 
     using timer_t = std::chrono::high_resolution_clock;

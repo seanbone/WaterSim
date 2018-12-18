@@ -80,6 +80,10 @@ The details of the process can be modified in `3d/include/MeshExporter.h`:
 
 **Note on portability**: `MeshExporter::MeshExporter` uses the function [`mkdir`](http://pubs.opengroup.org/onlinepubs/009695399/functions/mkdir.html) to ensure the target directory exists. Should this cause issues on non-POSIX systems, the call can be safely removed from `MeshExporter.cpp` as long as the folder exists.
 
+## Viewing meshes
+
+The exported meshes can of course be imported to other 3D software (Blender, Maya), or it can be previewed with the executable `ViewMesh`. This will open a single file with a simple libigl window. The source for this file is `3d/viewmesh.cpp`.
+
 
 # 2D simulation
 

@@ -17,7 +17,7 @@ std::vector<bool> select_fluid_cells(size_t nx, size_t ny, size_t nz) {
 	std::vector<bool> is_fluid(nx*ny*nz, false);
 
 	for (unsigned k = 0; k < nz; k++) {
-		for (unsigned j = 0; j < 20; j++) {
+		for (unsigned j = 0; j < 10; j++) {
 			for (unsigned i = 0; i < nx; i++) {
 				is_fluid[i + j*nx + nx*ny*k] = true;
 			}
@@ -44,9 +44,9 @@ private:
 	double m_system_size_y = 120; // Y dimension of system in m
 	double m_system_size_z = 120; // Z dimension of system in m
 
-	int m_grid_res_x = 120; // Number of cells on X axis
-	int m_grid_res_y = 120; // Number of cells on Y axis
-	int m_grid_res_z = 120; // Number of cells on Z axis
+	int m_grid_res_x = 40; // Number of cells on X axis
+	int m_grid_res_y = 40; // Number of cells on Y axis
+	int m_grid_res_z = 40; // Number of cells on Z axis
 	// Whether to randomize particle positions
 	bool m_jitter_particles = true; 
 

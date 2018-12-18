@@ -7,6 +7,7 @@ FLIP::FLIP(Particle* particles, const unsigned num_particles, Mac3d* MACGrid,
 	
 }
 
+
 /*** PERFORM ONE STEP ***/
 void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	/** One FLIP step:
@@ -92,7 +93,7 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	for( int s = 0; s < num_substeps ; ++s ){
 		
 		// 7.
-		advance_particles(dt_new, step);
+		advance_particles(dt/num_substeps, step);
 	}
 
 	tpoint_t t7 = timer_t::now();
@@ -100,75 +101,9 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	std::cout << adv_duration << timer_unit <<  std::endl;
 }
 
-double FLIP::compute_timestep( const double dt ){
-	
-	// New timestep that satisfies CFL condition
-	double dt_new;
-	
-	// Particle velocity
-	Eigen::Vector3d vel;
-	
-	// Get the maximal particle velocity components
-	double u_max = 0;
-	double v_max = 0;
-	double w_max = 0;
-	for( unsigned int n = 0; n < num_particles_; ++n ){
-		vel = (particles_ + n)->get_velocity();
-		if ( std::abs(vel(0)) > std::abs(u_max) ){
-			u_max = vel(0);
-		}
-		if ( std::abs(vel(1)) > std::abs(v_max) ){
-			v_max = vel(1);
-		}
-		if ( std::abs(vel(2)) > std::abs(w_max) ){
-			w_max = vel(2);
-		}
-	}
-	
-	// Check if the fastest particles travel a distance larger than the 
-	// length of an edge of a cell
-	if ( u_max == 0 ){
-		dt_new = dt;
-	} else {
-		dt_new = std::abs(MACGrid_->get_cell_sizex()/u_max);
-		if ( dt_new > dt){
-			dt_new = dt;
-		}
-	}
-	
-	if ( v_max == 0 ){
-		dt_new = dt;
-	} else {
-		double tmp = std::abs(MACGrid_->get_cell_sizey()/v_max);
-		if ( tmp < dt_new){
-			dt_new = tmp;
-		}
-		if ( dt_new > dt ){
-			dt_new = dt;
-		}
-	}
-	
-	if ( w_max == 0 ){
-		dt_new = dt;
-	} else {
-		double tmp = std::abs(MACGrid_->get_cell_sizez()/w_max);
-		if ( tmp < dt_new){
-			dt_new = tmp;
-		}
-		if ( dt_new > dt ){
-			dt_new = dt;
-		}
-	}
-	
-	return dt_new;
-}
 
 /*** COMPUTE VELOCITY FIELD ***/
 void FLIP::compute_velocity_field() {
-	
-/**********************************
- * Particle-to-Grid Transfer
-***********************************/
 
 	// Set all grid velocities to zero
 	MACGrid_->set_velocities_to_zero();
@@ -186,7 +121,8 @@ void FLIP::compute_velocity_field() {
 	double cell_sizey = MACGrid_->get_cell_sizey();
 	double cell_sizez = MACGrid_->get_cell_sizez();
 	
-	// Threshold h and h scaled so that it is equal to the distance expressed in number of cells
+	// Threshold h and h_scaled so that it is equal to the distance 
+	// expressed in number of cells
 	double h = 2*cell_sizex;
 	int h_scaledx = std::ceil(h/cell_sizex);
 	int h_scaledy = std::ceil(h/cell_sizey);
@@ -206,13 +142,17 @@ void FLIP::compute_velocity_field() {
 	// Reset all fluid flags
 	MACGrid_->reset_fluid();
 	
-	// Iterate over all particles and add weighted particles velocities
-	// to grid points within a threshold h (in this case equal to the 
-	// length of an edge of a cell)
+	// Iterate over all particles and add weighted particle velocities
+	// to grid points within a threshold h (in this case equal to double
+	// the length of an edge of a cell)
 	for( unsigned int n = 0; n < num_particles_; ++n ){
+		
+		// Get the position and velocity vector of the current particle
 		pos = (particles_ + n)->get_position();
 		vel = (particles_ + n)->get_velocity();
 
+		// Get the indices corresponding to the cell containing the 
+		// current particle
 		Eigen::Vector3d tmp = MACGrid_->index_from_coord(pos(0), pos(1), pos(2));
 		cell_coord << tmp(0), tmp(1), tmp(2);
 		
@@ -221,19 +161,24 @@ void FLIP::compute_velocity_field() {
 			MACGrid_->set_fluid(cell_coord(0), cell_coord(1), cell_coord(2));
 		}
 		
-		// Coordinates of the points on the grid edges
+		// Coordinates of the points on the grid faces (in meters)
 		Eigen::Vector3d grid_coord;
 		grid_coord << 0, 0, 0;
+		
+		// Get total number of cells on each axis
 		int nx = MACGrid_->get_num_cells_x();
 		int ny = MACGrid_->get_num_cells_y();
 		int nz = MACGrid_->get_num_cells_z();
+		
+		// For each particle iterate only over the grid-velocities in a
+		// h_scaled neighborhood
 		for( int k = cell_coord(2) - h_scaledz; k <= cell_coord(2) + h_scaledz + 1; ++k ){	
 			for( int j = cell_coord(1) - h_scaledy; j <= cell_coord(1) + h_scaledy + 1; ++j ){
 				for( int i = cell_coord(0) - h_scaledx; i <= cell_coord(0) + h_scaledx + 1; ++i ){
 					if ( ( i >= 0 and j >= 0 and k >= 0 ) ){
 						if ( ( i <= nx and j < ny and k < nz ) ){
 						
-							// Left edge
+							// Left Face
 							grid_coord(0) = (i - 0.5) * cell_sizex;
 							grid_coord(1) = j * cell_sizey;
 							grid_coord(2) = k * cell_sizez;
@@ -242,7 +187,7 @@ void FLIP::compute_velocity_field() {
 						
 						if ( ( i < nx and j <= ny and k < nz ) ){
 							
-							// Lower edge
+							// Lower Face
 							grid_coord(0) = i * cell_sizex;
 							grid_coord(1) = (j - 0.5) * cell_sizey;
 							grid_coord(2) = k * cell_sizez;
@@ -251,7 +196,7 @@ void FLIP::compute_velocity_field() {
 						
 						if ( ( i < nx and j < ny and k <= nz ) ){
 							
-							// Farthest edge (the closer to the origin)
+							// Farthest Face (the closer to the origin)
 							grid_coord(0) = i * cell_sizex;
 							grid_coord(1) = j * cell_sizey;
 							grid_coord(2) = (k - 0.5) * cell_sizez;
@@ -273,10 +218,12 @@ void FLIP::compute_velocity_field() {
 	extrapolate_v( visited_v );
 	extrapolate_w( visited_w );
 	
+	// Clear the Heap
 	delete[] visited_u;
 	delete[] visited_v;
 	delete[] visited_w;
 }
+
 
 bool FLIP::check_threshold( const Eigen::Vector3d& particle_coord, 
 					  const Eigen::Vector3d& grid_coord, 
@@ -289,12 +236,16 @@ bool FLIP::check_threshold( const Eigen::Vector3d& particle_coord,
 	return false;
 }
 
+
 double FLIP::compute_weight( const Eigen::Vector3d& particle_coord, 
 							 const Eigen::Vector3d& grid_coord, 
 							 const double h )
 {
+	// Distance between the particle and the location on which the 
+	// gird-velocity is saved (the center of a face)
 	double r = (particle_coord - grid_coord).norm();
 	
+	// Compute h^9 (std::pow() is inefficient)
 	double h2 = h*h;
 	double h4 = h2 * h2;
 	double h9 = h4 * h4 * h;
@@ -307,7 +258,7 @@ double FLIP::compute_weight( const Eigen::Vector3d& particle_coord,
 	return coeff * diff3;
 }
 
-// Accumulate velocities and weights for u					
+					
 void FLIP::accumulate_u( const Eigen::Vector3d& pos,
 						 const Eigen::Vector3d& vel,
 						 const Eigen::Vector3d& grid_coord,
@@ -316,6 +267,9 @@ void FLIP::accumulate_u( const Eigen::Vector3d& pos,
 						 const int j,
 						 const int k )
 {	
+	// If the current particle is within the given threshold h, update 
+	// the horizontal grid-velocity at grid_coord with the weighted 
+	// particle-velocity
 	if ( check_threshold(pos, grid_coord, h) ){
 		double u_prev = MACGrid_->get_u(i, j, k);
 		double W_u = compute_weight(pos, grid_coord, h);
@@ -331,7 +285,7 @@ void FLIP::accumulate_u( const Eigen::Vector3d& pos,
 	}
 }
 
-// Accumulate velocities and weights for v
+
 void FLIP::accumulate_v( const Eigen::Vector3d& pos,
 						 const Eigen::Vector3d& vel,
 						 const Eigen::Vector3d& grid_coord,
@@ -340,6 +294,9 @@ void FLIP::accumulate_v( const Eigen::Vector3d& pos,
 						 const int j,
 						 const int k )
 {
+	// If the current particle is within the given threshold h, update 
+	// the vertical grid-velocity at grid_coord with the weighted 
+	// particle-velocity
 	if ( check_threshold(pos, grid_coord, h) ){
 		double v_prev = MACGrid_->get_v(i, j, k);
 		double W_v = compute_weight(pos, grid_coord, h);
@@ -355,7 +312,7 @@ void FLIP::accumulate_v( const Eigen::Vector3d& pos,
 	}
 }
 
-// Accumulate velocities and weights for w
+
 void FLIP::accumulate_w( const Eigen::Vector3d& pos,
 						 const Eigen::Vector3d& vel,
 						 const Eigen::Vector3d& grid_coord,
@@ -364,6 +321,9 @@ void FLIP::accumulate_w( const Eigen::Vector3d& pos,
 						 const int j,
 						 const int k )
 {
+	// If the current particle is within the given threshold h, update 
+	// the outgoing grid-velocity at grid_coord with the weighted 
+	// particle-velocity
 	if ( check_threshold(pos, grid_coord, h) ){
 		double w_prev = MACGrid_->get_w(i, j, k);
 		double W_w = compute_weight(pos, grid_coord, h);
@@ -379,14 +339,24 @@ void FLIP::accumulate_w( const Eigen::Vector3d& pos,
 	}
 }
 
+
 void FLIP::normalize_accumulated_u( bool* const visited_u ){
+	
+	// Get total number of cells on each axis
 	unsigned N = MACGrid_->get_num_cells_x();
 	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned L = MACGrid_->get_num_cells_z();
+	
+	// Iterate over all horizontal grid-velocities and divide for the 
+	// corresponding weight (if non-zero). Also set the flags of 
+	// visited_u to 1 if the weight is non-zero (-> visited)
 	for( unsigned k = 0; k < L; ++k ){
 		for( unsigned j = 0; j < M; ++j ){
 			for( unsigned i = 0; i < N+1; ++i ){
+				
+				// Get weight of current grid-velocity
 				double W_u = MACGrid_->get_weights_u(i, j, k);
+				
 				if ( W_u != 0 ){
 					double u_prev = MACGrid_->get_u(i, j, k);
 					double u_curr = u_prev/W_u;
@@ -398,14 +368,24 @@ void FLIP::normalize_accumulated_u( bool* const visited_u ){
 	}	
 }
 
+
 void FLIP::normalize_accumulated_v( bool* const visited_v ){
+	
+	// Get total number of cells on each axis
 	unsigned N = MACGrid_->get_num_cells_x();
 	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned L = MACGrid_->get_num_cells_z();
+	
+	// Iterate over all vertical grid-velocities and divide for the 
+	// corresponding weight (if non-zero). Also set the flags of 
+	// visited_v to 1 if the weight is non-zero (-> visited)
 	for( unsigned k = 0; k < L; ++k ){	
 		for( unsigned j = 0; j < M+1; ++j ){
 			for( unsigned i = 0; i < N; ++i ){
+				
+				// Get weight of current grid-velocity
 				double W_v = MACGrid_->get_weights_v(i, j, k);
+				
 				if ( W_v != 0 ){
 					double v_prev = MACGrid_->get_v(i, j, k);
 					double v_curr = v_prev/W_v;
@@ -417,14 +397,24 @@ void FLIP::normalize_accumulated_v( bool* const visited_v ){
 	}
 }
 
+
 void FLIP::normalize_accumulated_w( bool* const visited_w ){
+	
+	// Get total number of cells on each axis
 	unsigned N = MACGrid_->get_num_cells_x();
 	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned L = MACGrid_->get_num_cells_z();
+	
+	// Iterate over all outgoing grid-velocities and divide for the 
+	// corresponding weight (if non-zero). Also set the flags of 
+	// visited_w to 1 if the weight is non-zero (-> visited)
 	for( unsigned k = 0; k < L+1; ++k ){
 		for( unsigned j = 0; j < M; ++j ){
 			for( unsigned i = 0; i < N; ++i ){
+				
+				// Get weight of current grid-velocity
 				double W_w = MACGrid_->get_weights_w(i, j, k);
+				
 				if ( W_w != 0 ){
 					double w_prev = MACGrid_->get_w(i, j, k);
 					double w_curr = w_prev/W_w;
@@ -436,42 +426,58 @@ void FLIP::normalize_accumulated_w( bool* const visited_w ){
 	}
 }
 
+
 void FLIP::extrapolate_u( const bool* const visited_u ){
-	// Do the cases for upper and right bound
+	
+	// Get total number of cells on each axis
 	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned N = MACGrid_->get_num_cells_x();
 	unsigned L = MACGrid_->get_num_cells_z();
+	
+	// Count the times a specific grid-velocity is accessed to average 
+	// the neighboring velocities
 	unsigned* counter = new unsigned[M*L*(N+1)];
 	std::fill(counter, counter + M*L*(N+1), 0);
+	
+	// Iterate over all horizontal grid-velocities and extrapolate into 
+	// the air cells (not visited) the average velocities of the 
+	// neighboring fluid/visited cells
 	for( unsigned k = 0; k < L; ++k ){	
 		for( unsigned j = 0; j < M; ++j ){
 			for( unsigned i = 0; i < N+1; ++i ){
+				
 				if ( *(visited_u + (N+1)*j + i + (N+1)*M*k) ){
+					
 					if ( i != 0 and !(*(visited_u + (N+1)*j + (i-1) + (N+1)*M*k)) ){
 						double tmp = MACGrid_->get_u(i-1, j, k) * *(counter + (N+1)*j + (i-1) + (N+1)*M*k);
 						*(counter + (N+1)*j + (i-1) + (N+1)*M*k) += 1;
 						MACGrid_->set_u(i-1, j, k, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*j + (i-1) + (N+1)*M*k)));
 					}
+					
 					if ( j != 0 and !(*(visited_u + (N+1)*(j-1) + i + (N+1)*M*k)) ){
 						double tmp = MACGrid_->get_u(i, j-1, k) * *(counter + (N+1)*(j-1) + i + (N+1)*M*k);
 						*(counter + (N+1)*(j-1) + i + (N+1)*M*k) += 1;
 						MACGrid_->set_u(i, j-1, k, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*(j-1) + i + (N+1)*M*k)));
 					}
+					
 					if ( k != 0 and !(*(visited_u + (N+1)*j + i + (N+1)*M*(k-1))) ){
 						double tmp = MACGrid_->get_u(i, j, k-1) * *(counter + (N+1)*j + i + (N+1)*M*(k-1));
 						*(counter + (N+1)*j + i + (N+1)*M*(k-1)) += 1;
 						MACGrid_->set_u(i, j, k-1, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*j + i + (N+1)*M*(k-1))));
 					}
+					
 					if ( i != N and !(*(visited_u + (N+1)*j + (i+1) + (N+1)*M*k)) ){
 						double tmp = MACGrid_->get_u(i+1, j, k) * *(counter + (N+1)*j + (i+1) + (N+1)*M*k);
 						*(counter + (N+1)*j + (i+1) + (N+1)*M*k) += 1;
 						MACGrid_->set_u(i+1, j, k, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*j + (i+1) + (N+1)*M*k)));
 					}
+					
 					if ( j != M-1 and !(*(visited_u + (N+1)*(j+1) + i + (N+1)*M*k)) ){
 						double tmp = MACGrid_->get_u(i, j+1, k) * *(counter + (N+1)*(j+1) + i + (N+1)*M*k);
 						*(counter + (N+1)*(j+1) + i + (N+1)*M*k) += 1;
 						MACGrid_->set_u(i, j+1, k, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*(j+1) + i + (N+1)*M*k)));
 					}
+					
 					if ( k != L-1 and !(*(visited_u + (N+1)*j + i + (N+1)*M*(k+1))) ){
 						double tmp = MACGrid_->get_u(i, j, k+1) * *(counter + (N+1)*j + i + (N+1)*M*(k+1));
 						*(counter + (N+1)*j + i + (N+1)*M*(k+1)) += 1;
@@ -486,12 +492,17 @@ void FLIP::extrapolate_u( const bool* const visited_u ){
 }
 
 void FLIP::extrapolate_v( const bool* const visited_v ){
-	// Do the cases for upper and right bound
+	
+	// Get total number of cells on each axis
 	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned N = MACGrid_->get_num_cells_x();
 	unsigned L = MACGrid_->get_num_cells_z();
+	
+	
 	unsigned* counter = new unsigned[N*L*(M+1)];
 	std::fill(counter, counter + N*L*(M+1), 0);
+	
+	
 	for( unsigned k = 0; k < L; ++k ){	
 		for( unsigned j = 0; j < M+1; ++j ){
 			for( unsigned i = 0; i < N; ++i ){
@@ -535,12 +546,17 @@ void FLIP::extrapolate_v( const bool* const visited_v ){
 }
 
 void FLIP::extrapolate_w( const bool* const visited_w ){
-	// Do the cases for upper and right bound
+	
+	// Get total number of cells on each axis
 	unsigned M = MACGrid_->get_num_cells_y();
 	unsigned N = MACGrid_->get_num_cells_x();
 	unsigned L = MACGrid_->get_num_cells_z();
+	
+	
 	unsigned* counter = new unsigned[N*M*(L+1)];
 	std::fill(counter, counter + N*M*(L+1), 0);
+	
+	
 	for( unsigned k = 0; k < L+1; ++k ){	
 		for( unsigned j = 0; j < M; ++j ){
 			for( unsigned i = 0; i < N; ++i ){
@@ -599,6 +615,51 @@ void FLIP::apply_forces(const double dt) {
 			for (unsigned i = 0; i < N; ++i){
 				g->set_v(i, j, k, g->get_v(i,j,k) - dt*gravity_mag_);
 			}
+		}
+	}
+}
+
+void FLIP::explode(const double dt, const unsigned long step, const int x, const int y, const int z, const double r, const double value){
+	// Apply external forces to simulate meteorite crash
+	const double force = value;
+	const double slope_x = 1;
+	const double slope_y = 1;
+	const double slope_z = 1;
+	const double sty = slope_y*step;
+	const double stx = slope_x*sty;
+	const double stz = slope_z*sty;
+	
+	// Coordinates of the bottom left point of the square containing the meteorite
+	const int nx = MACGrid_->get_num_cells_x();
+	const int ny = MACGrid_->get_num_cells_y();
+	const int nz = MACGrid_->get_num_cells_z();
+	const int x_center = x + slope_x*nx/2 - stx;
+	const int y_center = y + slope_y*ny/2 - sty;
+	const int z_center = z + slope_z*nz/2 - stz;
+	
+	const double radius = r;
+	
+	for( int k = 0; k < nz; ++k ){
+		for( int j = 0; j < ny; ++j ){
+			for( int i = 0; i < nx; ++i ){
+				if (std::abs(i-x_center) <= radius and std::abs(j-y_center) <= radius and std::abs(k-z_center) <= radius){
+					if (i-x_center == 0 or std::signbit(i-x_center)){
+						MACGrid_->set_u(i, j, k, MACGrid_->get_u(i, j, k) - dt*force*(2.+(i-x_center)/radius));
+					} else {
+						MACGrid_->set_u(i, j, k, MACGrid_->get_u(i, j, k) + dt*force*(2.-(i-x_center)/radius));
+					}
+					if (j-y_center == 0 or std::signbit(j-y_center)){
+						MACGrid_->set_v(i, j, k, MACGrid_->get_v(i, j, k) - dt*force*(2.+(j-y_center)/radius));
+					} else {
+						MACGrid_->set_v(i, j, k, MACGrid_->get_v(i, j, k) + dt*force*(2.-(j-y_center)/radius));
+					}
+					if (k-z_center == 0 or std::signbit(k-z_center)){
+						MACGrid_->set_w(i, j, k, MACGrid_->get_w(i, j, k) - dt*force*(2.+(k-z_center)/radius));
+					} else {
+						MACGrid_->set_w(i, j, k, MACGrid_->get_w(i, j, k) + dt*force*(2.-(k-z_center)/radius));
+					}
+				}
+			}	
 		}
 	}
 }
@@ -903,6 +964,68 @@ void FLIP::grid_to_particle(){
 	}
 }
 
+double FLIP::compute_timestep( const double dt ){
+	
+	// New timestep that satisfies CFL condition
+	double dt_new;
+	
+	// Particle velocity
+	Eigen::Vector3d vel;
+	
+	// Get the maximal particle velocity components
+	double u_max = 0;
+	double v_max = 0;
+	double w_max = 0;
+	for( unsigned int n = 0; n < num_particles_; ++n ){
+		vel = (particles_ + n)->get_velocity();
+		if ( std::abs(vel(0)) > std::abs(u_max) ){
+			u_max = vel(0);
+		}
+		if ( std::abs(vel(1)) > std::abs(v_max) ){
+			v_max = vel(1);
+		}
+		if ( std::abs(vel(2)) > std::abs(w_max) ){
+			w_max = vel(2);
+		}
+	}
+	
+	// Check if the fastest particles travel a distance larger than the 
+	// length of an edge of a cell
+	if ( u_max == 0 ){
+		dt_new = dt;
+	} else {
+		dt_new = std::abs(MACGrid_->get_cell_sizex()/u_max);
+		if ( dt_new > dt){
+			dt_new = dt;
+		}
+	}
+	
+	if ( v_max == 0 ){
+		dt_new = dt;
+	} else {
+		double tmp = std::abs(MACGrid_->get_cell_sizey()/v_max);
+		if ( tmp < dt_new){
+			dt_new = tmp;
+		}
+		if ( dt_new > dt ){
+			dt_new = dt;
+		}
+	}
+	
+	if ( w_max == 0 ){
+		dt_new = dt;
+	} else {
+		double tmp = std::abs(MACGrid_->get_cell_sizez()/w_max);
+		if ( tmp < dt_new){
+			dt_new = tmp;
+		}
+		if ( dt_new > dt ){
+			dt_new = dt;
+		}
+	}
+	
+	return dt_new;
+}
 
 void FLIP::advance_particles(const double dt, const unsigned long step) {
 	//Se una particles esce dal sistema o entra in un solido, rispingerla dentro.
@@ -989,179 +1112,4 @@ void FLIP::advance_particles(const double dt, const unsigned long step) {
 
 		(particles_ + n)->set_position(pos_next);
 	}
-}
-
-void FLIP::explode(const double dt, const unsigned long step, const int x, const int y, const int z, const double r, const double value){
-	// Apply external forces to simulate meteorite crash
-	const double force = value;
-	const double slope_x = 1;
-	const double slope_y = 1;
-	const double slope_z = 1;
-	const double sty = slope_y*step;
-	const double stx = slope_x*sty;
-	const double stz = slope_z*sty;
-	
-	// Coordinates of the bottom left point of the square containing the meteorite
-	const int nx = MACGrid_->get_num_cells_x();
-	const int ny = MACGrid_->get_num_cells_y();
-	const int nz = MACGrid_->get_num_cells_z();
-	const int x_center = x + slope_x*nx/2 - stx;
-	const int y_center = y + slope_y*ny/2 - sty;
-	const int z_center = z + slope_z*nz/2 - stz;
-	
-	const double radius = r;
-	
-	for( int k = 0; k < nz; ++k ){
-		for( int j = 0; j < ny; ++j ){
-			for( int i = 0; i < nx; ++i ){
-				if (std::abs(i-x_center) <= radius and std::abs(j-y_center) <= radius and std::abs(k-z_center) <= radius){
-					if (i-x_center == 0 or std::signbit(i-x_center)){
-						MACGrid_->set_u(i, j, k, MACGrid_->get_u(i, j, k) - dt*force*(2.+(i-x_center)/radius));
-					} else {
-						MACGrid_->set_u(i, j, k, MACGrid_->get_u(i, j, k) + dt*force*(2.-(i-x_center)/radius));
-					}
-					if (j-y_center == 0 or std::signbit(j-y_center)){
-						MACGrid_->set_v(i, j, k, MACGrid_->get_v(i, j, k) - dt*force*(2.+(j-y_center)/radius));
-					} else {
-						MACGrid_->set_v(i, j, k, MACGrid_->get_v(i, j, k) + dt*force*(2.-(j-y_center)/radius));
-					}
-					if (k-z_center == 0 or std::signbit(k-z_center)){
-						MACGrid_->set_w(i, j, k, MACGrid_->get_w(i, j, k) - dt*force*(2.+(k-z_center)/radius));
-					} else {
-						MACGrid_->set_w(i, j, k, MACGrid_->get_w(i, j, k) + dt*force*(2.-(k-z_center)/radius));
-					}
-				}
-			}	
-		}
-	}
-	
-	//~ // Bottom
-	//~ MACGrid_->set_v(x_bl+1-stx, y_bl-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+1-stx,y_bl-sty,z_bl+1-stz) - dt*force*alpha);
-	//~ MACGrid_->set_v(x_bl+2-stx, y_bl-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+2-stx,y_bl-sty,z_bl+1-stz) - dt*force*alpha);
-	//~ MACGrid_->set_v(x_bl+1-stx, y_bl-sty, z_bl+2-stz, MACGrid_->get_v(x_bl+1-stx,y_bl-sty,z_bl+2-stz) - dt*force*alpha);
-	//~ MACGrid_->set_v(x_bl+2-stx, y_bl-sty, z_bl+2-stz, MACGrid_->get_v(x_bl+2-stx,y_bl-sty,z_bl+2-stz) - dt*force*alpha);
-	
-	//~ // Bottom Half
-	//~ MACGrid_->set_v(x_bl+1-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+1-sty,z_bl-stz) - dt*force*alpha);
-	//~ MACGrid_->set_v(x_bl+2-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+1-sty,z_bl-stz) - dt*force*alpha);
-	//~ MACGrid_->set_v(x_bl-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_v(x_bl-stx,y_bl+1-sty,z_bl-stz) - dt*force*alpha);
-	//~ MACGrid_->set_v(x_bl+1-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+1-sty,z_bl-stz) - dt*force*beta);
-	//~ MACGrid_->set_v(x_bl+2-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+1-sty,z_bl-stz) - dt*force*beta);
-	//~ MACGrid_->set_v(x_bl+3-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+3-stx,y_bl+1-sty,z_bl-stz) - dt*force*alpha);
-	//~ MACGrid_->set_v(x_bl-stx, y_bl+1-sty, z_bl+2-stz, MACGrid_->get_v(x_bl-stx,y_bl+1-sty,z_bl+1-stz) - dt*force*alpha);
-	//~ MACGrid_->set_v(x_bl+1-stx, y_bl+1-sty, z_bl+2-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+1-sty,z_bl+1-stz) - dt*force*beta);
-	//~ MACGrid_->set_v(x_bl+2-stx, y_bl+1-sty, z_bl+2-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+1-sty,z_bl+1-stz) - dt*force*beta);
-	//~ MACGrid_->set_v(x_bl+3-stx, y_bl+1-sty, z_bl+2-stz, MACGrid_->get_v(x_bl+3-stx,y_bl+1-sty,z_bl+1-stz) - dt*force*alpha);
-	//~ MACGrid_->set_v(x_bl+1-stx, y_bl+1-sty, z_bl+3-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+1-sty,z_bl+3-stz) - dt*force*alpha);
-	//~ MACGrid_->set_v(x_bl+2-stx, y_bl+1-sty, z_bl+3-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+1-sty,z_bl+3-stz) - dt*force*alpha);
-	
-	//~ // Half
-	//~ MACGrid_->set_v(x_bl-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_v(x_bl-stx,y_bl+2-sty,z_bl-stz) - dt*spin);
-	//~ MACGrid_->set_v(x_bl+1-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+2-sty,z_bl-stz) - dt*spin*beta);
-	//~ MACGrid_->set_v(x_bl+2-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+2-sty,z_bl-stz) + dt*spin*beta);
-	//~ MACGrid_->set_v(x_bl+3-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_v(x_bl+3-stx,y_bl+2-sty,z_bl-stz) + dt*spin);
-	//~ MACGrid_->set_v(x_bl-stx, y_bl+2-sty,z_bl+1-stz, MACGrid_->get_v(x_bl-stx,y_bl+2-sty,z_bl+1-stz) - dt*spin);
-	//~ MACGrid_->set_v(x_bl+1-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+2-sty,z_bl+1-stz) - dt*spin*beta);
-	//~ MACGrid_->set_v(x_bl+2-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+2-sty,z_bl+1-stz) + dt*spin*beta);
-	//~ MACGrid_->set_v(x_bl+3-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+3-stx,y_bl+2-sty,z_bl+1-stz) + dt*spin);
-	
-	//~ // Top Half
-	//~ MACGrid_->set_v(x_bl-stx, y_bl+3-sty, z_bl-stz, MACGrid_->get_v(x_bl-stx,y_bl+3-sty,z_bl-stz) + dt*force);
-	//~ MACGrid_->set_v(x_bl+1-stx, y_bl+3-sty, z_bl-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+3-sty,z_bl-stz) + dt*force*beta);
-	//~ MACGrid_->set_v(x_bl+2-stx, y_bl+3-sty, z_bl-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+3-sty,z_bl-stz) + dt*force*beta);
-	//~ MACGrid_->set_v(x_bl+3-stx, y_bl+3-sty, z_bl-stz, MACGrid_->get_v(x_bl+3-stx,y_bl+3-sty,z_bl-stz) + dt*force);
-	//~ MACGrid_->set_v(x_bl-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_v(x_bl-stx,y_bl+3-sty,z_bl+1-stz) + dt*force);
-	//~ MACGrid_->set_v(x_bl+1-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+3-sty,z_bl+1-stz) + dt*force*beta);
-	//~ MACGrid_->set_v(x_bl+2-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+3-sty,z_bl+1-stz) + dt*force*beta);
-	//~ MACGrid_->set_v(x_bl+3-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+3-stx,y_bl+3-sty,z_bl+1-stz) + dt*force);
-	
-	//~ // Top
-	//~ MACGrid_->set_v(x_bl+1-stx, y_bl+4-sty, z_bl-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+4-sty,z_bl-stz) + dt*force);
-	//~ MACGrid_->set_v(x_bl+2-stx, y_bl+4-sty, z_bl-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+4-sty,z_bl-stz) + dt*force);
-	//~ MACGrid_->set_v(x_bl+1-stx, y_bl+4-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+1-stx,y_bl+4-sty,z_bl+1-stz) + dt*force);
-	//~ MACGrid_->set_v(x_bl+2-stx, y_bl+4-sty, z_bl+1-stz, MACGrid_->get_v(x_bl+2-stx,y_bl+4-sty,z_bl+1-stz) + dt*force);
-	
-	//~ // Left
-	//~ MACGrid_->set_u(x_bl-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_u(x_bl-stx,y_bl+1-sty,z_bl-stz) - dt*force*alpha);
-	//~ MACGrid_->set_u(x_bl-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_u(x_bl-stx,y_bl+2-sty,z_bl-stz) - dt*force*alpha);
-	//~ MACGrid_->set_u(x_bl-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_u(x_bl-stx,y_bl+1-sty,z_bl+1-stz) - dt*force*alpha);
-	//~ MACGrid_->set_u(x_bl-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_u(x_bl-stx,y_bl+2-sty,z_bl+1-stz) - dt*force*alpha);
-	
-	//~ // Left Half
-	//~ MACGrid_->set_u(x_bl+1-stx, y_bl-sty, z_bl-stz, MACGrid_->get_u(x_bl+1-stx,y_bl-sty,z_bl-stz) - dt*force*alpha);
-	//~ MACGrid_->set_u(x_bl+1-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+1-sty,z_bl-stz) - dt*force*beta);
-	//~ MACGrid_->set_u(x_bl+1-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+2-sty,z_bl-stz) - dt*force*beta);
-	//~ MACGrid_->set_u(x_bl+1-stx, y_bl+3-sty, z_bl-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+3-sty,z_bl-stz) - dt*force*alpha);
-	//~ MACGrid_->set_u(x_bl+1-stx, y_bl-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+1-stx,y_bl-sty,z_bl+1-stz) - dt*force*alpha);
-	//~ MACGrid_->set_u(x_bl+1-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+1-sty,z_bl+1-stz) - dt*force*beta);
-	//~ MACGrid_->set_u(x_bl+1-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+2-sty,z_bl+1-stz) - dt*force*beta);
-	//~ MACGrid_->set_u(x_bl+1-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+1-stx,y_bl+3-sty,z_bl+1-stz) - dt*force*alpha);
-	
-	//~ // Half
-	//~ MACGrid_->set_u(x_bl+2-stx, y_bl-sty, z_bl-stz, MACGrid_->get_u(x_bl+2-stx,y_bl-sty,z_bl-stz) + dt*spin);
-	//~ MACGrid_->set_u(x_bl+2-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_u(x_bl+2-stx,y_bl+1-sty,z_bl-stz) + dt*spin*beta);
-	//~ MACGrid_->set_u(x_bl+2-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_u(x_bl+2-stx,y_bl+2-sty,z_bl-stz) - dt*spin*beta);
-	//~ MACGrid_->set_u(x_bl+2-stx, y_bl+3-sty, z_bl-stz, MACGrid_->get_u(x_bl+2-stx,y_bl+3-sty,z_bl-stz) - dt*spin);
-	//~ MACGrid_->set_u(x_bl+2-stx, y_bl-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+2-stx,y_bl-sty,z_bl+1-stz) + dt*spin);
-	//~ MACGrid_->set_u(x_bl+2-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+2-stx,y_bl+1-sty,z_bl+1-stz) + dt*spin*beta);
-	//~ MACGrid_->set_u(x_bl+2-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+2-stx,y_bl+2-sty,z_bl+1-stz) - dt*spin*beta);
-	//~ MACGrid_->set_u(x_bl+2-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+2-stx,y_bl+3-sty,z_bl+1-stz) - dt*spin);
-	
-	//~ // Right Half
-	//~ MACGrid_->set_u(x_bl+3-stx, y_bl-sty, z_bl-stz, MACGrid_->get_u(x_bl+3-stx,y_bl-sty,z_bl-stz) + dt*force);
-	//~ MACGrid_->set_u(x_bl+3-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_u(x_bl+3-stx,y_bl+1-sty,z_bl-stz) + dt*force*beta);
-	//~ MACGrid_->set_u(x_bl+3-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_u(x_bl+3-stx,y_bl+2-sty,z_bl-stz) + dt*force*beta);
-	//~ MACGrid_->set_u(x_bl+3-stx, y_bl+3-sty, z_bl-stz, MACGrid_->get_u(x_bl+3-stx,y_bl+3-sty,z_bl-stz) + dt*force);
-	//~ MACGrid_->set_u(x_bl+3-stx, y_bl-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+3-stx,y_bl-sty,z_bl+1-stz) + dt*force);
-	//~ MACGrid_->set_u(x_bl+3-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+3-stx,y_bl+1-sty,z_bl+1-stz) + dt*force*beta);
-	//~ MACGrid_->set_u(x_bl+3-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+3-stx,y_bl+2-sty,z_bl+1-stz) + dt*force*beta);
-	//~ MACGrid_->set_u(x_bl+3-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+3-stx,y_bl+3-sty,z_bl+1-stz) + dt*force);
-	
-	//~ // Right
-	//~ MACGrid_->set_u(x_bl+4-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_u(x_bl+4-stx,y_bl+1-sty,z_bl-stz) + dt*force);
-	//~ MACGrid_->set_u(x_bl+4-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_u(x_bl+4-stx,y_bl+2-sty,z_bl-stz) + dt*force);
-	//~ MACGrid_->set_u(x_bl+4-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+4-stx,y_bl+1-sty,z_bl+1-stz) + dt*force);
-	//~ MACGrid_->set_u(x_bl+4-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_u(x_bl+4-stx,y_bl+2-sty,z_bl+1-stz) + dt*force);
-	
-	//~ // Behind
-	//~ MACGrid_->set_w(x_bl-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_w(x_bl-stx,y_bl+1-sty,z_bl-stz) - dt*force*alpha);
-	//~ MACGrid_->set_w(x_bl-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_w(x_bl-stx,y_bl+2-sty,z_bl-stz) - dt*force*alpha);
-	//~ MACGrid_->set_w(x_bl+1-stx, y_bl+1-sty, z_bl-stz, MACGrid_->get_w(x_bl+1-stx,y_bl+1-sty,z_bl-stz) - dt*force*alpha);
-	//~ MACGrid_->set_w(x_bl+1-stx, y_bl+2-sty, z_bl-stz, MACGrid_->get_w(x_bl+1-stx,y_bl+2-sty,z_bl-stz) - dt*force*alpha);
-	
-	//~ // Behind Half
-	//~ MACGrid_->set_w(x_bl-stx, y_bl-sty, z_bl+1-stz, MACGrid_->get_w(x_bl-stx,y_bl-sty,z_bl+1-stz) - dt*force*alpha);
-	//~ MACGrid_->set_w(x_bl-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_w(x_bl-stx,y_bl+1-sty,z_bl+1-stz) - dt*force*beta);
-	//~ MACGrid_->set_w(x_bl-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_w(x_bl-stx,y_bl+2-sty,z_bl+1-stz) - dt*force*beta);
-	//~ MACGrid_->set_w(x_bl-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_w(x_bl-stx,y_bl+3-sty,z_bl+1-stz) - dt*force*alpha);
-	//~ MACGrid_->set_w(x_bl+1-stx, y_bl-sty, z_bl+1-stz, MACGrid_->get_w(x_bl+1-stx,y_bl-sty,z_bl+1-stz) - dt*force*alpha);
-	//~ MACGrid_->set_w(x_bl+1-stx, y_bl+1-sty, z_bl+1-stz, MACGrid_->get_w(x_bl+1-stx,y_bl+1-sty,z_bl+1-stz) - dt*force*beta);
-	//~ MACGrid_->set_w(x_bl+1-stx, y_bl+2-sty, z_bl+1-stz, MACGrid_->get_w(x_bl+1-stx,y_bl+2-sty,z_bl+1-stz) - dt*force*beta);
-	//~ MACGrid_->set_w(x_bl+1-stx, y_bl+3-sty, z_bl+1-stz, MACGrid_->get_w(x_bl+1-stx,y_bl+3-sty,z_bl+1-stz) - dt*force*alpha);
-	
-	//~ // Half
-	//~ MACGrid_->set_w(x_bl-stx, y_bl-sty, z_bl+2-stz, MACGrid_->get_w(x_bl-stx,y_bl-sty,z_bl+2-stz) + dt*spin);
-	//~ MACGrid_->set_w(x_bl-stx, y_bl+1-sty, z_bl+2-stz, MACGrid_->get_w(x_bl-stx,y_bl+1-sty,z_bl+2-stz) + dt*spin*beta);
-	//~ MACGrid_->set_w(x_bl-stx, y_bl+2-sty, z_bl+2-stz, MACGrid_->get_w(x_bl-stx,y_bl+2-sty,z_bl+2-stz) - dt*spin*beta);
-	//~ MACGrid_->set_w(x_bl-stx, y_bl+3-sty, z_bl+2-stz, MACGrid_->get_w(x_bl-stx,y_bl+3-sty,z_bl+2-stz) - dt*spin);
-	//~ MACGrid_->set_w(x_bl+1-stx, y_bl-sty, z_bl+2-stz, MACGrid_->get_w(x_bl+1-stx,y_bl-sty,z_bl+2-stz) + dt*spin);
-	//~ MACGrid_->set_w(x_bl+1-stx, y_bl+1-sty, z_bl+2-stz, MACGrid_->get_w(x_bl+1-stx,y_bl+1-sty,z_bl+2-stz) + dt*spin*beta);
-	//~ MACGrid_->set_w(x_bl+1-stx, y_bl+2-sty, z_bl+2-stz, MACGrid_->get_w(x_bl+1-stx,y_bl+2-sty,z_bl+2-stz) - dt*spin*beta);
-	//~ MACGrid_->set_w(x_bl+1-stx, y_bl+3-sty, z_bl+2-stz, MACGrid_->get_w(x_bl+1-stx,y_bl+3-sty,z_bl+2-stz) - dt*spin);
-	
-	//~ // Forward Half
-	//~ MACGrid_->set_w(x_bl-stx, y_bl-sty, z_bl+3-stz, MACGrid_->get_w(x_bl-stx,y_bl-sty,z_bl+3-stz) + dt*force);
-	//~ MACGrid_->set_w(x_bl-stx, y_bl+1-sty, z_bl+3-stz, MACGrid_->get_w(x_bl-stx,y_bl+1-sty,z_bl+3-stz) + dt*force*beta);
-	//~ MACGrid_->set_w(x_bl-stx, y_bl+2-sty, z_bl+3-stz, MACGrid_->get_w(x_bl-stx,y_bl+2-sty,z_bl+3-stz) + dt*force*beta);
-	//~ MACGrid_->set_w(x_bl-stx, y_bl+3-sty, z_bl+3-stz, MACGrid_->get_w(x_bl-stx,y_bl+3-sty,z_bl+3-stz) + dt*force);
-	//~ MACGrid_->set_w(x_bl+1-stx, y_bl-sty, z_bl+3-stz, MACGrid_->get_w(x_bl+1-stx,y_bl-sty,z_bl+3-stz) + dt*force);
-	//~ MACGrid_->set_w(x_bl+1-stx, y_bl+1-sty, z_bl+3-stz, MACGrid_->get_w(x_bl+1-stx,y_bl+1-sty,z_bl+3-stz) + dt*force*beta);
-	//~ MACGrid_->set_w(x_bl+1-stx, y_bl+2-sty, z_bl+3-stz, MACGrid_->get_w(x_bl+1-stx,y_bl+2-sty,z_bl+3-stz) + dt*force*beta);
-	//~ MACGrid_->set_w(x_bl+1-stx, y_bl+3-sty, z_bl+3-stz, MACGrid_->get_w(x_bl+1-stx,y_bl+3-sty,z_bl+3-stz) + dt*force);
-	
-	//~ // Forward
-	//~ MACGrid_->set_w(x_bl-stx, y_bl+1-sty, z_bl+4-stz, MACGrid_->get_w(x_bl-stx,y_bl+1-sty,z_bl+4-stz) + dt*force);
-	//~ MACGrid_->set_w(x_bl-stx, y_bl+2-sty, z_bl+4-stz, MACGrid_->get_w(x_bl-stx,y_bl+2-sty,z_bl+4-stz) + dt*force);
-	//~ MACGrid_->set_w(x_bl+1-stx, y_bl+1-sty, z_bl+4-stz, MACGrid_->get_w(x_bl+1-stx,y_bl+1-sty,z_bl+4-stz) + dt*force);
-	//~ MACGrid_->set_w(x_bl+1-stx, y_bl+2-sty, z_bl+4-stz, MACGrid_->get_w(x_bl+1-stx,y_bl+2-sty,z_bl+4-stz) + dt*force);
 }

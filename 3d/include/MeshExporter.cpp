@@ -83,7 +83,7 @@ void MeshExporter::level_set(){
 						double W_surf = (1-temp*temp)*(1-temp*temp)*(1-temp*temp);
 						//double W_surf = 1-temp*temp*temp;
 						x_avrg_num[index] += W_surf*particle_pos;
-						*(r_avrg_num + index) += W_surf*0.6*dx;
+						*(r_avrg_num + index) += W_surf*0.87*dx;
 						*(den + index) += W_surf;
 					}
 				}
@@ -103,7 +103,7 @@ void MeshExporter::level_set(){
 					double temp = *(den+index2);
 					Eigen::Vector3d x_avrg = x_avrg_num[index2]/temp;
 					//~ double r_avrg = *(r_avrg_num+index)/temp;
-					double r_avrg = 0.6*dx;
+					double r_avrg = 0.87*dx;
 					Eigen::Vector3d cell_pos = Eigen::Vector3d(i*dx, j*dy, k*dz);
 					if(*(den+index2) != 0)
 						plevel_set_[index] = (cell_pos - x_avrg).norm() - r_avrg;

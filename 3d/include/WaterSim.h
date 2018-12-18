@@ -36,17 +36,8 @@ class WaterSim : public Simulation {
 		double m_fluid_density_;
 		double m_gravity_mag_;
 		double m_alpha_;
-		bool m_show_pressures;
 		bool m_display_grid;
-		bool m_show_velocity_arrows;
 
-		// PNG export params
-		bool m_export_png_;
-		size_t m_png_sx_;
-		size_t m_png_sy_;
-		std::string m_png_dirname_ = "PNG_out";
-		unsigned m_png_num_ = 0;
-		unsigned m_max_pngs_;
 		unsigned m_max_p_disp;
 
 		bool m_export_meshes;
@@ -97,9 +88,8 @@ class WaterSim : public Simulation {
 				 const double len_x, const double len_y, const double len_z,
 				 const double density, const double gravity,
 				 const double alpha,
-				 const bool show_pressures, const bool show_velocity_arrows,
 				 std::vector<bool> is_fluid, const bool jitter_particles,
-				 bool export_png, int png_sx, int png_sy, int max_pngs, bool export_meshes, unsigned max_p);
+				 bool export_meshes, unsigned max_p);
 
 		~WaterSim() {
 			delete p_mac_grid;
@@ -118,9 +108,8 @@ class WaterSim : public Simulation {
 		void updateParams(const bool display_grid, const int res_x, const int res_y, const int res_z,
 						  const double len_x, const double len_y, const double len_z,
 						  const double density, const double gravity, const double alpha,
-						  const bool show_pressures, const bool show_velocity_arrows,
 						  std::vector<bool> is_fluid, const bool jitter_particles,
-						  bool export_png, int png_sx, int png_sy, int max_pngs, bool export_meshes, unsigned max_p);
+						  bool export_meshes, unsigned max_p);
 
 		/*
 		 * Update the rendering data structures. This method will be called in
@@ -179,11 +168,6 @@ class WaterSim : public Simulation {
 		 * Initialize a mesh to visualize the MAC grid
 		 */
 		void initMacViz();
-
-		/*
-		 * Export current viewport as PNG
-		 */
-		void exportPNG(igl::opengl::glfw::Viewer &viewer);
 };
 
 #endif // WATERSIM_H

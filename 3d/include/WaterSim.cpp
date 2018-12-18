@@ -6,18 +6,13 @@ WaterSim::WaterSim(viewer_t& viewer, const bool display_grid,
         const double len_x, const double len_y, const double len_z,
         const double density, const double gravity,
         const double alpha,
-        const bool show_pressures, const bool show_velocity_arrows,
         std::vector<bool> is_fluid, const bool jitter_particles,
-        bool export_png, int png_sx, int png_sy, int max_pngs,
         bool export_meshes, unsigned max_p)
         : Simulation(), p_viewer(&viewer), m_display_grid(display_grid),
           m_res_x(res_x), m_res_y(res_y), m_res_z(res_z),
           m_len_x(len_x), m_len_y(len_y), m_len_z(len_z), m_fluid_density_(density),
           m_gravity_mag_(gravity), m_alpha_(alpha),
-          m_show_pressures(show_pressures),
-          m_show_velocity_arrows(show_velocity_arrows),
           is_fluid_(is_fluid), m_jitter_particles(jitter_particles),
-          m_export_png_(export_png), m_png_sx_(png_sx), m_png_sy_(png_sy), m_max_pngs_(max_pngs),
           m_export_meshes(export_meshes), m_max_p_disp(max_p) {
 
 
@@ -39,12 +34,6 @@ WaterSim::WaterSim(viewer_t& viewer, const bool display_grid,
     // Index of ViewerData instance dedicated to MAC grid
     m_grid_data_idx = viewer.append_mesh();
     
-    // Index of ViewerData instance dedicated to the velocities
-    /*m_velocity_u_idx = viewer.append_mesh();
-    m_velocity_v_idx = viewer.append_mesh();
-    m_velocity_w_idx = viewer.append_mesh();
-    */
-    
     // Initialize Mesh Exporter
 	initMeshExp();
     
@@ -53,7 +42,7 @@ WaterSim::WaterSim(viewer_t& viewer, const bool display_grid,
 }
 
 
-/*
+/**
  * Reset class variables to reset the simulation.
  */
 void WaterSim::resetMembers() {
@@ -75,14 +64,6 @@ void WaterSim::resetMembers() {
     // MeshExporter
     delete exp;
     initMeshExp();
-    
-    //Velocity arrows
-//    p_viewer->data_list[m_velocity_u_idx].clear();
-//    p_viewer->data_list[m_velocity_v_idx].clear();
-//    p_viewer->data_list[m_velocity_w_idx].clear();
-
-    // PNG exporting
-    m_png_num_ = 0;
 }
 
 
@@ -90,9 +71,8 @@ void WaterSim::updateParams(const bool display_grid,
                   const int res_x, const int res_y, const int res_z,
                   const double len_x, const double len_y, const double len_z,
                   const double density, const double gravity, const double alpha,
-                  const bool show_pressures, const bool show_velocity_arrows,
                   std::vector<bool> is_fluid, const bool jitter_particles,
-                  bool export_png, int png_sx, int png_sy, int max_pngs, bool export_meshes, unsigned max_p) {
+                  bool export_meshes, unsigned max_p) {
     m_display_grid = display_grid;
     m_res_x = res_x;
     m_res_y = res_y;
@@ -103,14 +83,8 @@ void WaterSim::updateParams(const bool display_grid,
     m_fluid_density_ = density;
     m_gravity_mag_ = gravity;
     m_alpha_ = alpha;
-    m_show_pressures = show_pressures;
-    m_show_velocity_arrows = show_velocity_arrows;
     is_fluid_ = is_fluid;
     m_jitter_particles = jitter_particles;
-    m_export_png_ = export_png;
-    m_png_sx_ = png_sx;
-    m_png_sy_ = png_sy;
-    m_max_pngs_ = max_pngs;
     m_export_meshes = export_meshes;
     m_max_p_disp = max_p;
     std::cout << "\nParams updated\n";
@@ -136,81 +110,6 @@ void WaterSim::updateRenderGeometry() {
     m_particle_colors.resize(disp_particles, 3);
     m_particle_colors.setZero();
     m_particle_colors.col(2).setOnes();
-    
-
-//    if (m_show_pressures) {
-//        // Render pressure as a scalar field
-//        unsigned nx = p_mac_grid->get_num_cells_x();
-//        unsigned ny = p_mac_grid->get_num_cells_y();
-//        Eigen::VectorXd pressures(2*nx*ny);
-//        for (unsigned j = 0; j < ny; j++) {
-//            for (unsigned i = 0; i < nx; i++) {
-//                pressures(2*(i + j*ny)) = p_mac_grid->get_pressure(i, j);
-//                pressures(2*(i + j*ny) + 1) = p_mac_grid->get_pressure(i, j);
-//            }
-//        }
-//
-//        igl::jet(pressures, true, m_renderC);
-//    }
-    
-//    if(m_show_velocity_arrows){
-//		unsigned nx = p_mac_grid->get_num_cells_x();
-//        unsigned ny = p_mac_grid->get_num_cells_y();
-//        double dx = p_mac_grid->get_cell_sizex();
-//        double dy = p_mac_grid->get_cell_sizey();
-//		m_render_velocity_u_V.resize(2*((nx+1)*ny),3);
-//		m_render_velocity_u_E.resize((nx+1)*ny,2);
-//		m_render_velocity_v_V.resize(2*(nx*(ny+1)),3);
-//		m_render_velocity_v_E.resize(nx*(ny+1),2);
-//        for (unsigned j = 0; j < ny ; j++) {
-//            for (unsigned i = 0; i < nx + 1; i++) {
-//                //insert start vertex
-//                Eigen::Vector3d start((i-0.5)*dx, j*dy, 0);
-//                m_render_velocity_u_V.row(2*((nx+1)*j + i)) = start;
-//                
-//                //insert end vertex
-//                double temp = p_mac_grid->get_u(i,j);
-//                temp *= m_dt;
-//                Eigen::Vector3d end((i-0.5)*dx + temp, j*dy, 0);
-//                m_render_velocity_u_V.row(2*((nx+1)*j + i) + 1) = end;
-//                
-//                //insert edge
-//                m_render_velocity_u_E((nx+1)*j + i,0) = 2*((nx+1)*j + i);
-//                m_render_velocity_u_E((nx+1)*j + i,1) = 2*((nx+1)*j + i) + 1;
-//            }
-//        }
-//        for (unsigned j = 0; j < ny + 1; j++) {
-//            for (unsigned i = 0; i < nx; i++) {
-//                //insert start vertex
-//                Eigen::Vector3d start(i*dx, (j - 0.5)*dy, 0);
-//                m_render_velocity_v_V.row(2*(nx*j+i)) = start;
-//                
-//                //insert end vertex
-//                double temp = p_mac_grid->get_v(i,j);
-//                temp *= m_dt;
-//                Eigen::Vector3d end(i*dx, (j-0.5)*dy + temp, 0);
-//                m_render_velocity_v_V.row(2*(nx*j+i) + 1) = end;
-//                
-//                //insert edge
-//                m_render_velocity_v_E(nx*j+i,0) = 2*(nx*j+i);
-//                m_render_velocity_v_E(nx*j+i,1) = 2*(nx*j+i) + 1;
-//            }
-//        }
-//    }
-
-
-    //~ std::cout << "\n*************\n";
-    //~ std::cout << "Pressure at (7, 0): " << p_mac_grid->get_pressure(7, 0) << std::endl;
-    //~ std::cout << "Pressure at (7, 1): " << p_mac_grid->get_pressure(7, 1) << std::endl;
-    //~ std::cout << "U velocity at (6.5, 1): " << p_mac_grid->get_u(7, 1) << std::endl;
-    //~ std::cout << "V velocity at (6.5, 1): " << p_mac_grid->get_v(7, 1) << std::endl;
-    //~ std::cout << "U* velocity at (6.5, 1): " << p_mac_grid->get_u_star(7, 1) << std::endl;
-    //~ std::cout << "V* velocity at (6.5, 1): " << p_mac_grid->get_v_star(7, 1) << std::endl;
-    //~ std::cout << "X of particle 0: " << flip_particles->get_position()(0) << std::endl;
-    //~ std::cout << "Y of particle 0: " << flip_particles->get_position()(1) << std::endl;
-    //~ std::cout << "U of particle 0: " << flip_particles->get_velocity()(0) << std::endl;
-    //~ std::cout << "V of particle 0: " << flip_particles->get_velocity()(1) << std::endl;
-    //~ std::cout << "\n*************\n";
 }
 
 
@@ -262,27 +161,9 @@ bool WaterSim::advance() {
 
 
 void WaterSim::renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) {
-    if (m_display_grid)
+    if (m_display_grid){
         viewer.data_list[m_grid_data_idx].set_edges(m_renderV, m_renderE, m_renderEC);
-    //else
-    //    viewer.data_list[m_grid_data_idx].clear();
-
-    //viewer.data_list[m_grid_data_idx].set_mesh(m_renderV, m_renderF);
-    //viewer.data_list[m_grid_data_idx].set_colors(m_renderC);
-    
-    //auto c = Eigen::MatrixXd::Zero(m_renderV.rows(), 3);
-    //viewer.data_list[m_particles_data_idx].set_points(m_renderV, c);
-    viewer.data_list[m_particles_data_idx].set_points(m_particles, m_particle_colors);
-    viewer.data_list[m_particles_data_idx].point_size = 5;
-    
-//    if(m_show_velocity_arrows){
-//        viewer.data_list[m_velocity_u_idx].set_edges(m_render_velocity_u_V, m_render_velocity_u_E, m_renderEC);
-//        viewer.data_list[m_velocity_v_idx].set_edges(m_render_velocity_v_V, m_render_velocity_v_E, m_renderEC);
-//    }
-
-    // PNG image export
-    //if (m_export_png_ and m_png_num_ < m_max_pngs_)
-    //    exportPNG(viewer);
+	}
 }
 
 
@@ -427,62 +308,5 @@ void WaterSim::initMacViz() {
             m_renderE.row(i) << a, a + nz * (ny + 1) * (nx + 1);
         }
     }
-
-    // Calculate mesh triangles (faces)
-    //  & colours for rendering
-    /*m_renderF.resize(num_tria, 3);
-    m_renderC.resize(num_tria, 3);
-    i = 0;
-    for (unsigned y = 0; y < ny; y++) {
-        for (unsigned x = 0; x < nx; x++) {
-            // Triangles
-            unsigned vbl = x + y * (nx + 1); // index of bottom-left vertex
-            m_renderF.row(i)   << vbl,   vbl+1,              vbl + (nx + 1);
-            m_renderF.row(i+1) << vbl+1, vbl + 1 + (nx + 1), vbl + (nx + 1);
-            
-            // Colour
-            //std::cout << x << " " << y << " " << p_mac_grid->is_solid(x,y) << std::endl;
-            if (p_mac_grid->is_solid(x, y)) {
-                m_renderC.row(i)   << .5, .25, 0;
-                m_renderC.row(i+1) << .5, .25, 0;
-            } else {
-                m_renderC.row(i)   << 1, 1, 0;
-                m_renderC.row(i+1) << 1, 1, 0;
-            }
-            
-            i += 2;
-        }
-    }*/
-
-}
-
-
-void WaterSim::exportPNG(igl::opengl::glfw::Viewer &viewer) {
-    // Export current frame as PNG
-    
-    // 1. File name
-    const int pad_size = 4; // number of chars to pad number to
-    
-    std::string file = std::to_string(m_png_num_);
-    file.insert(0, pad_size - file.length(), '0');
-    file += ".png";
-    
-    // 2. Check for folder existence, create if necessary
-    // http://pubs.opengroup.org/onlinepubs/009695399/functions/mkdir.html
-    mkdir(m_png_dirname_.c_str(), S_IRWXU);
-    
-    // 3. Draw buffer
-    Eigen::Matrix<unsigned char,Eigen::Dynamic,Eigen::Dynamic> R(m_png_sx_,m_png_sy_);
-    Eigen::Matrix<unsigned char,Eigen::Dynamic,Eigen::Dynamic> G(m_png_sx_,m_png_sy_);
-    Eigen::Matrix<unsigned char,Eigen::Dynamic,Eigen::Dynamic> B(m_png_sx_,m_png_sy_);
-    Eigen::Matrix<unsigned char,Eigen::Dynamic,Eigen::Dynamic> A(m_png_sx_,m_png_sy_);
-    
-    viewer.core.draw_buffer(viewer.data_list[m_particles_data_idx], false, R,G,B,A);
-
-    // 4. Write image
-    igl::png::writePNG(R,G,B,A, m_png_dirname_ + '/' + file);
-    
-    m_png_num_++;
-    
 }
 

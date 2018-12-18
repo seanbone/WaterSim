@@ -1,5 +1,7 @@
 # meteor_pbs18
 
+TODO: merge back into master for submission
+
 Meteorite crashing into the sea - Physically-Based Simulation HS18 project.
 
 Authors: Silvia Nauer, Mikael Stellio, Sean Bone.

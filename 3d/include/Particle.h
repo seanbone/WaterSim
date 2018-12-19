@@ -25,13 +25,16 @@ struct Particle {
 
 	public:
 	
-	// Default Constructor
+	/** Default Constructor
+	 */
 	Particle() {}
 	
-	// Copy Constructor
-	//~ TODO: Particle copy constructor
-	
-	// Initialize positions and velocities (zero by default)
+	/** Initialize positions and velocities
+	 * Params:
+	 * - x, y and z are the coordinates of the particle
+	 * - u, v and w are the velocity components, that are set to zero by
+	 * 	 default
+	 */
 	Particle( const double x, 
 			  const double y,
 			  const double z,
@@ -42,27 +45,53 @@ struct Particle {
 		  u_(u), v_(v), w_(w),
 		  xprev_(x), yprev_(y), zprev_(z) {} 
 	
-	// Destructor
+	/** Destructor
+	 */
 	~Particle() {}
 	
-	// Setters
+	/** Set the position of a particle to x, y and z
+	 * Params:
+	 * - x, y and z are the coordinates to which the particle position 
+	 * 	 should be setted
+	 */
 	void set_position( const double x,
-						const double y,
-						const double z );
-
+					   const double y,
+					   const double z );
+	
+	/** Set the position of a particle using an Eigen Vector
+	 * Params:
+	 * - pos is an Eigen Vector containing the coordinates to which the 
+	 * 	 particle position should be setted
+	 */
 	void set_position( const Eigen::Vector3d& pos );
 
+	/** Set the velocity components of a particle to u, v and w
+	 * Params:
+	 * - u, v and w are the velocity components to which the particle 
+	 * 	 velocity should be setted
+	 */
 	void set_velocity( const double u,
-						 const double v,
-						 const double w );
-
+					   const double v,
+					   const double w );
+	
+	/** Set the velocity components of a particle using an Eigen Vector
+	 * Params:
+	 * - vel is an Eigen Vector containing the velocity components to 
+	 * 	 which the particle velocity should be setted
+	 */
 	void set_velocity( const Eigen::Vector3d& vel );
 
-	// Getters
+	/** Get the position of a particle as an Eigen Vector
+	 */
 	Eigen::Vector3d get_position();
 
+	/** Get the velocity of a particle as an Eigen Vector
+	 */
 	Eigen::Vector3d get_velocity();
 
+	/** Get the position of a particle, at timestep t-1, as an Eigen 
+	 * 	Vector
+	 */
 	Eigen::Vector3d get_prev_position();
 };
 

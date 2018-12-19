@@ -32,7 +32,11 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 
 	// 2.
 	apply_forces(dt);
-
+	
+	if ( step >= 5 and step <= 20 ){
+		explode(dt, step, 300);
+	}
+	
 	// 3.
 	apply_boundary_conditions();
 
@@ -72,18 +76,19 @@ double FLIP::compute_timestep( const double dt ){
 		dt_new = dt;
 	} else {
 		dt_new = std::abs(MACGrid_->get_cell_sizex()/u_max);
-	}
-	
-	if ( v_max == 0 ){
 		if ( dt_new > dt){
 			dt_new = dt;
 		}
+	}
+	
+	if ( v_max == 0 ){
+		dt_new = dt;
 	} else {
-		double tmp = std::abs(MACGrid_->get_cell_sizex()/u_max);
+		double tmp = std::abs(MACGrid_->get_cell_sizey()/v_max);
 		if ( tmp < dt_new){
 			dt_new = tmp;
 		}
-		else if ( dt_new >= dt ){
+		if ( dt_new > dt ){
 			dt_new = dt;
 		}
 	}
@@ -610,7 +615,8 @@ void FLIP::grid_to_particle(){
 		// Use pure PIC on boundary, blend PIC+FLIP elsewhere
 		if (initial_idx.first == 0 or initial_idx.first == nx-1
 		 or initial_idx.second == 0 or initial_idx.second == ny-1){
-			u_update = initial_velocity*(1 - std::min(1., 2*alpha)) + interp_u_n1 - interp_u_star*(1 - std::min(1., 2*alpha));
+			//~ u_update = initial_velocity*(1 - std::min(1., 2*alpha)) + interp_u_n1 - interp_u_star*(1 - std::min(1., 2*alpha));
+			u_update = initial_velocity*(1 - alpha) + interp_u_n1 - interp_u_star*(1 - alpha);
 		} else {
 			u_update = initial_velocity*(1 - alpha) + interp_u_n1 - interp_u_star*(1 - alpha);
 		}
@@ -662,8 +668,8 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 		if (y <= -0.5*cell_sizey) {
 			pos_next(1) = 0.;
 		}
-		if (y >= size_y - 0.5*cell_sizex) {
-			pos_next(1) = size_y - cell_sizex;
+		if (y >= size_y - 0.5*cell_sizey) {
+			pos_next(1) = size_y - cell_sizey;
 		}
 
 		// Check if the particle enters in a solid
@@ -686,4 +692,70 @@ void FLIP::advance_particles(const double dt, const unsigned step) {
 
 		(particles_ + n)->set_position(pos_next);
 	}
+}
+
+void FLIP::explode(const double dt, const unsigned long step, const double value){
+	// Apply external forces to simulate meteorite crash
+	const double alpha = 2;
+	const double beta = 5;
+	const double force = value;
+	const double spin = -0.25*value;
+	const double sty = step - 5;
+	const double stx = 3*sty;
+	
+	// Coordinates of the bottom left point of the square containing the meteorite
+	const int x_bl = 46;
+	const int y_bl = 15;
+	
+	// Bottom
+	MACGrid_->set_v(x_bl+1-stx, y_bl-sty, MACGrid_->get_v(x_bl+1-stx,y_bl-sty) - dt*force*alpha);
+	MACGrid_->set_v(x_bl+2-stx, y_bl-sty, MACGrid_->get_v(x_bl+2-stx,y_bl-sty) - dt*force*alpha);
+	
+	// Bottom Half
+	MACGrid_->set_v(x_bl-stx, y_bl+1-sty, MACGrid_->get_v(x_bl-stx,y_bl+1-sty) - dt*force*alpha);
+	MACGrid_->set_v(x_bl+1-stx, y_bl+1-sty, MACGrid_->get_v(x_bl+1-stx,y_bl+1-sty) - dt*force*beta);
+	MACGrid_->set_v(x_bl+2-stx, y_bl+1-sty, MACGrid_->get_v(x_bl+2-stx,y_bl+1-sty) - dt*force*beta);
+	MACGrid_->set_v(x_bl+3-stx, y_bl+1-sty, MACGrid_->get_v(x_bl+3-stx,y_bl+1-sty) - dt*force*alpha);
+	
+	// Half
+	MACGrid_->set_v(x_bl-stx, y_bl+2-sty, MACGrid_->get_v(x_bl-stx,y_bl+2-sty) - dt*spin);
+	MACGrid_->set_v(x_bl+1-stx, y_bl+2-sty, MACGrid_->get_v(x_bl+1-stx,y_bl+2-sty) - dt*spin*beta);
+	MACGrid_->set_v(x_bl+2-stx, y_bl+2-sty, MACGrid_->get_v(x_bl+2-stx,y_bl+2-sty) + dt*spin*beta);
+	MACGrid_->set_v(x_bl+3-stx, y_bl+2-sty, MACGrid_->get_v(x_bl+3-stx,y_bl+2-sty) + dt*spin);
+	
+	// Top Half
+	MACGrid_->set_v(x_bl-stx, y_bl+3-sty, MACGrid_->get_v(x_bl-stx,y_bl+3-sty) + dt*force);
+	MACGrid_->set_v(x_bl+1-stx, y_bl+3-sty, MACGrid_->get_v(x_bl+1-stx,y_bl+3-sty) + dt*force*beta);
+	MACGrid_->set_v(x_bl+2-stx, y_bl+3-sty, MACGrid_->get_v(x_bl+2-stx,y_bl+3-sty) + dt*force*beta);
+	MACGrid_->set_v(x_bl+3-stx, y_bl+3-sty, MACGrid_->get_v(x_bl+3-stx,y_bl+3-sty) + dt*force);
+	
+	// Top
+	MACGrid_->set_v(x_bl+1-stx, y_bl+4-sty, MACGrid_->get_v(x_bl+1-stx,y_bl+4-sty) + dt*force);
+	MACGrid_->set_v(x_bl+2-stx, y_bl+4-sty, MACGrid_->get_v(x_bl+2-stx,y_bl+4-sty) + dt*force);
+	
+	// Left
+	MACGrid_->set_u(x_bl-stx, y_bl+1-sty, MACGrid_->get_u(x_bl-stx,y_bl+1-sty) - dt*force*alpha);
+	MACGrid_->set_u(x_bl-stx, y_bl+2-sty, MACGrid_->get_u(x_bl-stx,y_bl+2-sty) - dt*force*alpha);
+	
+	// Left Half
+	MACGrid_->set_u(x_bl+1-stx, y_bl-sty, MACGrid_->get_u(x_bl+1-stx,y_bl-sty) - dt*force*alpha);
+	MACGrid_->set_u(x_bl+1-stx, y_bl+1-sty, MACGrid_->get_u(x_bl+1-stx,y_bl+1-sty) - dt*force*beta);
+	MACGrid_->set_u(x_bl+1-stx, y_bl+2-sty, MACGrid_->get_u(x_bl+1-stx,y_bl+2-sty) - dt*force*beta);
+	MACGrid_->set_u(x_bl+1-stx, y_bl+3-sty, MACGrid_->get_u(x_bl+1-stx,y_bl+3-sty) - dt*force*alpha);
+	
+	// Half
+	MACGrid_->set_u(x_bl+2-stx, y_bl-sty, MACGrid_->get_u(x_bl+2-stx,y_bl-sty) + dt*spin);
+	MACGrid_->set_u(x_bl+2-stx, y_bl+1-sty, MACGrid_->get_u(x_bl+2-stx,y_bl+1-sty) + dt*spin*beta);
+	MACGrid_->set_u(x_bl+2-stx, y_bl+2-sty, MACGrid_->get_u(x_bl+2-stx,y_bl+2-sty) - dt*spin*beta);
+	MACGrid_->set_u(x_bl+2-stx, y_bl+3-sty, MACGrid_->get_u(x_bl+2-stx,y_bl+3-sty) - dt*spin);
+	
+	// Right Half
+	MACGrid_->set_u(x_bl+3-stx, y_bl-sty, MACGrid_->get_u(x_bl+3-stx,y_bl-sty) + dt*force);
+	MACGrid_->set_u(x_bl+3-stx, y_bl+1-sty, MACGrid_->get_u(x_bl+3-stx,y_bl+1-sty) + dt*force*beta);
+	MACGrid_->set_u(x_bl+3-stx, y_bl+2-sty, MACGrid_->get_u(x_bl+3-stx,y_bl+2-sty) + dt*force*beta);
+	MACGrid_->set_u(x_bl+3-stx, y_bl+3-sty, MACGrid_->get_u(x_bl+3-stx,y_bl+3-sty) + dt*force);
+	
+	// Right
+	MACGrid_->set_u(x_bl+4-stx, y_bl+1-sty, MACGrid_->get_u(x_bl+4-stx,y_bl+1-sty) + dt*force);
+	MACGrid_->set_u(x_bl+4-stx, y_bl+2-sty, MACGrid_->get_u(x_bl+4-stx,y_bl+2-sty) + dt*force);
 }

@@ -3,10 +3,12 @@
 
 #include "Simulation.h"
 #include "FLIP.h"
+#include "MeshExporter.h"
 
 #include <sys/stat.h> // mkdir
 #include <igl/opengl/glfw/Viewer.h>
 #include <igl/png/writePNG.h>
+#include <chrono>
 
 /**
  * This class manages the water simulation.
@@ -27,27 +29,18 @@ class WaterSim : public Simulation {
 		viewer_t* const p_viewer;
 		
 		// MAC grid data structure
-		int m_res_x, m_res_y; // no. of cells in X and Y directions
-		double m_len_x, m_len_y; // size in [m] of full grid
+		int m_res_x, m_res_y, m_res_z; // no. of cells in X and Y directions
+		double m_len_x, m_len_y, m_len_z; // size in [m] of full grid
 
 		// Other params
 		double m_fluid_density_;
 		double m_gravity_mag_;
 		double m_alpha_;
-		bool m_show_pressures;
-		bool m_show_velocity_arrows;
+		bool m_display_grid;
 
-		// PNG export params
-		bool m_export_png_;
-		size_t m_png_sx_;
-		size_t m_png_sy_;
-		std::string m_png_dirname_ = "PNG_out";
-		unsigned m_png_num_ = 0;
-		unsigned m_max_pngs_;
+		unsigned m_max_p_disp;
 
-		// List of Particles
-		Particle* flip_particles;
-		std::vector<bool> is_fluid_;
+		bool m_export_meshes;
 
 		// FLIP simulator
 		FLIP* p_flip;
@@ -60,6 +53,7 @@ class WaterSim : public Simulation {
 		unsigned int m_grid_data_idx;
 		unsigned int m_velocity_u_idx;
 		unsigned int m_velocity_v_idx;
+		unsigned int m_velocity_w_idx;
 		
 
 		unsigned int m_num_particles;
@@ -80,16 +74,22 @@ class WaterSim : public Simulation {
 
 	public:
 		//MAC grid data structure
-		Mac2d* p_mac_grid;
+		Mac3d* p_mac_grid;
 		
-		WaterSim(viewer_t& viewer, 
-				 const int res_x, const int res_y,
-				 const double len_x, const double len_y,
+		// List of Particles
+		Particle* flip_particles;
+		std::vector<bool> is_fluid_;
+		
+		//MeshExporter
+		MeshExporter* exp;
+		
+		WaterSim(viewer_t& viewer, const bool display_grid,
+				 const int res_x, const int res_y, const int res_z,
+				 const double len_x, const double len_y, const double len_z,
 				 const double density, const double gravity,
 				 const double alpha,
-				 const bool show_pressures, const bool show_velocity_arrows,
 				 std::vector<bool> is_fluid, const bool jitter_particles,
-				 bool export_png, int png_sx, int png_sy, int max_pngs);
+				 bool export_meshes, unsigned max_p);
 
 		~WaterSim() {
 			delete p_mac_grid;
@@ -105,12 +105,11 @@ class WaterSim : public Simulation {
 		/*
 		 * Update simulation parameters. Requires a reset to take effect.
 		 */
-		void updateParams(const int res_x, const int res_y, 
-						  const double len_x, const double len_y,
+		void updateParams(const bool display_grid, const int res_x, const int res_y, const int res_z,
+						  const double len_x, const double len_y, const double len_z,
 						  const double density, const double gravity, const double alpha,
-						  const bool show_pressures, const bool show_velocity_arrows,
 						  std::vector<bool> is_fluid, const bool jitter_particles,
-						  bool export_png, int png_sx, int png_sy, int max_pngs);
+						  bool export_meshes, unsigned max_p);
 
 		/*
 		 * Update the rendering data structures. This method will be called in
@@ -152,6 +151,12 @@ class WaterSim : public Simulation {
 		 * Note: does not delete previous instance!
 		 */
 		void initMacGrid();
+		
+		/*
+		 * Initialize a new instance of the Mesh Exporter
+		 * Note: does not delete previous instance!
+		 */
+		void initMeshExp();
 
 		/*
 		 * Initialize a new instance of the FLIP simulator
@@ -163,11 +168,6 @@ class WaterSim : public Simulation {
 		 * Initialize a mesh to visualize the MAC grid
 		 */
 		void initMacViz();
-
-		/*
-		 * Export current viewport as PNG
-		 */
-		void exportPNG(igl::opengl::glfw::Viewer &viewer);
 };
 
 #endif // WATERSIM_H

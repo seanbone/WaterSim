@@ -1,0 +1,5 @@
+**/out_meshes/*
+*.obj
+**/out_vid/*
+*.mkv
+*.png

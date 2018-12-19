@@ -22,8 +22,8 @@ std::vector<bool> select_fluid_cells(size_t nx, size_t ny) {
       }
    }*/
 
-   for (unsigned j = ny/4; j < ny-1; j++) {
-      for (unsigned i = 13; i < 37; i++) {
+   for (unsigned j = 5; j < 9; j++) {
+      for (unsigned i = 3; i < 7; i++) {
          is_fluid[i + j*nx] = true;
       }
    }
@@ -44,11 +44,11 @@ class WaterGui : public Gui {
       bool m_display_velocity_arrows = false;
       int m_export_fps = 30;
 
-      double m_system_size_x = 50; // X dimension of system in m
-      double m_system_size_y = 100; // Y dimension of system in m
+      double m_system_size_x = 20; // X dimension of system in m
+      double m_system_size_y = 20; // Y dimension of system in m
       
-      int m_grid_res_x = 50; // Number of cells on X axis
-      int m_grid_res_y = 100; // Number of cells on Y axis
+      int m_grid_res_x = 20; // Number of cells on X axis
+      int m_grid_res_y = 20; // Number of cells on Y axis
       // Whether to randomize particle positions
       bool m_jitter_particles = true; 
 
@@ -173,6 +173,10 @@ class WaterGui : public Gui {
 };
 
 int main() { //int argc, char *argv[]) {
+   // Tell Eigen we're using multithreading
+   // https://eigen.tuxfamily.org/dox/TopicMultiThreading.html
+   Eigen::initParallel();
+
    // Create a new instance of the GUI for the simulation
    new WaterGui();
 

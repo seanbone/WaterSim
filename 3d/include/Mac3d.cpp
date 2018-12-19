@@ -1,28 +1,14 @@
 #include "Mac3d.h"
 
-// Constructor
+
 Mac3d::Mac3d(const unsigned n, const unsigned m, const unsigned l, 
 			 const double dx, const double dy, const double dz)
 	: N_(n), M_(m), L_(l), sizex_(dx), sizey_(dy), sizez_(dz), 
 	  cell_sizex_(sizex_/(1.*N_)), cell_sizey_(sizey_/(1.*M_)), 
 	  cell_sizez_(sizez_/(1.*L_)){
 	
+	//Initialization of the arrays 
 	initArrays();
-
-	// Initialize solid cells as a "box"
-	//  Top & bottom
-	//for (unsigned i = 0; i < N_; i++) {
-	//	psolid_[i] = true;
-	//	psolid_[i + (M_ - 1)*N_] = true;
-	//}
-	//// Sides
-	//for (unsigned i = 1; i < M_ - 1; i++) {
-	//	psolid_[N_*i] = true;
-	//	for (unsigned j = 1; j < N_ - 1; j++) {
-	//		psolid_[j + N_*i] = false;
-	//	}
-	//	psolid_[N_-1 + N_*i] = true;
-	//}
 
 	//Initialization of the diagonal of A
 	initAdiag();
@@ -219,16 +205,17 @@ void Mac3d::initAdiag() {
 	}
 }
 
-//************************************************************************************
+/************************************************************************************
 //***********************************GETTERS******************************************
 //************************************************************************************
 //1) getters for the layout properties of the grid (cell sizes and sizes of the grid);
-//2) getters for the velocities (u, v, u*, v* and their interpolation);
+//2) getters for the velocities (u, v, w, u*, v*, w* and their interpolation);
 //3) getters for the pressures;
 //4) getters for the physical properties of the cells (solid, liquid, empty);
 //5) getters for the weights for the particle to grid;
 //6) getters for the diagonal of the pressure matrix A;
 //7) getters for the indices of the cell to which a particle belong.
+*/
 
 //1. Layout properties of the grid -------------------------------------
 Eigen::Vector3d Mac3d::get_grid_size() const {
@@ -319,7 +306,6 @@ double Mac3d::get_w_star(const unsigned i, const unsigned j, const unsigned k) {
 	}
 }
 
-//This function is used for the interpolations
 void Mac3d::assign_x(double x, int indices_x, int& ix0, int& ix1, double& x0, double& x1){
 	if(x > indices_x * cell_sizex_ or  x == 0){
 		ix0 = indices_x;
@@ -334,7 +320,6 @@ void Mac3d::assign_x(double x, int indices_x, int& ix0, int& ix1, double& x0, do
 	return;
 }
 
-//This function is used for the interpolations
 void Mac3d::assign_y(double y, int indices_y, int& iy0, int& iy1, double& y0, double& y1){
 	if(y > indices_y * cell_sizey_ or  y == 0){
 		iy0 = indices_y;
@@ -349,7 +334,6 @@ void Mac3d::assign_y(double y, int indices_y, int& iy0, int& iy1, double& y0, do
 	return;
 }
 
-//This function is used for the interpolations
 void Mac3d::assign_z(double z, int indices_z, int& iz0, int& iz1, double& z0, double& z1){
 	if(z > indices_z * cell_sizez_ or  z == 0){
 		iz0 = indices_z;
@@ -364,7 +348,6 @@ void Mac3d::assign_z(double z, int indices_z, int& iz0, int& iz1, double& z0, do
 	return;
 }
 
-//This function is used for the interpolations
 void Mac3d::assign_d(double& xd, double& yd, double& zd, double x0, double x1, 
 			  double y0, double y1, double z0, double z1, double x, double y, double z){
 	xd = (x-x0)/(x1-x0);
@@ -505,13 +488,13 @@ double Mac3d::get_interp_v(double x, double y, double z, const bool use_v_star){
 	int ix0, ix1, iy0, iy1, iz0, iz1;
 	double v000, v100, v110, v010, v001, v101, v111, v011, v00, v10, v01, v11, v0, v1;
 
-	//Assigning of the indices and the values in x
+	//Assigning of the indices and the values in y
 	iy0 = indices[1];
 	iy1 = iy0 + 1;
 	y0 = (iy0-0.5)*cell_sizey_;
 	y1 = (iy1-0.5)*cell_sizey_;
 	
-	//Assigning of the indices and the values in y and z
+	//Assigning of the indices and the values in x and z
 	//and trilinear interpolation
 	if(x >= 0 && x <= sizex_ - cell_sizex_){
 		if(z >= 0 && z <= sizez_ - cell_sizez_){
@@ -623,13 +606,13 @@ double Mac3d::get_interp_w(double x, double y, double z, const bool use_w_star){
 	int ix0, ix1, iy0, iy1, iz0, iz1;
 	double w000, w100, w110, w010, w001, w101, w111, w011, w00, w10, w01, w11, w0, w1;
 
-	//Assigning of the indices and the values in x
+	//Assigning of the indices and the values in z
 	iz0 = indices[2];
 	iz1 = iz0 + 1;
 	z0 = (iz0-0.5)*cell_sizez_;
 	z1 = (iz1-0.5)*cell_sizez_;
 	
-	//Assigning of the indices and the values in y and z
+	//Assigning of the indices and the values in x and y
 	//and trilinear interpolation
 	if(x >= 0 && x <= sizex_ - cell_sizex_){
 		if(y >= 0 && y <= sizey_ - cell_sizey_){
@@ -792,6 +775,7 @@ double Mac3d::get_weights_w(const unsigned i, const unsigned j, const unsigned k
 		return 0;
 	}
 }
+
 //6. Diagonal of A -----------------------------------------------------
 const std::vector< Mac3d::Triplet_t >& Mac3d::get_a_diag() {
 	return A_diag_;
@@ -808,13 +792,14 @@ Eigen::Vector3d Mac3d::index_from_coord(const double x, const double y, const do
 
 
 
-//************************************************************************************
-//***********************************SETTERS******************************************
-//************************************************************************************
-//1) setters for the velocities (u, v, u*, v*);
+/************************************************************************************
+//***********************************SETTERS*****************************************
+//***********************************************************************************
+//1) setters for the velocities (u, v, w, u*, v*, w*);
 //2) setters for the pressures;
 //3) setters for the physical properties of the cells (solid, liquid, empty);
 //4) setters for the weights for the particle to grid;
+*/
 
 //1. Velocities --------------------------------------------------------
 void Mac3d::set_u(const unsigned i, const unsigned j, const unsigned k, double value){

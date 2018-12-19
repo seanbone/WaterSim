@@ -103,6 +103,7 @@ class Mac3d{
 		 */
 		void initAdiag();
 		
+		//------------------------- GETTERS ----------------------------
 		/**Return the size in meter of the grid in every direction 
 		 */
 		Eigen::Vector3d get_grid_size() const;
@@ -226,7 +227,7 @@ class Mac3d{
 		 */
 		double get_weights_w(const unsigned i, const unsigned j, const unsigned k = 0);
 		
-		/**Assign the right indices for the interpolation on the x axis.
+		/**Assign the right x-indices for the interpolation of the velocities.
 		 * Params:
 		 * - x is the x coordinate of the point in which the interpolation is required
 		 * - indices_x is the index in x-driection which denotes the cell
@@ -240,52 +241,164 @@ class Mac3d{
 		 */
 		void assign_x(double x, int indices_x, int& ix0, int& ix1, double& x0, double& x1);
 		
-		
+		/**Assign the right y-indices for the interpolation of the velocities.
+		 * Params:
+		 * - y is the y coordinate of the point in which the interpolation is required
+		 * - indices_y is the index in y-driection which denotes the cell
+		 * 	 in which the point for the interpolation lies
+		 * - iy0 is assigned by the function and refers to the indices in 
+		 *   https://en.wikipedia.org/wiki/Trilinear_interpolation
+		 * - iy1 is assigned by the function and refers to the indices in
+		 *   https://en.wikipedia.org/wiki/Trilinear_interpolation
+		 * - y0 is assigned by the function and is (ix0-0.5)*cell_sizex_
+		 * - y1 is assigned by the function and is (ix1-0.5)*cell_sizex_
+		 */
 		void assign_y(double y, int indices_y, int& iy0, int& iy1, double& y0, double& y1);
+		
+		/**Assign the right z-indices for the interpolation of the velocities.
+		 * Params:
+		 * - z is the z coordinate of the point in which the interpolation is required
+		 * - indices_z is the index in z-driection which denotes the cell
+		 * 	 in which the point for the interpolation lies
+		 * - iz0 is assigned by the function and refers to the indices in 
+		 *   https://en.wikipedia.org/wiki/Trilinear_interpolation
+		 * - iz1 is assigned by the function and refers to the indices in
+		 *   https://en.wikipedia.org/wiki/Trilinear_interpolation
+		 * - z0 is assigned by the function and is (ix0-0.5)*cell_sizex_
+		 * - z1 is assigned by the function and is (ix1-0.5)*cell_sizex_
+		 */
 		void assign_z(double z, int indices_z, int& iz0, int& iz1, double& z0, double& z1);
+		
+		/**Assign the values xd, yd, zd explained in https://en.wikipedia.org/wiki/Trilinear_interpolation
+		 * Params:
+		 * - xd, yd, zd are assigned by the function
+		 * - x0, x1, y0, y1, z0, z1 describe the points in which the values 
+		 *   of the velocities are taken in order to interpolate the velocity.
+		 *   For better description see https://en.wikipedia.org/wiki/Trilinear_interpolation
+		 * - x, y, z are the coordinate of the point in which the interpolation has to be done
+		 */
 		void assign_d(double& xd, double& yd, double& zd, double x0, double x1, double y0, double y1, double z0, double z1, double x, double y, double z);
-		double get_interp_u(double x, double y, double z, const bool use_u_star = false);	// if use_u_star is true, then is the interpolation of u*!
-		double get_interp_v(double x, double y, double z, const bool use_v_star = false); // if use_v_star is true, then is the interpolation of v*!
-		double get_interp_w(double x, double y, double z, const bool use_w_star = false);	// if use_w_star is true, then is the interpolation of w*!	
-
-
-		//SETTERS
-		//Set the x-velocity in the mathematical point (i-1/2,j,k)
+		
+		/**Return the interpolation of u or u* in the point (x,y,z)
+		 * Params:
+		 * - x, y, z are the coordinate in which the interpolation is made
+		 * - use_u_star indicate if the velocity u (use_u_star == 0) or the 
+		 * 	 velocity u* (use_u_star == 1) is used for the interpolation
+		 */
+		double get_interp_u(double x, double y, double z, const bool use_u_star = false);
+		
+		/**Return the interpolation of v or v* in the point (x,y,z)
+		 * Params:
+		 * - x, y, z are the coordinate in which the interpolation is made
+		 * - use_v_star indicate if the velocity v (use_v_star == 0) or the 
+		 * 	 velocity v* (use_v_star == 1) is used for the interpolation
+		 */
+		double get_interp_v(double x, double y, double z, const bool use_v_star = false);
+		
+		/**Return the interpolation of w or w* in the point (x,y,z)
+		 * Params:
+		 * - x, y, z are the coordinate in which the interpolation is made
+		 * - use_w_star indicate if the velocity w (use_w_star == 0) or the 
+		 * 	 velocity w* (use_w_star == 1) is used for the interpolation
+		 */
+		double get_interp_w(double x, double y, double z, const bool use_w_star = false);
+		
+		//------------------------ SETTERS -----------------------------
+		/**Set the x-velocity in the mathematical point (i-1/2, j, k) at value
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the velocity 
+		 * 	 is to be set
+		 * - value is the value to which the velocity is set
+		 */
 		void set_u(const unsigned i, const unsigned j, const unsigned k, double value); 
-		//Set the y-velocity in the mathematical point (i,j-1/2,k)
+		
+		/**Set the y-velocity in the mathematical point (i,j-1/2,k) at value
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the velocity 
+		 * 	 is to be set
+		 * - value is the value to which the velocity is set
+		 */
 		void set_v(const unsigned i, const unsigned j, const unsigned k, double value);
-		//Set the z-velocity in the mathematical point (i,j,k-1/2)
+		
+		/**Set the z-velocity in the mathematical point (i,j,k-1/2) at value
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the velocity 
+		 * 	 is to be set
+		 * - value is the value to which the velocity is set
+		 */
 		void set_w(const unsigned i, const unsigned j, const unsigned k, double value);
-		// Copy velocity field to temporary copy arrays
+		
+		/**Copy velocity field to temporary copy arrays
+		 */		
 		void set_uvw_star();
 
-		//Set the pressure in the mathematical point(i,j,k)
+		/**Set the pressure in the mathematical point(i,j,k)
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the pressure 
+		 * 	 is to be set
+		 * - value is the value to which the pressure is set
+		 */
 		void set_pressure(const unsigned i, const unsigned j, const unsigned k, double value);
-		// Reset all pressures
+		
+		/**Reset all the pressure with the values contained in p
+		 * Params:
+		 * - p is the vector which cointains the new value of the pressures
+		 */
 		void set_pressure(const Eigen::VectorXd& p);
 		
-		//Set the weights for u in the mathematical point (i-1/2,j,k) 
+		/**Set the weight for u in the mathematical point (i-1/2, j, k) at value
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the weight_u 
+		 * 	 is set
+		 * - value is the value at which the weight is set
+		 */
 		void set_weights_u(const unsigned i, const unsigned j, const unsigned k, double value);
-		//Set the weights for v in the mathematical point (i,j-1/2,k)
+		
+		/**Set the weight for v in the mathematical point (i,j-1/2,k) at value
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the weight_v
+		 * 	 is set
+		 * - value is the value at which the weight is set
+		 */
 		void set_weights_v(const unsigned i, const unsigned j, const unsigned k, double value);
-		//Set the weights for w in the mathematical point (i,j-1/2,k)
+		
+		/**Set the weight for w in the mathematical point (i,j,k-1/2) at value
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the weight_w
+		 * 	 is set
+		 * - value is the value at which the weight is set
+		 */
 		void set_weights_w(const unsigned i, const unsigned j, const unsigned k, double value);
 				
-		// Set all grid velocities to zero for particle-to-grid transfer
+		/**Set all grid velocities to zero for particle-to-grid transfer
+		 */
 		void set_velocities_to_zero();
 		
-		// Set all weights to zero for particle-to-grid transfer
+		/**Set all weights to zero for particle-to-grid transfer
+		 */
 		void set_weights_to_zero();
 		
-		//Set the cell with center (i,j,k) as a solid cell
+		/**Set the cell with center (i,j,k) as a solid cell
+		 * Prams:
+		 * - i, j, k are the indices of the cell to be set as solid
+		 */
 		void set_solid(const unsigned i, const unsigned j, const unsigned k = 0);
-		//Set the cell with center (i,j,k) as a fluid cell
+
+		/**Set the cell with center (i,j,k) as a solid cell
+		 * Prams:
+		 * - i, j, k are the indices of the cell to be set as solid
+		 */
 		void set_fluid(const unsigned i, const unsigned j, const unsigned k = 0);
-		// Reset all cells to not contain any fluid
+		
+		/**Reset all cells to not contain any fluid
+		 */
 		void reset_fluid();
 
-		//USEFUL FUNCTIONS
-		//Return a pair with the grid-coordinates (i,j,k) given a spatial coordinate(x,y,z)
+		/** Return the indices in which the point with coordinate (x,y,z)
+		 * lies as a Eigen::Vector3d
+		 * Params:
+		 * - x,y,z are the coordinate of the point 
+		 */
 		Eigen::Vector3d index_from_coord(const double x, const double y, const double z);
 };
 #endif

@@ -2,83 +2,82 @@
 #define MAC3D_H
 
 #include <Eigen/Dense>	//used for the Eigen dense matrix
-#include <utility>		//used for std::pair
 #include <iostream> 	//used for input and output
 #include <iomanip>		//used for input and output
 #include <Eigen/Sparse>	//used for the matrix A
 #include <vector>		//used for std::vector
-#include <algorithm>	// std::fill
+#include <algorithm>	//std::fill
 #include <cassert>		//assertions
 
 class Mac3d{
-	public:
-		using Triplet_t = Eigen::Triplet<double>; 
-		using Pair_t = std::pair<int, int>; //To access the component of the Pair use the methods "first" and "second"
-
 	private:
-		//PARAMETER for the grid
-		//number of cells in x
+		//------------------- GRID Properties --------------------------
+		//number of cells respectively in x-direction,
+		//y-direction, z-direction
 		const unsigned N_; 
-		//number of cells in y
 		const unsigned M_;
-		//number of cells in z
 		const unsigned L_;
-		//size (in meter) of the grid in x-direction
+		
+		//size (in meter) of the grid respectively in x-direction,
+		//y-direction, z-direction
 		const double sizex_;
-		//size (in meter) of the grid in y-direction
 		const double sizey_;
-		//size (in meter) of the grid in z-direction
 		const double sizez_;
-		//size (in meter) of one cell in x-direction
+		
+		//size (in meter) of one cell respectively in x-direction,
+		//y-direction, z-direction
 		const double cell_sizex_; 
-		//size (in meter) of one cell in y-direction
 		const double cell_sizey_;
-		//size (in meter) of one cell in z-direction
 		const double cell_sizez_;
 		
-		//PHYSICAL VALUES objects
+		//---------------- PHYSICAL VALUES objects ---------------------
 		//pointer to array for the pressure
 		double* ppressure_;
-		//pointer to array for the velocities in x-direction
+		
+		//pointer to array for the velocities respecitvely in x-direction
+		//y-direction, z-direction
 		double* pu_;
-		//pointer to array for the velocities in y-direction
 		double* pv_;
-		//pointer to array for the velocities in z-direction
 		double* pw_;
-		// Temporary copy of velocity field -> u^*, v^*
+		
+		//pointer to the temporary copy of velocity field u*, v*, w*
+		//respectively in x-direction, y-direction, z-direction
 		double* pu_star_;
 		double* pv_star_;
 		double* pw_star_;
+		
 		//pointer to array for specifing if a cell is solid (1) or not(0)
 		bool* psolid_;
+		
 		//pointer to array for specifing if a cell contains fluid (1) or not(0)
 		bool* pfluid_;
+		
 		//pointer to a std::vector which contians the triplets for
 		//the diagonal of the matrix A, used to solve the pressures
 		std::vector<Triplet_t> A_diag_;
-		// Weights for particle-to-grid for u
+		
+		//pointer to the weights for particle-to-grid respectively for u, v, w
 		double* pweights_u_;
-		// Weights for particle-to-grid for v
 		double* pweights_v_;
-		// Weights for particle-to-grid for w
 		double* pweights_w_;
 
 	public:
-		//CONSTRUCTORS
-		//Default constructor
+		using Triplet_t = Eigen::Triplet<double>; 
+		
+		/** Default Constructor
+		*/
 		Mac3d()
 			: N_(0), M_(0), L_(0), sizex_(0), sizey_(0), sizez_(0), cell_sizex_(0), cell_sizey_(0), cell_sizez_(0){}
 		
-		//Constructor with the number of cells (in all the three directions) and the length of the box (in metres)
+		/**Constructor
+		 * Params:
+		 * - n, m and l represents the number of grid cells in each direction
+		 * - dx, dy and dz are the real lengths of the grid in each direction (in meter)
+		 */
 		Mac3d(const unsigned n, const unsigned m, const unsigned l, const double dx, const double dy, const double dz);
 
-		// Initialize arrays to zero (pressure, u, v, w, etc)
-		void initArrays();
-
-		// Initialize A diagonal
-		void initAdiag();
-		
-		//Destructor
+		/** Destructor
+		 */
 		~Mac3d(){
 			delete[] ppressure_;
 			delete[] pu_;
@@ -89,51 +88,159 @@ class Mac3d{
 			delete[] pw_star_;
 			delete[] psolid_;
 			delete[] pfluid_;
+			delete[] pweights_u_;
+			delete[] pweights_v_;
+			delete[] pweights_w_;
 		}
+
+		/**Initialize the arrays of the class to zero, in particular:
+		 * ppressure_, pu_, pv_, pw_, pu_star_, pv_star_, pw_star_,
+		 * psolid_, pfluid_, pweights_u_,  pweights_v_, pweights_w_.
+		 */
+		void initArrays();
+
+		/**Initialize the diagonal of the pressure matrix A 
+		 */
+		void initAdiag();
 		
-		//GETS
-		// Get size of the full grid
+		/**Return the size in meter of the grid in every direction 
+		 */
 		Eigen::Vector3d get_grid_size() const;
-		//Get the x-velocity in the mathematical point (i-1/2,j, k) 
-		double get_u(const unsigned i, const unsigned j, const unsigned k = 0);
-		//Get the y-velocity in the mathematical point (i,j-1/2, k)
+		
+		/**Return the x-velocity in the mathematical point (i-1/2, j, k)
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the velocity 
+		 * 	 is asked.
+		 */
+		 double get_u(const unsigned i, const unsigned j, const unsigned k = 0);
+		
+		/**Return the y-velocity in the mathematical point (i, j-1/2, k)
+		 * * Params:
+		 * - i, j, k indicate in which position of the grid the velocity 
+		 * 	 is asked.
+		 */
 		double get_v(const unsigned i, const unsigned j, const unsigned k = 0);
-		//Get the z-velocity in the mathematical point (i,j-1/2, k-1/2)
+		
+		/** Return the z-velocity in the mathematical point (i, j, k-1/2)
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the velocity 
+		 * 	 is asked.
+		 */
 		double get_w(const unsigned i, const unsigned j, const unsigned k = 0);
-		// Equivalent for intermediate field
+		
+		/**Return the intermediate x-velocity u* in the mathematical point (i-1/2, j, k)
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the velocity 
+		 * 	 is asked.
+		 */
 		double get_u_star(const unsigned i, const unsigned j, const unsigned k = 0);
+		
+		/**Return the intermediate y-velocity v* in the mathematical point (i, j-1/2, k)
+		 * * Params:
+		 * - i, j, k indicate in which position of the grid the velocity 
+		 * 	 is asked.
+		 */
 		double get_v_star(const unsigned i, const unsigned j, const unsigned k = 0);
+		
+		/** Return the intermediate z-velocity w* in the mathematical point (i, j, k-1/2)
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the velocity 
+		 * 	 is asked.
+		 */
 		double get_w_star(const unsigned i, const unsigned j, const unsigned k = 0);
-		//Get the pressure in the mathematical point(i,j,k)
+		
+		/**Return the pressure in the mathematical point(i,j,k)
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the pressure is asked.
+		 */
 		double get_pressure(const unsigned i, const unsigned j, const unsigned k = 0);
-		//Return if the cell with center (i,j,k) is a solid cell
+		
+		/**Return if the cell with center (i,j,k) is a solid cell
+		 * Params:
+		 * - i, j, k indicate for which cell the physical property is asked.
+		 */
 		bool is_solid(const unsigned i, const unsigned j, const unsigned k = 0);
-		//Return if the cell with center (i,j,k) is a fluid cell
+		
+		/**Return if the cell with center (i,j,k) is a fluid cell
+		 * Params:
+		 * - i, j, k indicate for which cell the physical property is asked.
+		 */
 		bool is_fluid(const unsigned i, const unsigned j, const unsigned k = 0);
-		//Return if the cell with center (i,j,k) is empty (not solid && not fluid)
+		
+		/**Return if the cell with center (i,j,k) is empty (not solid && not fluid)
+		 * Params:
+		 * - i, j, k indicate for which cell the physical property is asked.
+		 */
 		bool is_empty(const unsigned i, const unsigned j, const unsigned k = 0);
 
-		// Grid dimensions in #cells
+		/**Return the number of cells of the grid in x-direction
+		 */
 		unsigned get_num_cells_x();
+		
+		/**Return the number of cells of the grid in y-direction
+		 */
 		unsigned get_num_cells_y();
+		
+		/**Return the number of cells of the grid in z-direction
+		 */
 		unsigned get_num_cells_z();
+		
+		/**Return the total number of cells of the grid
+		 */
 		unsigned get_num_cells();
-		// Cell dimensions in metres
+		
+		/**Return the dimension of one cell in x-direction in meter
+		 */
 		double get_cell_sizex();
+		
+		/**Return the dimension of one cell in y-direction in meter
+		 */
 		double get_cell_sizey();
+		
+		/**Return the dimension of one cell in z-direction in meter
+		 */
 		double get_cell_sizez();
-		// Get const-reference to A diagonal
+		
+		/** Return a const-reference to the diagonal of the pressure's matrix A
+		 */
 		const std::vector< Triplet_t >& get_a_diag();
 		
-		//Get the weights for u in the mathematical point (i-1/2,j,k) 
+		/**Return the weights for u in the mathematical point (i-1/2, j, k)
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the velocity 
+		 * 	 is asked.
+		 */
 		double get_weights_u(const unsigned i, const unsigned j, const unsigned k = 0);
-		//Get the weights for v in the mathematical point (i,j-1/2,k)
+		
+		/**Return the weights for v in the mathematical point (i, j-1/2, k)
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the velocity 
+		 * 	 is asked.
+		 */
 		double get_weights_v(const unsigned i, const unsigned j, const unsigned k = 0);
-		//Get the weights for v in the mathematical point (i,j,k-1/2)
+		
+		/**Return the weights for v in the mathematical point (i, j, k-1/2)
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the velocity 
+		 * 	 is asked.
+		 */
 		double get_weights_w(const unsigned i, const unsigned j, const unsigned k = 0);
 		
-		//Getters for the trilinear interpolation of u, v, w, u*, v*, w* in the point x,y,z
+		/**Assign the right indices for the interpolation on the x axis.
+		 * Params:
+		 * - x is the x coordinate of the point in which the interpolation is required
+		 * - indices_x is the index in x-driection which denotes the cell
+		 * 	 in which the point for the interpolation lies
+		 * - ix0 is assigned by the function and refers to the indices in 
+		 *   https://en.wikipedia.org/wiki/Trilinear_interpolation
+		 * - ix1 is assigned by the function and refers to the indices in
+		 *   https://en.wikipedia.org/wiki/Trilinear_interpolation
+		 * - x0 is assigned by the function and is (ix0-0.5)*cell_sizex_
+		 * - x1 is assigned by the function and is (ix1-0.5)*cell_sizex_
+		 */
 		void assign_x(double x, int indices_x, int& ix0, int& ix1, double& x0, double& x1);
+		
+		
 		void assign_y(double y, int indices_y, int& iy0, int& iy1, double& y0, double& y1);
 		void assign_z(double z, int indices_z, int& iz0, int& iz1, double& z0, double& z1);
 		void assign_d(double& xd, double& yd, double& zd, double x0, double x1, double y0, double y1, double z0, double z1, double x, double y, double z);

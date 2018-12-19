@@ -118,6 +118,7 @@ This command uses the program `ffmpeg` to take files numbered `0000.png, 0001.pn
 
 If/when we get back to this project, there's some things we'd like to implement next.
 
+ - Optimization: even though the compiler helps, there's still plenty of room for improvement.
  - Smoke (for the meteor)
  - Foam (it looks cool)
  - Some kind of open-boundary conditions, allowing waves and splashes to disappear out of the simulation instead of being forced to remain in the box

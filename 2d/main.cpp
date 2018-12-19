@@ -6,7 +6,6 @@
 #include "Gui.h"
 #include "Simulator.h"
 
-
 /*
  * This helper function is a utility to determine which
  * cells should be initialized as containing fluid at the
@@ -16,14 +15,14 @@
 std::vector<bool> select_fluid_cells(size_t nx, size_t ny) {
    std::vector<bool> is_fluid(nx*ny, false);
 
-   /*for (unsigned j = ny/4; j < 3*ny/4; j++) {
-      for (unsigned i = nx/4; i < 3*nx/4; i++) {
+   for (unsigned j = 0; j < ny; j++) {
+      for (unsigned i = 0; i < nx/4; i++) {
          is_fluid[i + j*nx] = true;
       }
-   }*/
+   }
 
-   for (unsigned j = 5; j < 9; j++) {
-      for (unsigned i = 3; i < 7; i++) {
+   for (unsigned j = ny/2; j < ny-1; j++) {
+      for (unsigned i = nx/2; i < 3*nx/4; i++) {
          is_fluid[i + j*nx] = true;
       }
    }
@@ -39,16 +38,14 @@ std::vector<bool> select_fluid_cells(size_t nx, size_t ny) {
 class WaterGui : public Gui {
    private:
       // Simulation parameters
-      bool m_export_meshes = false;
       bool m_show_pressures = false;
       bool m_display_velocity_arrows = false;
-      int m_export_fps = 30;
 
       double m_system_size_x = 20; // X dimension of system in m
       double m_system_size_y = 20; // Y dimension of system in m
       
-      int m_grid_res_x = 20; // Number of cells on X axis
-      int m_grid_res_y = 20; // Number of cells on Y axis
+      int m_grid_res_x = 60; // Number of cells on X axis
+      int m_grid_res_y = 60; // Number of cells on Y axis
       // Whether to randomize particle positions
       bool m_jitter_particles = true; 
 
@@ -67,15 +64,13 @@ class WaterGui : public Gui {
 
       // Other members
       bool m_display_grid = true;
-      int m_cells_x;
-      int m_cells_y;
 
    public:
       WaterSim *p_waterSim = NULL;  // pointer to the simulation
 
       WaterGui() {
          // Initialize fluid flags
-         std::vector<bool> is_fluid = select_fluid_cells(m_system_size_x, m_system_size_y);
+         std::vector<bool> is_fluid = select_fluid_cells(m_grid_res_x, m_grid_res_y);
 
 
          // create a new simulation instance
@@ -115,7 +110,6 @@ class WaterGui : public Gui {
        * Add parameter controls to the GUI
        */
       virtual void drawSimulationParameterMenu() override {
-            ImGui::Checkbox("Export meshes", &m_export_meshes);
             ImGui::Checkbox("Show pressure field", &m_show_pressures);
             ImGui::Checkbox("Display velocity arrows", &m_display_velocity_arrows);      
             ImGui::Checkbox("Randomize particles", &m_jitter_particles);

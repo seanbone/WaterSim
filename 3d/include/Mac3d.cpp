@@ -9,21 +9,6 @@ Mac3d::Mac3d(const unsigned n, const unsigned m, const unsigned l,
 	
 	initArrays();
 
-	// Initialize solid cells as a "box"
-	//  Top & bottom
-	//for (unsigned i = 0; i < N_; i++) {
-	//	psolid_[i] = true;
-	//	psolid_[i + (M_ - 1)*N_] = true;
-	//}
-	//// Sides
-	//for (unsigned i = 1; i < M_ - 1; i++) {
-	//	psolid_[N_*i] = true;
-	//	for (unsigned j = 1; j < N_ - 1; j++) {
-	//		psolid_[j + N_*i] = false;
-	//	}
-	//	psolid_[N_-1 + N_*i] = true;
-	//}
-
 	//Initialization of the diagonal of A
 	initAdiag();
 }

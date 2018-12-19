@@ -21,7 +21,7 @@ WaterSim::WaterSim(viewer_t& viewer, const bool display_grid,
 
     // Initialize particles
     initParticles();
-	
+
     // Initialize FLIP object
     initFLIP();
     
@@ -35,7 +35,7 @@ WaterSim::WaterSim(viewer_t& viewer, const bool display_grid,
     m_grid_data_idx = viewer.append_mesh();
     
     // Initialize Mesh Exporter
-	initMeshExp();
+    initMeshExp();
     
     // Update rendering geometry
     updateRenderGeometry();
@@ -95,6 +95,9 @@ void WaterSim::updateRenderGeometry() {
     // Copy particle positions from FLIP's data structure
     unsigned disp_particles = m_num_particles;
     unsigned particle_step = 1;
+
+    // If there are too many particles to display, only
+    // display a subset, using stride particle_set
     if (m_num_particles > m_max_p_disp) {
         disp_particles = m_max_p_disp;
         particle_step = m_num_particles / m_max_p_disp;
@@ -105,14 +108,10 @@ void WaterSim::updateRenderGeometry() {
         m_particles.row(j) = flip_particles[i].get_position();
     }
 
-    //~ std::cout << "Num particles: " << m_num_particles << "\nParticle step: " << particle_step << "\n";
-
     m_particle_colors.resize(disp_particles, 3);
     m_particle_colors.setZero();
     m_particle_colors.col(2).setOnes();
 }
-
-
 
 
 bool WaterSim::advance() {
@@ -122,6 +121,7 @@ bool WaterSim::advance() {
 
     std::cout << "\n\nBegin FLIP step #" << m_step << std::endl;
 
+    // Set up for timings of individual functions
     using timer_t = std::chrono::high_resolution_clock;
     using tpoint_t = timer_t::time_point;
     using namespace std::chrono;
@@ -129,17 +129,18 @@ bool WaterSim::advance() {
     double timer_scale = 1e6;
     auto timer_unit = "s";
     
+    // Time at beginning of simulation step
     tpoint_t t1 = timer_t::now();
 
     // Perform a FLIP step
     p_flip->step_FLIP(m_dt, m_step);
     
-
     tpoint_t t2 = timer_t::now();
     auto flip_duration = duration_cast<ticks_t>( t2 - t1 ).count() / timer_scale;
     std::cout << "\nFLIP duration: " << flip_duration << timer_unit <<  std::endl;
 
 
+    // Export mesh if required
     if (m_export_meshes) {
         std::cout << "\nExport mesh..." << std::endl;
         exp->export_mesh();
@@ -149,21 +150,28 @@ bool WaterSim::advance() {
     }
 
 
+    // Time at end of simulation step
     tpoint_t tf = timer_t::now();
     auto tot_duration = duration_cast<ticks_t>( tf - t1 ).count() / timer_scale;
     std::cout << "\nTotal duration: " << tot_duration << timer_unit <<  std::endl;
 
-    // advance step
+    // Increase counter and current time
     m_step++;
     m_time += m_dt;
+
     return false;
 }
 
 
 void WaterSim::renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) {
+    // Display MAC grid
     if (m_display_grid){
         viewer.data_list[m_grid_data_idx].set_edges(m_renderV, m_renderE, m_renderEC);
-	}
+    }
+
+    // Display particles
+    viewer.data_list[m_particles_data_idx].set_points(m_particles, m_particle_colors);
+    viewer.data_list[m_particles_data_idx].point_size = 5;
 }
 
 
@@ -183,11 +191,12 @@ void WaterSim::initParticles() {
 
     m_num_particles = 0;
     unsigned idx = 0;
-    std::vector<Particle> particles;
-    
-    Eigen::VectorXd rnd;
 
+    // Constant complexity for .push_back
+    std::list<Particle> particles;
+    
     // Random offets to particle positions
+    Eigen::VectorXd rnd;
     if (m_jitter_particles)
         rnd = Eigen::VectorXd::Random(3*particles_per_cell*nx*ny*nz);
     else
@@ -198,16 +207,18 @@ void WaterSim::initParticles() {
         for (unsigned y = 0; y < ny; y++) {
             for (unsigned x = 0; x < nx; x++) {
 
+                // Only populate cells flagged as fluid
                 if (!is_fluid_[x + y*nx + z*nx*ny])
                     continue;
 
-                // Populate cell (x,y)
+                // Center of cell (x,y,z)
                 double cx = x * sx;
                 double cy = y * sy;
                 double cz = z * sz;
 
                 const double f = 4.;
 
+                // Particle positions in a 2x2x2 array around cell center
                 double positions[particles_per_cell][3] = {
                     { cx - sx/f + rnd(idx   )*sx/(2*f), cy - sy/f + rnd(idx+1 )*sy/(2*f), cz - sz/f + rnd(idx+2 )*sz/(2*f)},
                     { cx - sx/f + rnd(idx+3 )*sx/(2*f), cy - sy/f + rnd(idx+4 )*sy/(2*f), cz + sz/f + rnd(idx+5 )*sz/(2*f)},
@@ -261,7 +272,6 @@ void WaterSim::initMacViz() {
 
     unsigned num_vertices = (nx + 1) * (ny + 1) * (nz + 1);
     unsigned num_edges = (nx + ny + 2) * (nz + 1) + (nx + 1)*(ny + 1);
-    //unsigned num_tria = 2 * nx * ny;
 
     // Calculate grid vertex coordinates for rendering
     m_renderV.resize(num_vertices, 3);

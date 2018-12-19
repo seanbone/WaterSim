@@ -7,8 +7,8 @@
 
 #include <sys/stat.h> // mkdir
 #include <igl/opengl/glfw/Viewer.h>
-#include <igl/png/writePNG.h>
-#include <chrono>
+#include <chrono> // accurate timings
+#include <list> // std::list
 
 /**
  * This class manages the water simulation.
@@ -17,33 +17,42 @@
  * - Initializes the list of particles
  * - Initializes a FLIP object to handle updating the state
  * - Calls the update method on FLIP at each step
- * - Uses an Exporter object to export meshes at each step
+ * - Uses a MeshExporter object to export meshes at each step
  * - Handles rendering of the visualization (particles & grid)
  */
 class WaterSim : public Simulation {
 
 	private:
-		using viewer_t = igl::opengl::glfw::Viewer;
-
 		// Pointer to IGL viewer used by Gui
+		using viewer_t = igl::opengl::glfw::Viewer;
 		viewer_t* const p_viewer;
 		
-		// MAC grid data structure
+		// Parameters of MAC grid
 		int m_res_x, m_res_y, m_res_z; // no. of cells in X and Y directions
 		double m_len_x, m_len_y, m_len_z; // size in [m] of full grid
 
-		// Other params
+		// FLIP solver parameters
 		double m_fluid_density_;
 		double m_gravity_mag_;
 		double m_alpha_;
-		bool m_display_grid;
 
+		// Max number of particles to display
 		unsigned m_max_p_disp;
 
+		// If we should export meshes for each time step
 		bool m_export_meshes;
 
-		// FLIP simulator
-		FLIP* p_flip;
+		// If we should show the grid in the visualization
+		bool m_display_grid;
+
+		// If we should randomize particle starting positions
+		bool m_jitter_particles;
+
+		// Number of particles in simulation
+		unsigned int m_num_particles;
+		
+
+		/*** Members relating to visualization ***/
 
 		// Index of the ViewerData object containing particles for rendering
 		//  in viewer.data_list
@@ -51,13 +60,6 @@ class WaterSim : public Simulation {
 		// Index of the ViewerData object containing the mesh representing
 		//  the grid MAC grid in viewer.data_list
 		unsigned int m_grid_data_idx;
-		unsigned int m_velocity_u_idx;
-		unsigned int m_velocity_v_idx;
-		unsigned int m_velocity_w_idx;
-		
-
-		unsigned int m_num_particles;
-		bool m_jitter_particles;
 		Eigen::MatrixXd m_particles; // Particle positions for rendering, Nx3
 		Eigen::MatrixXd m_particle_colors; // Particle colours, Nx3
 
@@ -67,22 +69,29 @@ class WaterSim : public Simulation {
 		Eigen::MatrixXd m_renderC;  // colors per face for rendering, Nx3
 		Eigen::MatrixXd m_renderEC; // colors of edges of mac grid, Nx3
 		
-		Eigen::MatrixXd m_render_velocity_u_V;
-		Eigen::MatrixXi m_render_velocity_u_E;
-		Eigen::MatrixXd m_render_velocity_v_V;
-		Eigen::MatrixXi m_render_velocity_v_E;
-
 	public:
+		// Vector of flags for fluid initialization
+		std::vector<bool> is_fluid_;
+		
+		/*** Helper class members ***/
+
 		//MAC grid data structure
 		Mac3d* p_mac_grid;
 		
 		// List of Particles
 		Particle* flip_particles;
-		std::vector<bool> is_fluid_;
-		
+
+		// FLIP simulator
+		FLIP* p_flip;
+
 		//MeshExporter
 		MeshExporter* exp;
 		
+		/*** Public methods ***/
+
+		/*
+		 * Constructor
+		 */
 		WaterSim(viewer_t& viewer, const bool display_grid,
 				 const int res_x, const int res_y, const int res_z,
 				 const double len_x, const double len_y, const double len_z,
@@ -91,6 +100,9 @@ class WaterSim : public Simulation {
 				 std::vector<bool> is_fluid, const bool jitter_particles,
 				 bool export_meshes, unsigned max_p);
 
+		/*
+		 * Destructor
+		 */
 		~WaterSim() {
 			delete p_mac_grid;
 			delete p_flip;

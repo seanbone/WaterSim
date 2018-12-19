@@ -1,10 +1,10 @@
 # meteor_pbs18
 
-TODO: merge back into master for submission
-
 Meteorite crashing into the sea - Physically-Based Simulation HS18 project.
 
 Authors: Silvia Nauer, Mikael Stellio, Sean Bone.
+
+This is a 3D FLIP solver implemented as part of the course Physically-Based Simulation for Computer Graphics (ETHZ autumn semester 2018), the goal of which was to create a video of a meteorite crashing into the sea.
 
 # Cloning with submodules
 
@@ -66,7 +66,11 @@ This will fill the lower quarter of the simulation box with fluid.
 
 ## Meteor splash
 
-TODO: move splash parameters out of `FLIP.cpp` and write explanation
+To produce the effect of a meteorite hitting the water, we apply radial forces within a fixed distance of a moving point, effectively simulating an object in motion. This is implemented in `FLIP::explode`, which is called from `FLIP::step_FLIP`:
+
+    explode(dt, step, 15, 0, 15, 2, 800);
+
+The first two parameters are the timestep and current step number. The following three arguments are the coordinated (in cells) of the point the "meteorite" is directed at. The last two parameters are the radius (in cells) of the meteorite and the force it applies.
 
 ## Exporting meshes
 
@@ -118,7 +122,7 @@ This command uses the program `ffmpeg` to take files numbered `0000.png, 0001.pn
 
 If/when we get back to this project, there's some things we'd like to implement next.
 
- - Optimization: even though the compiler helps, there's still plenty of room for improvement.
+ - Optimization: even though the compiler helps, there's still plenty of room for improvement. The solver could also be parallelized to and extent to better use computational resources.
  - Smoke (for the meteor)
  - Foam (it looks cool)
  - Some kind of open-boundary conditions, allowing waves and splashes to disappear out of the simulation instead of being forced to remain in the box

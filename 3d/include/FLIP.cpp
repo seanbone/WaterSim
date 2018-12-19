@@ -704,7 +704,7 @@ void FLIP::explode(const double dt, const unsigned long step, const int x, const
 						MACGrid_->set_w(i, j, k, MACGrid_->get_w(i, j, k) + dt*force*(2.-(k-z_center)/radius));
 					}
 				}
-			}	
+			}
 		}
 	}
 }
@@ -719,14 +719,14 @@ void FLIP::apply_boundary_conditions() {
 	unsigned nz = MACGrid_->get_num_cells_z();
 	
 	// Enforce boundary conditions for outer (system) boundaries
-	for (unsigned k = 0; k < nz; k++) {	
+	for (unsigned k = 0; k < nz; k++) {
 		for (unsigned i = 0; i < nx; i++) {
 			MACGrid_->set_v(i, 0, k, 0);
 			MACGrid_->set_v(i, ny, k, 0);
 		}
 	}
 	
-	for (unsigned k = 0; k < nz; k++) {	
+	for (unsigned k = 0; k < nz; k++) {
 		for (unsigned j = 0; j < ny; j++) {
 			MACGrid_->set_u(0, j, k, 0);
 			MACGrid_->set_u(nx, j, k, 0);

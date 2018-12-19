@@ -10,6 +10,10 @@
 #include <cassert>		//assertions
 
 class Mac3d{
+	public:
+		using Triplet_t = Eigen::Triplet<double>; 
+		using Pair_t = std::pair<int, int>; 
+
 	private:
 		//------------------- GRID Properties --------------------------
 		//number of cells respectively in x-direction,
@@ -62,7 +66,6 @@ class Mac3d{
 		double* pweights_w_;
 
 	public:
-		using Triplet_t = Eigen::Triplet<double>; 
 		
 		/** Default Constructor
 		*/

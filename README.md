@@ -106,3 +106,20 @@ This command uses the program `ffmpeg` to take files numbered `0000.png, 0001.pn
  - `-s`: dimensions
  - `-crf`: quality, lower is better
  - `-i`: input images. Change folder name/location if necessary.
+
+
+# Known issues & bugs
+
+ - We originally intended to implement interaction with static grid-aligned solids. Due to time constraints, we didn't finish implementing them, since they weren't required for our video. However, there is still some code referencing solids: this has no effect on the simulation, and calls to `Mac3d::is_solid` will evaluate to false. Since we may yet come back to this project (it's fun!), we decided to leave in what we had done.
+ - Our implementation of the level-set function is still somewhat rudimentary, and as a result the reconstructed meshes are imperfect. This produces some slight instabilities in the surface. This is especially visible in small splashes of just a few particles, where the droplets can be seen "flickering" and changing size between frames.
+ - The original video we presented also has some issues. For aethetics, we introduced some small-scale displacements to the water surface in Blender. However, as the meteor first enters the water, this causes the water's surface to wriggle unnaturally. This is probably due to the deformation of the mesh changing the procedural displacements. Unfortunately, we realised this too late to re-render the entire video for the presentation.
+
+# Future features
+
+If/when we get back to this project, there's some things we'd like to implement next.
+
+ - Smoke (for the meteor)
+ - Foam (it looks cool)
+ - Some kind of open-boundary conditions, allowing waves and splashes to disappear out of the simulation instead of being forced to remain in the box
+ - Particle sources/sinks
+ - Grid-aligned stationary solids

@@ -41,7 +41,7 @@ class WaterSim : public Simulation {
 		bool m_export_png_;
 		size_t m_png_sx_;
 		size_t m_png_sy_;
-		std::string m_png_dirname_ = "PNG_out";
+		std::string m_png_dirname_ = "../PNG_out";
 		unsigned m_png_num_ = 0;
 		unsigned m_max_pngs_;
 

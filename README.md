@@ -18,7 +18,21 @@ This Git repository has a submodule for libigl. To clone it correctly use either
     git clone --recurse-submodules git@gitlab.inf.ethz.ch:COURSE-ASL/asl21/team32.git
     git clone --recurse-submodules https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team32.git
 
-# Usage
+### Note for linux users
+
+Many linux distributions do not include `gcc` and the basic development tools in their default installation. On Ubuntu, you need to install the following packages:
+
+```
+sudo apt-get install cmake make build-essential libx11-dev mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev libxrandr-dev libxi-dev libxmu-dev libblas-dev libxinerama-dev libxcursor-dev
+```
+
+If you are using linux with a virtual machine on Windows, it is *recommended* to use **Visual Studio** instead.
+
+### Note for Windows users
+
+`libigl` supports the **Microsoft Visual Studio 2015** compiler and later, in *64bit* mode. You can download *Visual Studio 2019 Community* for free from [here](https://visualstudio.microsoft.com/vs/).
+
+# Compiling and running
 
 The main simulation is in the folder `3d`. It can be compiled with Make and CMake:
 

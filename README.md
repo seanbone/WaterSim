@@ -4,6 +4,7 @@ Meteorite crashing into the sea - Physically-Based Simulation HS18 project.
 Optimized for better performance as part of the Advanced Systems Lab FS21 project.
 
 Original authors: Silvia Nauer, Mikael Stellio, Sean Bone.
+
 Optimizations by: Chris Amevor, Felix I., Mikael Stellio, Sean Bone.
 
 This is a 3D FLIP solver originally implemented as part of the course Physically-Based Simulation for Computer Graphics (ETHZ autumn semester 2018), the goal of which was to create a video of a meteorite crashing into the sea.

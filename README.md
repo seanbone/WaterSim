@@ -1,4 +1,4 @@
-# meteor_pbs18
+# flip_asl21
 
 Meteorite crashing into the sea - Physically-Based Simulation HS18 project.
 
@@ -10,8 +10,8 @@ This is a 3D FLIP solver implemented as part of the course Physically-Based Simu
 
 This Git repository has a submodule for libigl. To clone it correctly use either of the following:
 
-    git clone --recurse-submodules git@gitlab.ethz.ch:bones/meteor_pbs18.git
-    git clone --recurse-submodules https://gitlab.ethz.ch/bones/meteor_pbs18.git
+    git clone --recurse-submodules git@gitlab.inf.ethz.ch:COURSE-ASL/asl21/team32.git
+    git clone --recurse-submodules https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team32.git
 
 # Usage
 

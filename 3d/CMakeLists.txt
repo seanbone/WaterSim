@@ -39,7 +39,7 @@ endif()
 
 # Add your project files
 file(GLOB SRCFILES main.cpp)
-file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/include/*.cpp)
+file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB HFILES *.h)
 file(GLOB H_FILES ${PROJECT_SOURCE_DIR}/include/*.h)
 

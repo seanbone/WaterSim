@@ -3,3 +3,4 @@
 *.vim
 compile_commands.json
 *.mp4
+**/.idea/

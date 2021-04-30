@@ -5,34 +5,6 @@
 #include "Gui.h"
 #include "SimConfig.h"
 
-
-/**
- * This helper function is a utility to determine which
- * cells should be initialized as containing fluid at the
- * start of the simulation.
- * Note: use this to set the initial state of fluid!
- * Params:
- * - nx, ny and nz are the number of cells on each axis
- */
-std::vector<bool> select_fluid_cells(size_t nx, size_t ny, size_t nz) {
-
-	// Vector of flags that determine which cells are fluid or not
-	std::vector<bool> is_fluid(nx * ny * nz, false);
-
-	// Iterate over all the cells that have to contain fluid at the 
-	// beginning of the simulation
-	for (unsigned k = 0; k < nz; k++) {
-		for (unsigned j = 0; j < 10; j++) {
-			for (unsigned i = 0; i < nx; i++) {
-				is_fluid[i + j * nx + nx * ny * k] = true;
-			}
-		}
-	}
-
-	return is_fluid;
-}
-
-
 /**
  * This class is a GUI for our water simulation. It extends the basic GUI
  * defined in Gui.h.
@@ -161,10 +133,6 @@ public:
 	* Update the Simulation class with the parameters input to the GUI
 	*/
 	void updateSimulationParameters() override {
-		// Dimensions of system have potentially changed
-		//  -> reevaluate fluid population
-		auto is_fluid = select_fluid_cells(m_grid_res_x, m_grid_res_y, m_grid_res_z);
-
 		updateConfig();
 
 		p_simulator->setMaxSteps(m_max_steps);

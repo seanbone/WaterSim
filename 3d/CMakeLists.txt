@@ -59,7 +59,8 @@ endif()
 
 
 add_definitions(-DIGL_VIEWER_VIEWER_QUIET)
-add_executable(${PROJECT_NAME} main.cpp ${SRC_FILES} ${H_FILES})
+add_executable(watersim-gui watersim-gui.cpp ${SRC_FILES} ${H_FILES})
 add_executable(ViewMesh viewmesh.cpp)
-target_link_libraries(${PROJECT_NAME} igl::core igl::opengl_glfw igl::opengl_glfw_imgui igl::png nlohmann_json::nlohmann_json)
+target_link_libraries(watersim-gui igl::core igl::opengl_glfw igl::opengl_glfw_imgui
+        igl::png nlohmann_json::nlohmann_json)
 target_link_libraries(ViewMesh igl::core igl::opengl_glfw igl::opengl_glfw_imgui igl::png)

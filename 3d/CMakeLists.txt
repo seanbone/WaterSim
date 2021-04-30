@@ -2,6 +2,34 @@
 cmake_minimum_required(VERSION 3.1)
 project(WaterSim)
 
+option(FETCHCONTENT_QUIET OFF)
+
+# Fetch JSON library
+include(FetchContent)
+FetchContent_Declare(json
+        GIT_REPOSITORY https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent
+        GIT_TAG v3.9.1)
+FetchContent_GetProperties(json)
+if(NOT json_POPULATED)
+    FetchContent_Populate(json)
+    add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+
+# Fetch NetCDF library
+include(FetchContent)
+FetchContent_Declare(
+        netcdf
+        GIT_REPOSITORY https://github.com/Unidata/netcdf-cxx4
+        GIT_TAG 162d78a8c4dc33379df746dfe232d0aaebc705db)
+FetchContent_GetProperties(netcdf)
+if(NOT netcdf_POPULATED)
+    FetchContent_Populate(netcdf)
+    add_subdirectory(${netcdf_SOURCE_DIR} ${netcdf_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+
+
+
+
 # Finds Libigl
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 
@@ -49,24 +77,14 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(../lib/eigen3)
 
 
-option(FETCHCONTENT_QUIET OFF)
-# Fetch JSON libray -- see https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent
-include(FetchContent)
-FetchContent_Declare(json
-        GIT_REPOSITORY https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent
-        GIT_TAG v3.9.1)
-FetchContent_GetProperties(json)
-if(NOT json_POPULATED)
-    FetchContent_Populate(json)
-    add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
-
 
 add_definitions(-DIGL_VIEWER_VIEWER_QUIET)
 add_executable(watersim-gui watersim-gui.cpp ${SRC_FILES} ${H_FILES})
 add_executable(watersim-cli watersim-cli.cpp ${SRC_FILES_CLI} ${H_FILES_CLI})
 add_executable(viewmesh viewmesh.cpp)
+add_executable(netcdf-test netcdf-test.cpp)
 target_link_libraries(watersim-gui igl::core igl::opengl_glfw igl::opengl_glfw_imgui
-        igl::png nlohmann_json::nlohmann_json)
-target_link_libraries(watersim-cli igl::core nlohmann_json::nlohmann_json)
+        igl::png nlohmann_json::nlohmann_json netcdf-cxx4)
+target_link_libraries(watersim-cli igl::core nlohmann_json::nlohmann_json netcdf-cxx4)
 target_link_libraries(viewmesh igl::core igl::opengl_glfw igl::opengl_glfw_imgui igl::png)
+target_link_libraries(netcdf-test netcdf-cxx4)

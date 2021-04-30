@@ -51,7 +51,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	WaterSimGui(viewer_t& viewer, const SimConfig& cfg, std::vector<bool> is_fluid);
+	WaterSimGui(viewer_t& viewer, const SimConfig& cfg);
 
 	/**
 	 * Reset class variables to reset the simulation.
@@ -61,7 +61,7 @@ public:
 	/**
 	 * Update simulation parameters. Requires a reset to take effect.
 	 */
-	void updateParams(const SimConfig& cfg, std::vector<bool> is_fluid);
+	void updateParams(const SimConfig& cfg);
 
 	/**
 	 * Update the rendering data structures. This method will be called in

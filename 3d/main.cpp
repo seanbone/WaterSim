@@ -47,6 +47,7 @@ private:
 	// Simulation parameters
 	bool m_export_meshes;
 	int m_max_steps;
+	bool m_meteor_force;
 
 	// X, Y and Z dimension of system in meters
 	double m_system_size_x;
@@ -84,6 +85,14 @@ private:
 	// to visualize the state of the sim.
 	int m_max_p_disp = 4242;
 
+	// Fluid region
+	double m_fluid_from_x;
+	double m_fluid_from_y;
+	double m_fluid_from_z;
+	double m_fluid_to_x;
+	double m_fluid_to_y;
+	double m_fluid_to_z;
+
 public:
 
 	// Pointer to the simulation
@@ -98,12 +107,8 @@ public:
 
 		readConfig();
 
-		// Initialize fluid flags
-		std::vector<bool> is_fluid = select_fluid_cells(m_grid_res_x, m_grid_res_y, m_grid_res_z);
-
-
 		// Create a new simulation instance
-		p_waterSim = new WaterSimGui(m_viewer, m_cfg, is_fluid);
+		p_waterSim = new WaterSimGui(m_viewer, m_cfg);
 
 		// Set this simulation as the simulation that is running in our GUI
 		setSimulation(p_waterSim);
@@ -127,6 +132,9 @@ public:
 		m_display_grid = m_cfg.getDisplayGrid();
 		m_max_p_disp = m_cfg.getMaxParticlesDisplay();
 		m_max_steps = m_cfg.getMaxSteps();
+		m_meteor_force = m_cfg.getApplyMeteorForce();
+		m_cfg.getFluidRegion(m_fluid_from_x, m_fluid_from_y, m_fluid_from_z,
+					   m_fluid_to_x, m_fluid_to_y, m_fluid_to_z);
 	}
 
 	/**
@@ -144,6 +152,9 @@ public:
 		m_cfg.setDisplayGrid(m_display_grid);
 		m_cfg.setMaxParticlesDisplay(m_max_p_disp);
 		m_cfg.setMaxSteps(m_max_steps);
+		m_cfg.setApplyMeteorForce(m_meteor_force);
+		m_cfg.setFluidRegion(m_fluid_from_x, m_fluid_from_y, m_fluid_from_z,
+		                     m_fluid_to_x, m_fluid_to_y, m_fluid_to_z);
 	}
 
 	/**
@@ -158,7 +169,7 @@ public:
 
 		p_simulator->setMaxSteps(m_max_steps);
 		p_waterSim->setTimestep(m_dt);
-		p_waterSim->updateParams(m_cfg, is_fluid);
+		p_waterSim->updateParams(m_cfg);
 	};
 
 	/**
@@ -181,6 +192,7 @@ public:
 	void drawSimulationParameterMenu() override {
 		ImGui::Checkbox("Export meshes", &m_export_meshes);
 		ImGui::Checkbox("Randomize particles", &m_jitter_particles);
+		ImGui::Checkbox("Meteor force", &m_meteor_force);
 		ImGui::InputDouble("Alpha", &m_alpha, 0, 0);
 		ImGui::InputDouble("Timestep [s]", &m_dt, 0, 0);
 		ImGui::InputInt("Max Steps", &m_max_steps);
@@ -193,6 +205,16 @@ public:
 		ImGui::InputDouble("Y Size [m]", &m_system_size_y, 0, 0);
 		ImGui::InputDouble("Z Size [m]", &m_system_size_z, 0, 0);
 
+		if (ImGui::CollapsingHeader("Fluid region",
+		                            ImGuiTreeNodeFlags_None)) {
+			ImGui::InputDouble("From X [m]", &m_fluid_from_x);
+			ImGui::InputDouble("From Y [m]", &m_fluid_from_y);
+			ImGui::InputDouble("From Z [m]", &m_fluid_from_z);
+			ImGui::InputDouble("To X [m]", &m_fluid_to_x);
+			ImGui::InputDouble("To Y [m]", &m_fluid_to_y);
+			ImGui::InputDouble("To Z [m]", &m_fluid_to_z);
+		}
+
 		if (ImGui::Button("Save configuration", ImVec2(-1, 0))) {
 			updateConfig();
 			m_cfg.writeFile(configFile);
@@ -204,6 +226,7 @@ public:
 		if (ImGui::Button("Reset to defaults", ImVec2(-1, 0))) {
 			m_cfg.setDefaults(true);
 			readConfig();
+			resetSimulation();
 		}
 	}
 
@@ -258,6 +281,8 @@ public:
 	* Override Gui::resetSimulation to also update simulation parameters.
 	*/
 	void resetSimulation() override {
+		updateConfig();
+		readConfig(); // Read config again to make sure invariants are respected
 		updateSimulationParameters();
 		Gui::resetSimulation();
 	}

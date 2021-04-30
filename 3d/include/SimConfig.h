@@ -16,6 +16,14 @@ class SimConfig {
 		// JSON object to store data
 		json m_config;
 
+		/** Sort a and b such that a <= b */
+		static inline void simpleSort(double& a, double& b) {
+			if (a > b) {
+				double tmp = a;
+				a = b;
+				b = tmp;
+			}
+		}
 	public:
 		SimConfig() {
 			setDefaults(true);
@@ -99,6 +107,27 @@ class SimConfig {
 		 */
 		void setMaxSteps(int maxSteps);
 		int getMaxSteps() const;
+
+		/**
+		 * Whether or not to apply the force replicating the meteor splash.
+		 */
+		 void setApplyMeteorForce(bool explode);
+		 bool getApplyMeteorForce() const;
+
+		 /**
+		  * Define the domain initially filled with fluid. Coords in meters.
+		  * Two points (from_x, from_y, from_z) and (to_x, to_y, to_z) define an
+		  * axis-aligned bounding box. All cells within that area are flagged as
+		  * containing fluid at the start of the simulation.
+		  * Note: coordinates are rearranged such that
+		  * from_x <= to_x
+		  * from_y <= to_y
+		  * from_z <= to_z
+		  */
+		  void setFluidRegion(double from_x, double from_y, double from_z,
+						double to_x, double to_y, double to_z);
+		  void getFluidRegion(double& from_x, double& from_y, double& from_z,
+						double& to_x, double& to_y, double& to_z) const;
 };
 
 #endif //WATERSIM_SIMCONFIG_H

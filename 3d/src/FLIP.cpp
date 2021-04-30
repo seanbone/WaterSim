@@ -1,15 +1,15 @@
 #include "FLIP.h"
 
-FLIP::FLIP(Particle* particles, const unsigned num_particles, Mac3d* MACGrid,
-		   const double density, const double gravity, const double alpha) 
-	: particles_(particles), num_particles_(num_particles), MACGrid_(MACGrid),
-	  fluid_density_(density), gravity_mag_(gravity), alpha_(alpha) {
+FLIP::FLIP(Particle* particles, unsigned num_particles, Mac3d* MACGrid,
+		   const SimConfig& cfg)
+	: particles_(particles), num_particles_(num_particles), MACGrid_(MACGrid), cfg_(cfg),
+	  fluid_density_(cfg.getDensity()), gravity_mag_(cfg.getGravity()), alpha_(cfg.getAlpha()) {
 	
 }
 
 
 /*** PERFORM ONE STEP ***/
-void FLIP::step_FLIP(const double dt, const unsigned long step) {
+void FLIP::step_FLIP(double dt, unsigned long step) {
 	/** One FLIP step:
 	 * 1. Compute velocity field (particle-to-grid transfer)
 	 *    - Particle-to-grid transfer
@@ -50,7 +50,7 @@ void FLIP::step_FLIP(const double dt, const unsigned long step) {
 	// 2.
 	apply_forces(dt);
 	
-	if ( step <= 200 ){
+	if (cfg_.getApplyMeteorForce() && step <= 200 ){
 		explode(dt, step, 15, 0, 15, 2, 800);
 	}
 

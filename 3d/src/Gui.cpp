@@ -474,9 +474,11 @@ bool Gui::drawMenu(igl::opengl::glfw::Viewer &viewer,
         }
         */
         ImGui::Checkbox("Show stats", &m_showStats);
+        /*
         if (ImGui::Checkbox("Show axes", &m_showAxes)) {
             showAxes(m_showAxes);
         }
+         */
         drawRenderOptionsMenu();
     }
     if (ImGui::CollapsingHeader("Simulation Config (reset to apply)",

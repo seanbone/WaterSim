@@ -3,6 +3,7 @@
 
 #include "Particle.h"
 #include "Mac3d.h"
+#include "SimConfig.h"
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
 #include <cmath>
@@ -11,7 +12,7 @@
 #include <chrono>
 
 class FLIP {
-	public:
+public:
 	
 	using SparseMat_t = Eigen::SparseMatrix<double>;
 	using Triplet_t = Eigen::Triplet<double>;
@@ -29,8 +30,8 @@ class FLIP {
 	 * - alpha is the percentage of PIC method mixed with the FLIP 
 	 *   method
 	 */
-	FLIP(Particle* particles, const unsigned num_particles, Mac3d* MACGrid,
-		 const double density, const double gravity, const double alpha);
+	FLIP(Particle* particles, unsigned num_particles, Mac3d* MACGrid,
+	  const SimConfig& cfg);
 	
 	/** Perform one FLIP step
 	 * Params:
@@ -38,9 +39,12 @@ class FLIP {
 	 * 	 subsampled)
 	 * - step is the number of steps performed
 	 */
-	void step_FLIP(const double dt, const unsigned long step);
+	void step_FLIP(double dt, unsigned long step);
 	
-	private:
+private:
+
+	// The configuration
+	const SimConfig cfg_;
 	
 	// Array of all particles
 	Particle* particles_;

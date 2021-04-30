@@ -2,10 +2,8 @@
 
 #include <utility>
 
-WaterSimGui::WaterSimGui(viewer_t &viewer, const SimConfig& cfg,
-						 std::vector<bool> is_fluid)
-	: Simulation(), m_watersim(cfg, std::move(is_fluid)),
-	  p_viewer(&viewer) {
+WaterSimGui::WaterSimGui(viewer_t &viewer, const SimConfig& cfg)
+	: Simulation(), m_watersim(cfg), p_viewer(&viewer) {
 
 	// Index of ViewerData instance dedicated to particles
 	m_particles_data_idx = viewer.append_mesh();
@@ -31,8 +29,8 @@ void WaterSimGui::resetMembers() {
 }
 
 
-void WaterSimGui::updateParams(const SimConfig& cfg, std::vector<bool> is_fluid) {
-	m_watersim.updateParams(cfg, std::move(is_fluid));
+void WaterSimGui::updateParams(const SimConfig& cfg) {
+	m_watersim.updateParams(cfg);
 
 	setTimestep(cfg.getTimeStep());
 }

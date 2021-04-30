@@ -1,7 +1,6 @@
 #include "WaterSim.h"
 
-WaterSim::WaterSim(const SimConfig& cfg, std::vector<bool> is_fluid)
-	: m_cfg(cfg), is_fluid_(std::move(is_fluid)) {
+WaterSim::WaterSim(const SimConfig& cfg) : m_cfg(cfg) {
 
 	// Initialize MAC grid
 	initMacGrid();
@@ -16,9 +15,8 @@ WaterSim::WaterSim(const SimConfig& cfg, std::vector<bool> is_fluid)
 	initMeshExp();
 }
 
-void WaterSim::updateParams(const SimConfig& cfg, std::vector<bool> is_fluid) {
+void WaterSim::updateParams(const SimConfig& cfg) {
 	m_cfg = cfg;
-	is_fluid_ = std::move(is_fluid);
 	setTimestep(cfg.getTimeStep());
 }
 
@@ -118,19 +116,29 @@ void WaterSim::initParticles() {
     else
         rnd = Eigen::VectorXd::Zero(3*particles_per_cell*nx*ny*nz);
 
-    // Initialize particles_per_cell particles per fluid cell
+    // Get fluid region
+	double fluid_from_x, fluid_from_y, fluid_from_z;
+	double fluid_to_x, fluid_to_y, fluid_to_z;
+	m_cfg.getFluidRegion(fluid_from_x, fluid_from_y, fluid_from_z,
+	                     fluid_to_x, fluid_to_y, fluid_to_z);
+
+	// Initialize particles_per_cell particles per fluid cell
     for (unsigned z = 0; z < nz; z++) {
         for (unsigned y = 0; y < ny; y++) {
             for (unsigned x = 0; x < nx; x++) {
 
-                // Only populate cells flagged as fluid
-                if (!is_fluid_[x + y*nx + z*nx*ny])
-                    continue;
+	            // Center of cell (x,y,z)
+	            double cx = x * sx;
+	            double cy = y * sy;
+	            double cz = z * sz;
 
-                // Center of cell (x,y,z)
-                double cx = x * sx;
-                double cy = y * sy;
-                double cz = z * sz;
+	            // Only populate cells flagged as fluid
+                bool is_fluid = cx >= fluid_from_x && cx <= fluid_to_x;
+	            is_fluid &= cy >= fluid_from_y && cy <= fluid_to_y;
+	            is_fluid &= cz >= fluid_from_z && cz <= fluid_to_z;
+	            //if (!is_fluid_[x + y*nx + z*nx*ny])
+	            if (!is_fluid)
+                    continue;
 
                 const double f = 4.;
 
@@ -173,7 +181,5 @@ void WaterSim::initMeshExp(){
 }
 
 void WaterSim::initFLIP() {
-    p_flip = new FLIP(flip_particles, m_num_particles, p_mac_grid,
-                      m_cfg.getDensity(), m_cfg.getGravity(),
-                      m_cfg.getAlpha());
+    p_flip = new FLIP(flip_particles, m_num_particles, p_mac_grid, m_cfg);
 }

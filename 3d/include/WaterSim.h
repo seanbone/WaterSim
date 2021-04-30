@@ -34,9 +34,6 @@ public:
 	/** Configuration object */
 	SimConfig m_cfg;
 
-	// Vector of flags for fluid initialization
-	std::vector<bool> is_fluid_;
-
 	/*** Helper class members ***/
 
 	//MAC grid data structure
@@ -56,7 +53,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	WaterSim(const SimConfig& cfg, std::vector<bool> is_fluid);
+	WaterSim(const SimConfig& cfg);
 
 	/**
 	 * Destructor
@@ -70,7 +67,7 @@ public:
 	/**
 	 * Update simulation parameters. Requires a reset to take effect.
 	 */
-	void updateParams(const SimConfig& cfg, std::vector<bool> is_fluid);
+	void updateParams(const SimConfig& cfg);
 
 	/**
 	 * Reset class variables to reset the simulation.

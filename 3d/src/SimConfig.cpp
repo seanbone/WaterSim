@@ -43,7 +43,7 @@ void SimConfig::setDefaults(bool hard) {
 	if (!m_config.contains("systemSize"))
 		setSystemSize(120, 120, 120);
 	if (!m_config.contains("gridResolution"))
-		setGridResolution(40, 40, 40);
+		setGridResolution(15, 15, 15);
 	if (!m_config.contains("jitterParticles"))
 		setJitterParticles(true);
 	if (!m_config.contains("timeStep"))
@@ -57,9 +57,13 @@ void SimConfig::setDefaults(bool hard) {
 	if (!m_config.contains("displayGrid"))
 		setDisplayGrid(false);
 	if (!m_config.contains("maxParticlesDisplay"))
-		setMaxParticlesDisplay(4242);
+		setMaxParticlesDisplay(42420);
 	if (!m_config.contains("maxSteps"))
 		setMaxSteps(-1);
+	if (!m_config.contains("applyMeteorForce"))
+		setApplyMeteorForce(false);
+	if (!m_config.contains("fluidRegion"))
+		setFluidRegion(22, 22, 22, 90, 110, 90);
 }
 
 void SimConfig::setExportMeshes(bool v) {
@@ -152,4 +156,33 @@ void SimConfig::setMaxSteps(int maxSteps) {
 
 int SimConfig::getMaxSteps() const {
 	return m_config["maxSteps"];
+}
+
+void SimConfig::setApplyMeteorForce(bool explode) {
+	m_config["applyMeteorForce"] = explode;
+}
+
+bool SimConfig::getApplyMeteorForce() const {
+	return m_config["applyMeteorForce"];
+}
+
+void SimConfig::setFluidRegion(double from_x, double from_y, double from_z, double to_x,
+							   double to_y, double to_z) {
+	simpleSort(from_x, to_x);
+	simpleSort(from_y, to_y);
+	simpleSort(from_z, to_z);
+	m_config["fluidRegion"] = {{from_x, from_y, from_z}, {to_x, to_y, to_z}};
+}
+
+void SimConfig::getFluidRegion(double &from_x, double &from_y, double &from_z,
+							   double &to_x, double &to_y, double &to_z) const {
+	from_x = m_config["fluidRegion"][0][0];
+	from_y = m_config["fluidRegion"][0][1];
+	from_z = m_config["fluidRegion"][0][2];
+	to_x = m_config["fluidRegion"][1][0];
+	to_y = m_config["fluidRegion"][1][1];
+	to_z = m_config["fluidRegion"][1][2];
+	simpleSort(from_x, to_x);
+	simpleSort(from_y, to_y);
+	simpleSort(from_z, to_z);
 }

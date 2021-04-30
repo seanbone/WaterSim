@@ -46,6 +46,7 @@ private:
 
 	// Simulation parameters
 	bool m_export_meshes;
+	int m_max_steps;
 
 	// X, Y and Z dimension of system in meters
 	double m_system_size_x;
@@ -125,6 +126,7 @@ public:
 		m_gravity = m_cfg.getGravity();
 		m_display_grid = m_cfg.getDisplayGrid();
 		m_max_p_disp = m_cfg.getMaxParticlesDisplay();
+		m_max_steps = m_cfg.getMaxSteps();
 	}
 
 	/**
@@ -141,6 +143,7 @@ public:
 		m_cfg.setGravity(m_gravity);
 		m_cfg.setDisplayGrid(m_display_grid);
 		m_cfg.setMaxParticlesDisplay(m_max_p_disp);
+		m_cfg.setMaxSteps(m_max_steps);
 	}
 
 	/**
@@ -153,21 +156,34 @@ public:
 
 		updateConfig();
 
+		p_simulator->setMaxSteps(m_max_steps);
 		p_waterSim->setTimestep(m_dt);
 		p_waterSim->updateParams(m_cfg, is_fluid);
 	};
 
+	/**
+	 * Add rendering controls to GUI
+	 */
+	 void drawRenderOptionsMenu() override {
+		if (ImGui::Checkbox("Show grid", &m_display_grid)) {
+			p_waterSim->m_watersim.m_cfg.setDisplayGrid(m_display_grid);
+			p_waterSim->updateRenderGeometry();
+		}
+		if (ImGui::InputInt("Max particles display", &m_max_p_disp, 0, 0)) {
+			p_waterSim->m_watersim.m_cfg.setMaxParticlesDisplay(m_max_p_disp);
+			p_waterSim->updateRenderGeometry();
+		}
+	 }
 
 	/**
 	* Add parameter controls to the GUI
 	*/
 	void drawSimulationParameterMenu() override {
-		ImGui::Checkbox("Display grid", &m_display_grid);
 		ImGui::Checkbox("Export meshes", &m_export_meshes);
 		ImGui::Checkbox("Randomize particles", &m_jitter_particles);
-		ImGui::InputInt("Max particles display", &m_max_p_disp, 0, 0);
 		ImGui::InputDouble("Alpha", &m_alpha, 0, 0);
 		ImGui::InputDouble("Timestep [s]", &m_dt, 0, 0);
+		ImGui::InputInt("Max Steps", &m_max_steps);
 		ImGui::InputDouble("Density [kg/m^3]", &m_density, 0, 0);
 		ImGui::InputDouble("Gravity [m/s^2]", &m_gravity, 0, 0);
 		ImGui::InputInt("Grid resolution X", &m_grid_res_x, 0, 0);
@@ -233,6 +249,8 @@ public:
 
 		ImGui::Text("Max pressure: %.5f", pressure_max);
 		ImGui::Text("Min pressure: %.5f", pressure_min);
+		ImGui::Text("%d particles", p_waterSim->m_watersim.getNumParticles());
+		ImGui::Text("%d cells (%d x %d x %d)", nx*ny*nz, nx, ny, nz);
 	}
 
 

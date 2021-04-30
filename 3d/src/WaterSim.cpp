@@ -23,6 +23,9 @@ void WaterSim::updateParams(const SimConfig& cfg, std::vector<bool> is_fluid) {
 }
 
 void WaterSim::resetMembers() {
+	m_time = 0;
+	m_step = 0;
+
 	// MAC grid
 	delete p_mac_grid;
 	initMacGrid();

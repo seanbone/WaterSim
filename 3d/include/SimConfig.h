@@ -93,6 +93,12 @@ class SimConfig {
 		 */
 		void setMaxParticlesDisplay(int maxParticles);
 		int getMaxParticlesDisplay() const;
+
+		/**
+		 * Maximum number of steps to perform in simulation.
+		 */
+		void setMaxSteps(int maxSteps);
+		int getMaxSteps() const;
 };
 
 #endif //WATERSIM_SIMCONFIG_H

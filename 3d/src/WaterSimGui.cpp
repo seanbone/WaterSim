@@ -70,6 +70,12 @@ void WaterSimGui::renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) {
     // Display MAC grid
     if (m_watersim.m_cfg.getDisplayGrid()){
         viewer.data_list[m_grid_data_idx].set_edges(m_renderV, m_renderE, m_renderEC);
+    } else {
+	    Eigen::MatrixXi renderE; // MAC grid edges for rendering, Nx2
+	    Eigen::MatrixXd renderEC; // colors of edges of mac grid, Nx3
+	    renderE.resize(0, 2);
+	    renderEC.resize(0, 3);
+	    viewer.data_list[m_grid_data_idx].set_edges(renderEC, renderE, renderEC);
     }
 
     // Display particles
@@ -80,8 +86,8 @@ void WaterSimGui::renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) {
 
 void WaterSimGui::initMacViz() {
 
-    if (!m_watersim.m_cfg.getDisplayGrid())
-        return;
+    //if (!m_watersim.m_cfg.getDisplayGrid())
+    //    return;
 
     unsigned nx = m_watersim.p_mac_grid->get_num_cells_x();
     unsigned ny = m_watersim.p_mac_grid->get_num_cells_y();

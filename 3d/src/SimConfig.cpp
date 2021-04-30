@@ -58,6 +58,8 @@ void SimConfig::setDefaults(bool hard) {
 		setDisplayGrid(false);
 	if (!m_config.contains("maxParticlesDisplay"))
 		setMaxParticlesDisplay(4242);
+	if (!m_config.contains("maxSteps"))
+		setMaxSteps(-1);
 }
 
 void SimConfig::setExportMeshes(bool v) {
@@ -142,4 +144,12 @@ void SimConfig::setMaxParticlesDisplay(int maxParticles) {
 
 int SimConfig::getMaxParticlesDisplay() const {
 	return m_config["maxParticlesDisplay"];
+}
+
+void SimConfig::setMaxSteps(int maxSteps) {
+	m_config["maxSteps"] = maxSteps;
+}
+
+int SimConfig::getMaxSteps() const {
+	return m_config["maxSteps"];
 }

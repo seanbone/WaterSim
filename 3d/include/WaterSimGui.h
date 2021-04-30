@@ -95,6 +95,10 @@ public:
 		m_watersim.setTimestep(t);
 	}
 
+	double getTime() const override { return m_watersim.getTime(); }
+
+	unsigned long getStep() const override { return m_watersim.getStep(); }
+
 protected:
 
 	/**

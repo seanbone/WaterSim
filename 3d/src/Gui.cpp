@@ -44,7 +44,7 @@ void Gui::start() {
     menu.callback_draw_viewer_window = [&]() { drawMenuWindow(menu); };
     showAxes(m_showAxes);
     p_simulator->setNumRecords(m_numRecords);
-    p_simulator->setMaxSteps(m_maxSteps);
+    //p_simulator->setMaxSteps(m_max_steps);
 
     // callbacks
     m_viewer.callback_key_pressed = [&](igl::opengl::glfw::Viewer &viewer,
@@ -434,17 +434,22 @@ bool Gui::drawMenu(igl::opengl::glfw::Viewer &viewer,
         if (ImGui::Button("Reset Simulation", ImVec2(-1, 0))) {
             resetSimulation();
         }
+        /*
         if (ImGui::Button("Clear Screen", ImVec2(-1, 0))) {
             clearScreen();
         }
-        if (ImGui::SliderInt("Steps/Second", &m_simSpeed, 1, 240)) {
+         */
+        if (ImGui::SliderInt("Steps/Second (render only)", &m_simSpeed, 1, 60)) {
             p_simulator->setSimulationSpeed(m_simSpeed);
         }
+        /*
         if (ImGui::InputInt("Max Steps", &m_maxSteps, -1, -1)) {
             p_simulator->setMaxSteps(m_maxSteps);
         }
+         */
     }
-    if (ImGui::CollapsingHeader("Overlays", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Render options", ImGuiTreeNodeFlags_None)) {
+    	/*
         if (ImGui::Checkbox("Wireframe", &(viewer.data().show_lines))) {
             for (size_t i = 0; i < viewer.data_list.size(); i++) {
                 viewer.data_list[i].show_lines = viewer.data().show_lines;
@@ -467,15 +472,18 @@ bool Gui::drawMenu(igl::opengl::glfw::Viewer &viewer,
                 viewer.data_list[i].show_faceid = viewer.data().show_faceid;
             }
         }
+        */
         ImGui::Checkbox("Show stats", &m_showStats);
         if (ImGui::Checkbox("Show axes", &m_showAxes)) {
             showAxes(m_showAxes);
         }
+        drawRenderOptionsMenu();
     }
-    if (ImGui::CollapsingHeader("Simulation Parameters",
+    if (ImGui::CollapsingHeader("Simulation Config (reset to apply)",
                                 ImGuiTreeNodeFlags_DefaultOpen)) {
         drawSimulationParameterMenu();
     }
+    /*
     if (ImGui::CollapsingHeader("Recording")) {
         bool hasRecords = p_simulator->getRecords().size() > 0 &&
                           p_simulator->getRecords()[0].size() > 0;
@@ -516,6 +524,7 @@ bool Gui::drawMenu(igl::opengl::glfw::Viewer &viewer,
         ImGui::PopStyleColor();
         ImGui::PopStyleColor();
     }
+     */
     return false;
 }
 

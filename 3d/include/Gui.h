@@ -54,6 +54,11 @@ class Gui {
     virtual void drawSimulationParameterMenu() {}
 
     /*
+     * Setup additional render options menu.
+     */
+    virtual void drawRenderOptionsMenu() {}
+
+    /*
      * Setup your own (additional) ImGUI debugging output.
      */
     virtual void drawSimulationStats() {}
@@ -116,7 +121,6 @@ class Gui {
                        igl::opengl::glfw::imgui::ImGuiMenu &menu, int button,
                        int modifier);
 
-    Simulator *p_simulator = NULL;
     bool m_request_clear = false;
     int m_simSpeed = 60;
     bool m_fastForward = false;
@@ -134,14 +138,15 @@ class Gui {
     bool m_showStats = true;
     double m_timerAverage = 0;  // running average of execution time of
                                 // one iteration of the simulation
-    int m_maxSteps = -1;
+    //int m_maxSteps = -1;
 
     int m_numRecords = 100;  // number of records to keep
 
    protected:
     igl::opengl::glfw::Viewer m_viewer;
+	Simulator *p_simulator = NULL;
 
-    virtual void resetSimulation();
+	virtual void resetSimulation();
 
 };
 

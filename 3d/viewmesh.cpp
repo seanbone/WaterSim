@@ -1,27 +1,21 @@
 #include <igl/readOBJ.h>
-
 #include <igl/opengl/glfw/Viewer.h>
 
+int main(int argc, char *argv[]) {
+	if (argc < 2) {
+		std::cout << "Usage: ./viewmesh <path/to/meshfile.obj>" << std::endl;
+		return 0;
+	}
 
+	Eigen::MatrixXd V;
+	Eigen::MatrixXi F;
+	// Load a mesh in OBJ format
+	igl::readOBJ(argv[1], V, F);
 
-Eigen::MatrixXd V;
+	// Render the mesh
+	igl::opengl::glfw::Viewer viewer;
 
-Eigen::MatrixXi F;
+	viewer.data().set_mesh(V, F);
 
-
-
-int main(int argc, char *argv[])
-
-{
-      // Load a mesh in OBJ format
-      
-      igl::readOBJ("../out_meshes/mesh_000249.obj", V, F);
-      
-      // Plot the mesh
-      
-      igl::opengl::glfw::Viewer viewer;
-      
-      viewer.data().set_mesh(V, F);
-      
-      viewer.launch(); 
+	viewer.launch();
 }

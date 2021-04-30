@@ -37,9 +37,13 @@ if (NOT LIBIGL_FOUND)
     find_package(LIBIGL REQUIRED QUIET)
 endif()
 
-# Add your project files
+# Add project files
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB H_FILES ${PROJECT_SOURCE_DIR}/include/*.h)
+file(GLOB SRC_FILES_CLI src/FLIP.cpp src/Mac3d.cpp src/MeshExporter.cpp src/Particle.cpp
+         src/SimConfig.cpp src/WaterSim.cpp)
+file(GLOB H_FILES_CLI src/FLIP.h src/Mac3d.h src/MeshExporter.h src/Particle.h
+        src/SimConfig.h src/WaterSim.h)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(../lib/eigen3)
@@ -60,7 +64,9 @@ endif()
 
 add_definitions(-DIGL_VIEWER_VIEWER_QUIET)
 add_executable(watersim-gui watersim-gui.cpp ${SRC_FILES} ${H_FILES})
+add_executable(watersim-cli watersim-cli.cpp ${SRC_FILES_CLI} ${H_FILES_CLI})
 add_executable(ViewMesh viewmesh.cpp)
 target_link_libraries(watersim-gui igl::core igl::opengl_glfw igl::opengl_glfw_imgui
         igl::png nlohmann_json::nlohmann_json)
+target_link_libraries(watersim-cli igl::core nlohmann_json::nlohmann_json)
 target_link_libraries(ViewMesh igl::core igl::opengl_glfw igl::opengl_glfw_imgui igl::png)

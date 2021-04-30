@@ -1,13 +1,11 @@
 #ifndef WATERSIM_H
 #define WATERSIM_H
 
-#include "Simulation.h"
 #include "FLIP.h"
 #include "MeshExporter.h"
 #include "SimConfig.h"
 
 #include <sys/stat.h> // mkdir
-#include <igl/opengl/glfw/Viewer.h>
 #include <chrono> // accurate timings
 #include <list> // std::list
 

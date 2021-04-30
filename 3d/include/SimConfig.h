@@ -49,10 +49,17 @@ class SimConfig {
 		bool writeFile(const std::string& json_file);
 
 		/**
+		 * Give access to JSON serialization.
+		 */
+		std::string toString() const { return m_config.dump(4); }
+
+		/**
 		 * Set default values for missing entries.
 		 * @param hard If set to true, will override entries already set with defaults.
 		 */
 		void setDefaults(bool hard = false);
+
+		/*****  Sim Configuration Parameters  *****/
 
 		/** Whether to export meshes */
 		void setExportMeshes(bool v);

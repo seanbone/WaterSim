@@ -1,46 +1,36 @@
 #include "WaterSim.h"
 
+WaterSim::WaterSim(viewer_t &viewer, const SimConfig& cfg, std::vector<bool> is_fluid)
+	: Simulation(), p_viewer(&viewer), is_fluid_(std::move(is_fluid)) {
 
-WaterSim::WaterSim(viewer_t& viewer, const bool display_grid,
-        const int res_x, const int res_y, const int res_z,
-        const double len_x, const double len_y, const double len_z,
-        const double density, const double gravity,
-        const double alpha,
-        std::vector<bool> is_fluid, const bool jitter_particles,
-        bool export_meshes, unsigned max_p)
-        : Simulation(), p_viewer(&viewer), m_display_grid(display_grid),
-          m_res_x(res_x), m_res_y(res_y), m_res_z(res_z),
-          m_len_x(len_x), m_len_y(len_y), m_len_z(len_z), m_fluid_density_(density),
-          m_gravity_mag_(gravity), m_alpha_(alpha),
-          is_fluid_(is_fluid), m_jitter_particles(jitter_particles),
-          m_export_meshes(export_meshes), m_max_p_disp(max_p) {
+	m_cfg = cfg;
 
+	setTimestep(cfg.getTimeStep());
 
-    // Initialize MAC grid
-    initMacGrid();
+	// Initialize MAC grid
+	initMacGrid();
 
-    // Initialize particles
-    initParticles();
+	// Initialize particles
+	initParticles();
 
-    // Initialize FLIP object
-    initFLIP();
-    
-    // Index of ViewerData instance dedicated to particles
-    m_particles_data_idx = viewer.append_mesh();
-    
-    // Generate visualization mesh based on Mac3d
-    initMacViz();
+	// Initialize FLIP object
+	initFLIP();
 
-    // Index of ViewerData instance dedicated to MAC grid
-    m_grid_data_idx = viewer.append_mesh();
-    
-    // Initialize Mesh Exporter
-    initMeshExp();
-    
-    // Update rendering geometry
-    updateRenderGeometry();
+	// Index of ViewerData instance dedicated to particles
+	m_particles_data_idx = viewer.append_mesh();
+
+	// Generate visualization mesh based on Mac3d
+	initMacViz();
+
+	// Index of ViewerData instance dedicated to MAC grid
+	m_grid_data_idx = viewer.append_mesh();
+
+	// Initialize Mesh Exporter
+	initMeshExp();
+
+	// Update rendering geometry
+	updateRenderGeometry();
 }
-
 
 /**
  * Reset class variables to reset the simulation.
@@ -67,40 +57,25 @@ void WaterSim::resetMembers() {
 }
 
 
-void WaterSim::updateParams(const bool display_grid,
-                  const int res_x, const int res_y, const int res_z,
-                  const double len_x, const double len_y, const double len_z,
-                  const double density, const double gravity, const double alpha,
-                  std::vector<bool> is_fluid, const bool jitter_particles,
-                  bool export_meshes, unsigned max_p) {
-    m_display_grid = display_grid;
-    m_res_x = res_x;
-    m_res_y = res_y;
-    m_res_z = res_z;
-    m_len_x = len_x;
-    m_len_y = len_y;
-    m_len_z = len_z;
-    m_fluid_density_ = density;
-    m_gravity_mag_ = gravity;
-    m_alpha_ = alpha;
-    is_fluid_ = is_fluid;
-    m_jitter_particles = jitter_particles;
-    m_export_meshes = export_meshes;
-    m_max_p_disp = max_p;
-    std::cout << "\nParams updated\n";
+void WaterSim::updateParams(const SimConfig& cfg, std::vector<bool> is_fluid) {
+	m_cfg = cfg;
+
+	is_fluid_ = std::move(is_fluid);
+
+	setTimestep(cfg.getTimeStep());
+	std::cout << "\nParams updated\n";
 }
 
-
 void WaterSim::updateRenderGeometry() {
-    // Copy particle positions from FLIP's data structure
+	// Copy particle positions from FLIP's data structure
     unsigned disp_particles = m_num_particles;
     unsigned particle_step = 1;
 
     // If there are too many particles to display, only
     // display a subset, using stride particle_set
-    if (m_num_particles > m_max_p_disp) {
-        disp_particles = m_max_p_disp;
-        particle_step = m_num_particles / m_max_p_disp;
+    if (m_num_particles > m_cfg.getMaxParticlesDisplay()) {
+        disp_particles = m_cfg.getMaxParticlesDisplay();
+        particle_step = m_num_particles / disp_particles;
     }
      
     m_particles.resize(disp_particles, 3);
@@ -117,7 +92,7 @@ void WaterSim::updateRenderGeometry() {
 bool WaterSim::advance() {
 
     if (m_step == 0)
-        std::cout << "Starting simluation with " << m_num_particles << " particles.\n\n";
+        std::cout << "Starting simulation with " << m_num_particles << " particles.\n\n";
 
     std::cout << "\n\nBegin FLIP step #" << m_step << std::endl;
 
@@ -141,7 +116,7 @@ bool WaterSim::advance() {
 
 
     // Export mesh if required
-    if (m_export_meshes) {
+    if (m_cfg.getExportMeshes()) {
         std::cout << "\nExport mesh..." << std::endl;
         exp->export_mesh();
         tpoint_t t3 = timer_t::now();
@@ -165,7 +140,7 @@ bool WaterSim::advance() {
 
 void WaterSim::renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) {
     // Display MAC grid
-    if (m_display_grid){
+    if (m_cfg.getDisplayGrid()){
         viewer.data_list[m_grid_data_idx].set_edges(m_renderV, m_renderE, m_renderEC);
     }
 
@@ -195,9 +170,9 @@ void WaterSim::initParticles() {
     // Constant complexity for .push_back
     std::list<Particle> particles;
     
-    // Random offets to particle positions
+    // Random offsets to particle positions
     Eigen::VectorXd rnd;
-    if (m_jitter_particles)
+    if (m_cfg.getJitterParticles())
         rnd = Eigen::VectorXd::Random(3*particles_per_cell*nx*ny*nz);
     else
         rnd = Eigen::VectorXd::Zero(3*particles_per_cell*nx*ny*nz);
@@ -245,7 +220,11 @@ void WaterSim::initParticles() {
 }
 
 void WaterSim::initMacGrid() {
-    p_mac_grid = new Mac3d(m_res_x, m_res_y, m_res_z, m_len_x, m_len_y, m_len_z);
+	int res_x, res_y, res_z;
+	m_cfg.getGridResolution(res_x, res_y, res_z);
+	double len_x, len_y, len_z;
+	m_cfg.getSystemSize(len_x, len_y, len_z);
+    p_mac_grid = new Mac3d(res_x, res_y, res_z, len_x, len_y, len_z);
 }
 
 void WaterSim::initMeshExp(){
@@ -254,13 +233,14 @@ void WaterSim::initMeshExp(){
 
 void WaterSim::initFLIP() {
     p_flip = new FLIP(flip_particles, m_num_particles, p_mac_grid,
-                      m_fluid_density_, m_gravity_mag_, m_alpha_);
+                      m_cfg.getDensity(), m_cfg.getGravity(),
+                      m_cfg.getAlpha());
 }
 
 
 void WaterSim::initMacViz() {
 
-    if (!m_display_grid)
+    if (!m_cfg.getDisplayGrid())
         return;
 
     unsigned nx = p_mac_grid->get_num_cells_x();

@@ -48,42 +48,42 @@ class SimConfig {
 
 		/** Whether to export meshes */
 		void setExportMeshes(bool v);
-		bool getExportMeshes();
+		bool getExportMeshes() const;
 
 		/** System size in meters */
 		void setSystemSize(double x, double y, double z);
-		void getSystemSize(double& x, double& y, double& z);
+		void getSystemSize(double& x, double& y, double& z) const;
 
 		/** Number of grid-cells on X, Y and Z axes */
 		void setGridResolution(int x, int y, int z);
-		void getGridResolution(int& x, int& y, int& z);
+		void getGridResolution(int& x, int& y, int& z) const;
 
 		/** Whether to randomize particle positions on startup */
 		void setJitterParticles(bool jitter);
-		bool getJitterParticles();
+		bool getJitterParticles() const;
 
 		/** Simulation time step */
 		void setTimeStep(double dt);
-		double getTimeStep();
+		double getTimeStep() const;
 
 		/** Blending factor between PIC and FLIP.
 		 * Pure FLIP: alpha = 0.0
 		 * Pure PIC: alpha = 1.0
 		 */
 		void setAlpha(double alpha);
-		double getAlpha();
+		double getAlpha() const;
 
 		/** Density of the simulated fluid in kg/m^3 */
 		void setDensity(double density);
-		double getDensity();
+		double getDensity() const;
 
 		/** Gravity acting on the fluid in m/s^2 */
 		void setGravity(double gravity);
-		double getGravity();
+		double getGravity() const;
 
 		/** Whether to display the grid. Only affects GUI mode. */
 		void setDisplayGrid(bool display);
-		bool getDisplayGrid();
+		bool getDisplayGrid() const;
 
 		/** Maximum number of particles to display
 		 * Needed to prevent GUI lag for large sims
@@ -92,7 +92,7 @@ class SimConfig {
 		 * to visualize the state of the sim.
 		 */
 		void setMaxParticlesDisplay(int maxParticles);
-		int getMaxParticlesDisplay();
+		int getMaxParticlesDisplay() const;
 };
 
 #endif //WATERSIM_SIMCONFIG_H

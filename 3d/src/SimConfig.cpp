@@ -64,7 +64,7 @@ void SimConfig::setExportMeshes(bool v) {
 	m_config["exportMeshes"] = v;
 }
 
-bool SimConfig::getExportMeshes() {
+bool SimConfig::getExportMeshes() const {
 	return m_config["exportMeshes"];
 }
 
@@ -72,7 +72,7 @@ void SimConfig::setSystemSize(double x, double y, double z) {
 	m_config["systemSize"] = {x, y, z};
 }
 
-void SimConfig::getSystemSize(double &x, double &y, double &z) {
+void SimConfig::getSystemSize(double &x, double &y, double &z) const {
 	x = m_config["systemSize"][0];
 	y = m_config["systemSize"][1];
 	z = m_config["systemSize"][2];
@@ -82,7 +82,7 @@ void SimConfig::setGridResolution(int x, int y, int z) {
 	m_config["gridResolution"] = {x, y, z};
 }
 
-void SimConfig::getGridResolution(int &x, int &y, int &z) {
+void SimConfig::getGridResolution(int &x, int &y, int &z) const {
 	x = m_config["gridResolution"][0];
 	y = m_config["gridResolution"][1];
 	z = m_config["gridResolution"][2];
@@ -92,7 +92,7 @@ void SimConfig::setJitterParticles(bool jitter) {
 	m_config["jitterParticles"] = jitter;
 }
 
-bool SimConfig::getJitterParticles() {
+bool SimConfig::getJitterParticles() const {
 	return m_config["jitterParticles"];
 }
 
@@ -100,7 +100,7 @@ void SimConfig::setTimeStep(double dt) {
 	m_config["timeStep"] = dt;
 }
 
-double SimConfig::getTimeStep() {
+double SimConfig::getTimeStep() const {
 	return m_config["timeStep"];
 }
 
@@ -108,7 +108,7 @@ void SimConfig::setAlpha(double alpha) {
 	m_config["alpha"] = alpha;
 }
 
-double SimConfig::getAlpha() {
+double SimConfig::getAlpha() const {
 	return m_config["alpha"];
 }
 
@@ -116,7 +116,7 @@ void SimConfig::setDensity(double density) {
 	m_config["density"] = density;
 }
 
-double SimConfig::getDensity() {
+double SimConfig::getDensity() const {
 	return m_config["density"];
 }
 
@@ -124,7 +124,7 @@ void SimConfig::setGravity(double gravity) {
 	m_config["gravity"] = gravity;
 }
 
-double SimConfig::getGravity() {
+double SimConfig::getGravity() const {
 	return m_config["gravity"];
 }
 
@@ -132,7 +132,7 @@ void SimConfig::setDisplayGrid(bool display) {
 	m_config["displayGrid"] = display;
 }
 
-bool SimConfig::getDisplayGrid() {
+bool SimConfig::getDisplayGrid() const {
 	return m_config["displayGrid"];
 }
 
@@ -140,6 +140,6 @@ void SimConfig::setMaxParticlesDisplay(int maxParticles) {
 	m_config["maxParticlesDisplay"] = maxParticles;
 }
 
-int SimConfig::getMaxParticlesDisplay() {
+int SimConfig::getMaxParticlesDisplay() const {
 	return m_config["maxParticlesDisplay"];
 }

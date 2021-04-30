@@ -55,11 +55,11 @@ class Simulation {
      */
     virtual void renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) = 0;
 
-    void setTimestep(double t) { m_dt = t; }
+    virtual void setTimestep(double t) { m_dt = t; }
 
-    double getTime() const { return m_time; }
+    virtual double getTime() const { return m_time; }
 
-    unsigned long getStep() const { return m_step; }
+    virtual unsigned long getStep() const { return m_step; }
 
     std::vector<RigidObject> &getObjects() { return m_objects; }
 

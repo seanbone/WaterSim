@@ -38,15 +38,14 @@ if (NOT LIBIGL_FOUND)
 endif()
 
 # Add your project files
-file(GLOB SRCFILES main.cpp)
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
-file(GLOB HFILES *.h)
 file(GLOB H_FILES ${PROJECT_SOURCE_DIR}/include/*.h)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(../lib/eigen3)
 
 
+option(FETCHCONTENT_QUIET OFF)
 # Fetch JSON libray -- see https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent
 include(FetchContent)
 FetchContent_Declare(json
@@ -60,7 +59,7 @@ endif()
 
 
 add_definitions(-DIGL_VIEWER_VIEWER_QUIET)
-add_executable(${PROJECT_NAME} ${SRCFILES} ${SRC_FILES} ${HFILES} ${H_FILES})
+add_executable(${PROJECT_NAME} main.cpp ${SRC_FILES} ${H_FILES})
 add_executable(ViewMesh viewmesh.cpp)
 target_link_libraries(${PROJECT_NAME} igl::core igl::opengl_glfw igl::opengl_glfw_imgui igl::png nlohmann_json::nlohmann_json)
 target_link_libraries(ViewMesh igl::core igl::opengl_glfw igl::opengl_glfw_imgui igl::png)

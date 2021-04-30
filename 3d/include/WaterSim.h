@@ -19,40 +19,21 @@
  * - Initializes a FLIP object to handle updating the state
  * - Calls the update method on FLIP at each step
  * - Uses a MeshExporter object to export meshes at each step
- * - Handles rendering of the visualization (particles & grid)
  */
-class WaterSim : public Simulation {
-
-private:
-
-	/** Configuration object */
-	SimConfig m_cfg;
+class WaterSim {
 
 	// Number of particles in simulation
 	unsigned int m_num_particles;
 
-
-	/*** Members relating to visualization ***/
-	// Pointer to GLFW viewer used by Gui
-	using viewer_t = igl::opengl::glfw::Viewer;
-	viewer_t *const p_viewer;
-
-	// Index of the ViewerData object containing particles for rendering
-	//  in viewer.data_list
-	unsigned int m_particles_data_idx;
-	// Index of the ViewerData object containing the mesh representing
-	//  the grid MAC grid in viewer.data_list
-	unsigned int m_grid_data_idx;
-	Eigen::MatrixXd m_particles; // Particle positions for rendering, Nx3
-	Eigen::MatrixXd m_particle_colors; // Particle colours, Nx3
-
-	Eigen::MatrixXd m_renderV;  // vertex positions for rendering, Nx3
-	Eigen::MatrixXi m_renderE;  // MAC grid edges for rendering, Nx2
-	Eigen::MatrixXi m_renderF;  // face indices for rendering, Nx3
-	Eigen::MatrixXd m_renderC;  // colors per face for rendering, Nx3
-	Eigen::MatrixXd m_renderEC; // colors of edges of mac grid, Nx3
+	double m_dt = 0.0;         // length of timestep
+	double m_time = 0.0;       // current time
+	unsigned long m_step = 0;  // number of performed steps in simulation
 
 public:
+
+	/** Configuration object */
+	SimConfig m_cfg;
+
 	// Vector of flags for fluid initialization
 	std::vector<bool> is_fluid_;
 
@@ -75,21 +56,16 @@ public:
 	/**
 	 * Constructor
 	 */
-	WaterSim(viewer_t& viewer, const SimConfig& cfg, std::vector<bool> is_fluid);
+	WaterSim(const SimConfig& cfg, std::vector<bool> is_fluid);
 
 	/**
 	 * Destructor
 	 */
-	~WaterSim() override {
+	~WaterSim() {
 		delete p_mac_grid;
 		delete p_flip;
 		delete[] flip_particles;
 	}
-
-	/**
-	 * Reset class variables to reset the simulation.
-	 */
-	void resetMembers() override;
 
 	/**
 	 * Update simulation parameters. Requires a reset to take effect.
@@ -97,33 +73,26 @@ public:
 	void updateParams(const SimConfig& cfg, std::vector<bool> is_fluid);
 
 	/**
-	 * Update the rendering data structures. This method will be called in
-	 * alternation with advance(). This method blocks rendering in the
-	 * viewer, so do *not* do extensive computation here (leave it to
-	 * advance()). This method need not be thread-safe with
-	 * renderRenderGeometry(): mutual exclusion is guaranteed by Simulator.
+	 * Reset class variables to reset the simulation.
 	 */
-	void updateRenderGeometry() override;
+	void resetMembers();
 
 	/**
-	 * Performs one simulation step of length m_dt. This method *must* be
-	 * thread-safe with respect to renderRenderGeometry() (easiest is to not
-	 * touch any rendering data structures at all). You have to update the time
+	 * Performs one simulation step of length m_dt. You have to update the time
 	 * variables at the end of each step if they are necessary for your
 	 * simulation.
 	 */
-	bool advance() override;
+	bool advance();
 
-	/**
-	 * Perform any actual rendering here. This method *must* be thread-safe with
-	 * respect to advance(). This method runs in the same thread as the
-	 * viewer and blocks user IO, so there really should not be any extensive
-	 * computation here or the UI will lag/become unresponsive (the whole reason
-	 * the simulation itself is in its own thread.)
-	 */
-	void renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) override;
+	unsigned int getNumParticles() const { return m_num_particles; }
 
-private:
+	void setTimestep(double t) { m_dt = t; }
+
+	double getTime() const { return m_time; }
+
+	unsigned long getStep() const { return m_step; }
+
+protected:
 
 	/**
 	 * Initialize the particle list according to the current settings.
@@ -148,11 +117,6 @@ private:
 	 * Note: does not delete previous instance!
 	 */
 	void initFLIP();
-
-	/**
-	 * Initialize a mesh to visualize the MAC grid
-	 */
-	void initMacViz();
 };
 
 #endif // WATERSIM_H

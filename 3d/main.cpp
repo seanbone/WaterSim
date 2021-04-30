@@ -1,10 +1,8 @@
 #include <igl/writeOFF.h>
-#include <Eigen/Eigen>
 #include <vector>
 #include <thread>
-#include "WaterSim.h"
+#include "WaterSimGui.h"
 #include "Gui.h"
-#include "Simulator.h"
 #include "SimConfig.h"
 
 
@@ -88,7 +86,7 @@ private:
 public:
 
 	// Pointer to the simulation
-	WaterSim *p_waterSim = nullptr;
+	WaterSimGui *p_waterSim = nullptr;
 
 
 	/** Default Constructor
@@ -104,7 +102,7 @@ public:
 
 
 		// Create a new simulation instance
-		p_waterSim = new WaterSim(m_viewer, m_cfg, is_fluid);
+		p_waterSim = new WaterSimGui(m_viewer, m_cfg, is_fluid);
 
 		// Set this simulation as the simulation that is running in our GUI
 		setSimulation(p_waterSim);
@@ -163,7 +161,7 @@ public:
 	/**
 	* Add parameter controls to the GUI
 	*/
-	virtual void drawSimulationParameterMenu() override {
+	void drawSimulationParameterMenu() override {
 		ImGui::Checkbox("Display grid", &m_display_grid);
 		ImGui::Checkbox("Export meshes", &m_export_meshes);
 		ImGui::Checkbox("Randomize particles", &m_jitter_particles);
@@ -197,16 +195,18 @@ public:
 	/**
 	* Add maximum and minimum pressure to the GUI
 	*/
-	virtual void drawSimulationStats() override {
+	void drawSimulationStats() override {
 
 		// Print the maximal and the minimal pressure at every time-step
 		double pressure_max = 0;
 		double pressure_min = 0;
 
 		// Get total number of cells on each axis
-		unsigned nx = (*p_waterSim).p_mac_grid->get_num_cells_x();
-		unsigned ny = (*p_waterSim).p_mac_grid->get_num_cells_y();
-		unsigned nz = (*p_waterSim).p_mac_grid->get_num_cells_z();
+		//unsigned nx = (*p_waterSim).p_mac_grid->get_num_cells_x();
+		//unsigned ny = (*p_waterSim).p_mac_grid->get_num_cells_y();
+		//unsigned nz = (*p_waterSim).p_mac_grid->get_num_cells_z();
+		int nx, ny, nz;
+		p_waterSim->m_watersim.m_cfg.getGridResolution(nx, ny, nz);
 
 		// Iterate over all grid-cells
 		for (unsigned k = 0; k < nz; k++) {
@@ -214,7 +214,7 @@ public:
 				for (unsigned i = 0; i < nx; i++) {
 
 					// Find the maximal/minimal pressure
-					double temp = (*p_waterSim).p_mac_grid->get_pressure(i, j, k);
+					double temp = p_waterSim->m_watersim.p_mac_grid->get_pressure(i, j, k);
 
 					if (i == 0 && j == 0 && k == 0) {
 						pressure_max = temp;

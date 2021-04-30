@@ -1,11 +1,7 @@
 #include "WaterSim.h"
 
-WaterSim::WaterSim(viewer_t &viewer, const SimConfig& cfg, std::vector<bool> is_fluid)
-	: Simulation(), p_viewer(&viewer), is_fluid_(std::move(is_fluid)) {
-
-	m_cfg = cfg;
-
-	setTimestep(cfg.getTimeStep());
+WaterSim::WaterSim(const SimConfig& cfg, std::vector<bool> is_fluid)
+	: m_cfg(cfg), is_fluid_(std::move(is_fluid)) {
 
 	// Initialize MAC grid
 	initMacGrid();
@@ -16,82 +12,37 @@ WaterSim::WaterSim(viewer_t &viewer, const SimConfig& cfg, std::vector<bool> is_
 	// Initialize FLIP object
 	initFLIP();
 
-	// Index of ViewerData instance dedicated to particles
-	m_particles_data_idx = viewer.append_mesh();
-
-	// Generate visualization mesh based on Mac3d
-	initMacViz();
-
-	// Index of ViewerData instance dedicated to MAC grid
-	m_grid_data_idx = viewer.append_mesh();
-
 	// Initialize Mesh Exporter
 	initMeshExp();
-
-	// Update rendering geometry
-	updateRenderGeometry();
 }
-
-/**
- * Reset class variables to reset the simulation.
- */
-void WaterSim::resetMembers() {
-    // MAC grid
-    delete p_mac_grid;
-    initMacGrid();
-
-    p_viewer->data_list[m_grid_data_idx].clear();
-    initMacViz();
-
-    // Particles
-    delete [] flip_particles;
-    initParticles();
-
-    // FLIP simulator
-    delete p_flip;
-    initFLIP();
-    
-    // MeshExporter
-    delete exp;
-    initMeshExp();
-}
-
 
 void WaterSim::updateParams(const SimConfig& cfg, std::vector<bool> is_fluid) {
 	m_cfg = cfg;
-
 	is_fluid_ = std::move(is_fluid);
-
 	setTimestep(cfg.getTimeStep());
-	std::cout << "\nParams updated\n";
 }
 
-void WaterSim::updateRenderGeometry() {
-	// Copy particle positions from FLIP's data structure
-    unsigned disp_particles = m_num_particles;
-    unsigned particle_step = 1;
+void WaterSim::resetMembers() {
+	// MAC grid
+	delete p_mac_grid;
+	initMacGrid();
 
-    // If there are too many particles to display, only
-    // display a subset, using stride particle_set
-    if (m_num_particles > m_cfg.getMaxParticlesDisplay()) {
-        disp_particles = m_cfg.getMaxParticlesDisplay();
-        particle_step = m_num_particles / disp_particles;
-    }
-     
-    m_particles.resize(disp_particles, 3);
-    for (unsigned i = 0, j=0; j < disp_particles && i < m_num_particles; j++, i += particle_step) {
-        m_particles.row(j) = flip_particles[i].get_position();
-    }
+	// Particles
+	delete [] flip_particles;
+	initParticles();
 
-    m_particle_colors.resize(disp_particles, 3);
-    m_particle_colors.setZero();
-    m_particle_colors.col(2).setOnes();
+	// FLIP simulator
+	delete p_flip;
+	initFLIP();
+
+	// MeshExporter
+	delete exp;
+	initMeshExp();
 }
-
 
 bool WaterSim::advance() {
 
-    if (m_step == 0)
+	if (m_step == 0)
         std::cout << "Starting simulation with " << m_num_particles << " particles.\n\n";
 
     std::cout << "\n\nBegin FLIP step #" << m_step << std::endl;
@@ -136,19 +87,6 @@ bool WaterSim::advance() {
 
     return false;
 }
-
-
-void WaterSim::renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) {
-    // Display MAC grid
-    if (m_cfg.getDisplayGrid()){
-        viewer.data_list[m_grid_data_idx].set_edges(m_renderV, m_renderE, m_renderEC);
-    }
-
-    // Display particles
-    viewer.data_list[m_particles_data_idx].set_points(m_particles, m_particle_colors);
-    viewer.data_list[m_particles_data_idx].point_size = 5;
-}
-
 
 void WaterSim::initParticles() {
 
@@ -236,67 +174,3 @@ void WaterSim::initFLIP() {
                       m_cfg.getDensity(), m_cfg.getGravity(),
                       m_cfg.getAlpha());
 }
-
-
-void WaterSim::initMacViz() {
-
-    if (!m_cfg.getDisplayGrid())
-        return;
-
-    unsigned nx = p_mac_grid->get_num_cells_x();
-    unsigned ny = p_mac_grid->get_num_cells_y();
-    unsigned nz = p_mac_grid->get_num_cells_z();
-    double sx = p_mac_grid->get_cell_sizex();
-    double sy = p_mac_grid->get_cell_sizey();
-    double sz = p_mac_grid->get_cell_sizez();
-
-    unsigned num_vertices = (nx + 1) * (ny + 1) * (nz + 1);
-    unsigned num_edges = (nx + ny + 2) * (nz + 1) + (nx + 1)*(ny + 1);
-
-    // Calculate grid vertex coordinates for rendering
-    m_renderV.resize(num_vertices, 3);
-    unsigned i = 0;
-    for (unsigned z = 0; z <= nz; z++) {
-        for (unsigned y = 0; y <= ny; y++) {
-            for (unsigned x = 0; x <= nx; x++) {
-                // Vertex:
-                double cx = x * sx;
-                double cy = y * sy;
-                double cz = z * sz;
-                m_renderV.row(i) << cx - sx/2., cy - sy/2., cz - sz/2.;
-                
-                // Increment index
-                i++;
-            }
-        }
-    }
-
-    // Calculate edges of MAC grid for rendering
-    m_renderE.resize(num_edges, 2);
-    m_renderE.setZero();
-    m_renderEC.resize(num_edges, 3);
-    m_renderEC.setZero();
-    i = 0;
-    // Edges parallel to x axis <=> normal to yz plane
-    for (unsigned z = 0; z <= nz; z++) {
-        for (unsigned y = 0; y <= ny; y++, i++) {
-            auto a = y*(nx+1) + z*(nx+1)*(ny+1);
-            m_renderE.row(i) << a, a + nx;
-        }
-    }
-    // Edges parallel to y axis <=> normal to xz plane
-    for (unsigned z = 0; z <= nz; z++) {
-        for (unsigned x = 0; x <= nx; x++, i++) {
-            auto a = x + z*(nx+1)*(ny+1);
-            m_renderE.row(i) << a, a + ny * (nx + 1);
-        }
-    }
-    // Edges parallel to z axis <=> normal to xy plane
-    for (unsigned y = 0; y <= ny; y++) {
-        for (unsigned x = 0; x <= nx; x++, i++) {
-            auto a = x + y * (nx + 1);
-            m_renderE.row(i) << a, a + nz * (ny + 1) * (nx + 1);
-        }
-    }
-}
-

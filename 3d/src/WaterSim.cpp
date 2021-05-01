@@ -67,13 +67,22 @@ bool WaterSim::advance() {
     std::cout << "\nFLIP duration: " << flip_duration << timer_unit <<  std::endl;
 
 
-    // Export mesh if required
+    // Compute mesh if required
+    if (m_cfg.getDisplayMeshes() || m_cfg.getExportMeshes()) {
+	    std::cout << "\nCompute mesh..." << std::endl;
+	    exp->compute_mesh();
+	    tpoint_t t_comp = timer_t::now();
+	    auto comp_duration = duration_cast<ticks_t>( t_comp - t2 ).count() / timer_scale;
+	    std::cout << "Mesh compute duration: " << comp_duration <<timer_unit<<std::endl;
+    }
+
+	// Export mesh if required
     if (m_cfg.getExportMeshes()) {
         std::cout << "\nExport mesh..." << std::endl;
         exp->export_mesh();
         tpoint_t t3 = timer_t::now();
         auto export_duration = duration_cast<ticks_t>( t3 - t2 ).count() / timer_scale;
-        std::cout << "\nExport duration: " << export_duration << timer_unit <<  std::endl;
+        std::cout << "Export duration: " << export_duration << timer_unit <<  std::endl;
     }
 
 

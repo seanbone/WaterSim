@@ -20,6 +20,9 @@ private:
 	bool m_export_meshes;
 	int m_max_steps;
 	bool m_meteor_force;
+	bool m_display_meshes;
+	bool m_display_mesh_edges;
+	bool m_display_mesh_faces;
 
 	// X, Y and Z dimension of system in meters
 	double m_system_size_x;
@@ -102,6 +105,9 @@ public:
 		m_density = m_cfg.getDensity();
 		m_gravity = m_cfg.getGravity();
 		m_display_grid = m_cfg.getDisplayGrid();
+		m_display_meshes = m_cfg.getDisplayMeshes();
+		m_display_mesh_faces = m_cfg.getDisplayMeshFaces();
+		m_display_mesh_edges = m_cfg.getDisplayMeshEdges();
 		m_max_p_disp = m_cfg.getMaxParticlesDisplay();
 		m_max_steps = m_cfg.getMaxSteps();
 		m_meteor_force = m_cfg.getApplyMeteorForce();
@@ -122,6 +128,7 @@ public:
 		m_cfg.setDensity(m_density);
 		m_cfg.setGravity(m_gravity);
 		m_cfg.setDisplayGrid(m_display_grid);
+		m_cfg.setDisplayMeshes(m_display_mesh_edges, m_display_mesh_faces);
 		m_cfg.setMaxParticlesDisplay(m_max_p_disp);
 		m_cfg.setMaxSteps(m_max_steps);
 		m_cfg.setApplyMeteorForce(m_meteor_force);
@@ -143,13 +150,34 @@ public:
 	/**
 	 * Add rendering controls to GUI
 	 */
-	 void drawRenderOptionsMenu() override {
-		if (ImGui::Checkbox("Show grid", &m_display_grid)) {
-			p_waterSim->m_watersim.m_cfg.setDisplayGrid(m_display_grid);
-			p_waterSim->updateRenderGeometry();
+	 void drawRenderOptionsMenu(igl::opengl::glfw::Viewer &viewer) override {
+		if (ImGui::Checkbox("Mesh Wireframe", &m_display_mesh_edges) ||
+			m_display_mesh_edges != viewer.data().show_lines)
+		{
+			p_waterSim->m_watersim.m_cfg.setDisplayMeshes(m_display_mesh_edges,
+												 m_display_mesh_faces);
+			viewer.data().show_lines = m_display_mesh_edges;
+			for (size_t i = 0; i < viewer.data_list.size(); i++) {
+				viewer.data_list[i].show_lines = viewer.data().show_lines;
+			}
 		}
+		if (ImGui::Checkbox("Mesh Fill", &(m_display_mesh_faces)) ||
+			m_display_mesh_faces != viewer.data().show_faces)
+		{
+			p_waterSim->m_watersim.m_cfg.setDisplayMeshes(m_display_mesh_edges,
+			                                              m_display_mesh_faces);
+			viewer.data().show_faces = m_display_mesh_faces;
+			for (size_t i = 0; i < viewer.data_list.size(); i++) {
+				viewer.data_list[i].show_faces = viewer.data().show_faces;
+			}
+		}
+		//ImGui::Checkbox("Show stats", &m_showStats);
 		if (ImGui::InputInt("Max particles display", &m_max_p_disp, 0, 0)) {
 			p_waterSim->m_watersim.m_cfg.setMaxParticlesDisplay(m_max_p_disp);
+			p_waterSim->updateRenderGeometry();
+		}
+		if (ImGui::Checkbox("Show grid", &m_display_grid)) {
+			p_waterSim->m_watersim.m_cfg.setDisplayGrid(m_display_grid);
 			p_waterSim->updateRenderGeometry();
 		}
 	 }

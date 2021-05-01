@@ -14,6 +14,13 @@ WaterSimGui::WaterSimGui(viewer_t &viewer, const SimConfig& cfg)
 	// Index of ViewerData instance dedicated to MAC grid
 	m_grid_data_idx = viewer.append_mesh();
 
+	// Index of ViewerData instance dedicated to mesh
+	m_mesh_data_idx = viewer.append_mesh();
+
+	m_mesh_renderF = Eigen::MatrixXi::Zero(1, 3);
+	m_mesh_renderV = Eigen::MatrixXd::Zero(1, 3);
+	m_mesh_renderN = Eigen::MatrixXd::Zero(1, 3);
+
 	// Update rendering geometry
 	updateRenderGeometry();
 }
@@ -56,6 +63,15 @@ void WaterSimGui::updateRenderGeometry() {
     m_particle_colors.resize(disp_particles, 3);
     m_particle_colors.setZero();
     m_particle_colors.col(2).setOnes();
+
+    if (m_watersim.m_cfg.getDisplayMeshes()) {
+	    m_watersim.exp->get_mesh(m_mesh_renderV, m_mesh_renderF);
+	    igl::per_face_normals(m_mesh_renderV, m_mesh_renderF, m_mesh_renderN);
+    } else {
+    	m_mesh_renderF = Eigen::MatrixXi::Zero(1, 3);
+    	m_mesh_renderV = Eigen::MatrixXd::Zero(1, 3);
+    	m_mesh_renderN = Eigen::MatrixXd::Zero(1, 3);
+    }
 }
 
 
@@ -79,6 +95,14 @@ void WaterSimGui::renderRenderGeometry(igl::opengl::glfw::Viewer &viewer) {
     // Display particles
     viewer.data_list[m_particles_data_idx].set_points(m_particles, m_particle_colors);
     viewer.data_list[m_particles_data_idx].point_size = 5;
+
+    // Display mesh
+	viewer.data_list[m_mesh_data_idx].clear();
+	if (m_watersim.m_cfg.getDisplayMeshes() && m_watersim.getStep() > 0
+		&& m_mesh_renderF.cols() == 3) {
+		viewer.data_list[m_mesh_data_idx].set_mesh(m_mesh_renderV, m_mesh_renderF);
+		viewer.data_list[m_mesh_data_idx].set_normals(m_mesh_renderN);
+	}
 }
 
 

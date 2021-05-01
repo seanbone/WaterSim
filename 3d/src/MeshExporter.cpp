@@ -139,22 +139,30 @@ void MeshExporter::level_set(){
 	}
 }
 
-void MeshExporter::export_mesh() {
-	const unsigned pad_width = 6;
 
+void MeshExporter::compute_mesh() {
 	unsigned nx, ny, nz;
 	nx = pMacGrid_->get_num_cells_x();
 	ny = pMacGrid_->get_num_cells_y();
 	nz = pMacGrid_->get_num_cells_z();
 
+	// Perform calculation of mesh
+	level_set();
+	igl::copyleft::marching_cubes(plevel_set_, points_, nx+2, ny+2, nz+2, vertices_, faces_);
+}
+
+void MeshExporter::get_mesh(Eigen::MatrixXd &vertices, Eigen::MatrixXi &faces) const {
+	vertices = vertices_;
+	faces = faces_;
+}
+
+void MeshExporter::export_mesh() {
+	const unsigned pad_width = 6;
+
 	// Assemble file name
 	std::stringstream filename;
 	filename << folder_ << file_prefix_ << std::setfill('0') << std::setw(pad_width) << num_exported_;
 	filename << ".obj";
-
-	// Perform calculation of mesh
-	level_set();
-	igl::copyleft::marching_cubes(plevel_set_, points_, nx+2, ny+2, nz+2, vertices_, faces_);
 
 	// Export mesh to OBJ file
 	igl::writeOBJ(filename.str(), vertices_, faces_);

@@ -40,48 +40,75 @@ The main simulation is in the folder `3d`. It can be compiled with Make and CMak
     cd 3d/build && cmake ..
     make -j8
 
-This builds two executables, `WaterSim` (the actual simulation) and `ViewMesh` (which can be used to preview a generated mesh).
+This builds three executables:
+* `watersim-gui` starts a GUI with the simulation.
+* `watersim-cli` runs without a GUI, and therefore with fewer dependencies. It requires a configuration file as input. Run `./watersim-cli -h` for help.
+* `viewmesh`, which can be used to preview an OBJ mesh.
 
 # 3D Simulation
 
 ## Simulation parameters
 
-`WaterSim` has several options. Note that the simulation must be reset before any changes are applied.
+`watersim` has several options. Note that in GUI mode, the simulation must be reset before any changes to settings are applied (except the first two, which only affect the viewport and not the simulation itself).
 
- - Display grid: whether to display the MAC grid
+ - Show grid: whether to display the MAC grid
+ - Max particles display: when running a large simulation, rendering all the particles causes the libigl GUI to lag significantly. Therefore a maximum number of particles actually visualized can be selected. This does not affect the number of particles actually used in simulation.
  - Export meshes: whether to generate `*.obj` files for each frame (see below)
  - Randomize particles: if checked, the initial particle positions are jittered slightly instead of being on a strict 2x2x2 grid in their starting cell.
- - Max particles display: when running a large simulation, rendering all the particles causes the libigl GUI to lag significantly. Therefore a maximum number of particles actually visualized can be selected. This does not affect the number of particles actually used in simulation.
+ - Meteor force: if checked, the `FLIP::explode` method will be called at each step, generating the "meteor splash" effect.
  - Alpha: the mixing parameter for FLIP and PIC methods. `alpha = 1` means pure PIC, `alpha = 0` means pure FLIP.
  - Timestep: timestep used for simulation, in seconds.
+ - Max steps: how many steps to run the simulation for. If negative, no limit is set.
  - The density of the fluid, in kg/m^3
  - Acceleration of gravity in m/s^2
  - Grid resolution XYZ: the number of cells along the corresponding direction (axis)
  - Size XYZ: the size in metres of the simulation environment.
+ - Fluid region: used to select a region to be filled with fluid at the start of the simulation. It is specified by two points (coordinates in meters) which define an axis-aligned bounding box. All cells whose center lies in this region are flagged as fluid.
 
 **Caution:** the program expects the grid cells to be cubic in shape, and this assumption is made across the program. So special care sould be taken when setting the simulation size (`sx, sy, sz`) and grid resolution (`nx, ny, nz`) such that `sx/nx = sy/ny = sz/nz`.
 
-## Initial fluid layout
+### Configuration files
+Simulation settings can be exported and loaded to/from JSON files.
+* In CLI mode, a configuration file is required. By default, it will attempt to read `3d/config.json`, but a different value can be passed as command-line argument. Since `3d/config.json` is ignored by git, you will need to provide this file manually when first cloning the project (or generate it with the GUI).
+* In GUI mode, the `3d/config.json` is read. If it is not found, a set of defaults (specified in `SimConfig::setDefaults`) is loaded. Using the GUI buttons, you can save the current settings to `3d/config.json`, reload the settings from `3d/config.json`, or reset to defaults.
 
-The initial layout of the fluid is determined in `main.cpp`. The function `select_fluid_cells` is used to determine which cells should be initialized as fluid at the beginning of the simulation.
-For example:
-
+Here is an example `config.json` file:
 ```
-std::vector<bool> select_fluid_cells(size_t nx, size_t ny, size_t nz) {
-	std::vector<bool> is_fluid(nx*ny*nz, false);
-
-	for (unsigned k = 0; k < nz; k++) {
-		for (unsigned j = 0; j < ny/4; j++) {
-			for (unsigned i = 0; i < nx; i++) {
-				is_fluid[i + j*nx + nx*ny*k] = true;
-			}
-		}
-    }
-    return is_fluid;
+{
+    "alpha": 0.01,
+    "applyMeteorForce": false,
+    "density": 1000.0,
+    "displayGrid": false,
+    "exportMeshes": false,
+    "fluidRegion": [
+        [
+            22.0,
+            22.0,
+            22.0
+        ],
+        [
+            90.0,
+            110.0,
+            90.0
+        ]
+    ],
+    "gravity": 9.81,
+    "gridResolution": [
+        15,
+        15,
+        15
+    ],
+    "jitterParticles": true,
+    "maxParticlesDisplay": 42420,
+    "maxSteps": -1,
+    "systemSize": [
+        120.0,
+        120.0,
+        120.0
+    ],
+    "timeStep": 0.025
 }
 ```
-
-This will fill the lower quarter of the simulation box with fluid.
 
 ## Meteor splash
 
@@ -90,6 +117,8 @@ To produce the effect of a meteorite hitting the water, we apply radial forces w
     explode(dt, step, 15, 0, 15, 2, 800);
 
 The first two parameters are the timestep and current step number. The following three arguments are the coordinated (in cells) of the point the "meteorite" is directed at. The last two parameters are the radius (in cells) of the meteorite and the force it applies.
+
+Note that this only takes effect if `applyMeteorForce` is `true` in the configuration.
 
 ## Exporting meshes
 
@@ -105,7 +134,7 @@ The details of the process can be modified in `3d/include/MeshExporter.h`:
 
 ## Viewing meshes
 
-The exported meshes can of course be imported to other 3D software (Blender, Maya), or it can be previewed with the executable `ViewMesh`. This will open a single file with a simple libigl window. The source for this file is `3d/viewmesh.cpp`.
+The exported meshes can of course be imported to other 3D software (Blender, Maya), or it can be previewed with the executable `viewmesh`. This will open a single file with a simple libigl window. The source for this file is `3d/viewmesh.cpp`.
 
 
 # 2D simulation

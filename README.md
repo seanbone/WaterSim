@@ -45,6 +45,13 @@ This builds three executables:
 * `watersim-cli` runs without a GUI, and therefore with fewer dependencies. It requires a configuration file as input. Run `./watersim-cli -h` for help.
 * `viewmesh`, which can be used to preview an OBJ mesh.
 
+## Unit tests
+
+The `3d/tests` directory defines unit tests for the 3D case.
+* To run the tests manually, execute `make watersim-tests` in the build directory to build and run tests.
+* If you're using an IDE to run the tests, you can use the `watersim-tests-build` target to build all tests without running them, and then use CTest to run them.
+* To add a test, simply add a `*.cpp` file to the `3d/tests` folder. CMake will set up a test for each file it finds in that folder (non-recursively).
+
 # 3D Simulation
 
 ## Simulation parameters

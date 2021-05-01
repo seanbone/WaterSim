@@ -41,7 +41,7 @@ class MeshExporter{
 		//used by the level set function
 		std::vector<Eigen::Vector3d> x_avrg_num;
 		
-		//pointer to the list which constains the numerator of the value
+		//pointer to the list which contains the numerator of the value
 		//r_average used by the level set function
 		double* r_avrg_num;
 		
@@ -92,10 +92,22 @@ class MeshExporter{
 		 * is exactly 0 lies the surface of the fluid.
 		 */
 		void level_set_easy();
+
+		/**
+		 * Compute the mesh without exporting it to a file.
+		 */
+		void compute_mesh();
 		
-		/**Export the mesh in an obj file
+		/**
+		 * Export the mesh in an OBJ file. Note that in order to update the mesh,
+		 * compute_mesh must be called separately.
 		 */
 		void export_mesh();
+
+		/**
+		 * Get the computed mesh.
+		 */
+		 void get_mesh(Eigen::MatrixXd& vertices, Eigen::MatrixXi& faces) const;
 };
 
 #endif //MESHEXPORTER_H

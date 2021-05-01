@@ -29,17 +29,23 @@ protected:
 	// Index of the ViewerData object containing particles for rendering
 	//  in viewer.data_list
 	unsigned int m_particles_data_idx;
-	// Index of the ViewerData object containing the mesh representing
-	//  the grid MAC grid in viewer.data_list
-	unsigned int m_grid_data_idx;
 	Eigen::MatrixXd m_particles; // Particle positions for rendering, Nx3
 	Eigen::MatrixXd m_particle_colors; // Particle colours, Nx3
 
+	// MAC grid rendering
+	// Index of the ViewerData object containing the mesh representing
+	//  the grid MAC grid in viewer.data_list
+	unsigned int m_grid_data_idx;
 	Eigen::MatrixXd m_renderV;  // vertex positions for rendering, Nx3
 	Eigen::MatrixXi m_renderE;  // MAC grid edges for rendering, Nx2
-	Eigen::MatrixXi m_renderF;  // face indices for rendering, Nx3
-	Eigen::MatrixXd m_renderC;  // colors per face for rendering, Nx3
 	Eigen::MatrixXd m_renderEC; // colors of edges of mac grid, Nx3
+
+	// Mesh rendering
+	// Index of the ViewerData object containing the mesh representing the fluid
+	unsigned int m_mesh_data_idx;
+	Eigen::MatrixXi m_mesh_renderF = Eigen::MatrixXi::Zero(1, 3);  // face indices for rendering, Nx3
+	Eigen::MatrixXd m_mesh_renderV = Eigen::MatrixXd::Zero(1, 3);  // vertex positions for rendering, Nx3
+	Eigen::MatrixXd m_mesh_renderN = Eigen::MatrixXd::Zero(1, 3);  // face normals for rendering
 
 public:
 

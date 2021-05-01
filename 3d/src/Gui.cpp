@@ -260,6 +260,10 @@ bool Gui::keyCallback(igl::opengl::glfw::Viewer &viewer, unsigned int key,
 bool Gui::mouseCallback(igl::opengl::glfw::Viewer &viewer,
                         igl::opengl::glfw::imgui::ImGuiMenu &menu, int button,
                         int modifier) {
+	// Disable all of this because we don't need it and it messes with the wireframe
+	// display functionality
+	return false;
+
     // get vertices, project them onto screen and find closest vertex to mouse
     float minDist = std::numeric_limits<float>::infinity();
     int vertex = -1;
@@ -448,18 +452,8 @@ bool Gui::drawMenu(igl::opengl::glfw::Viewer &viewer,
         }
          */
     }
-    if (ImGui::CollapsingHeader("Render options", ImGuiTreeNodeFlags_None)) {
-    	/*
-        if (ImGui::Checkbox("Wireframe", &(viewer.data().show_lines))) {
-            for (size_t i = 0; i < viewer.data_list.size(); i++) {
-                viewer.data_list[i].show_lines = viewer.data().show_lines;
-            }
-        }
-        if (ImGui::Checkbox("Fill", &(viewer.data().show_faces))) {
-            for (size_t i = 0; i < viewer.data_list.size(); i++) {
-                viewer.data_list[i].show_faces = viewer.data().show_faces;
-            }
-        }
+    if (ImGui::CollapsingHeader("Render options", ImGuiTreeNodeFlags_DefaultOpen)) {
+	    /*
         if (ImGui::Checkbox("Show vertex labels",
                             &(viewer.data().show_vertid))) {
             for (size_t i = 0; i < viewer.data_list.size(); i++) {
@@ -473,13 +467,12 @@ bool Gui::drawMenu(igl::opengl::glfw::Viewer &viewer,
             }
         }
         */
-        ImGui::Checkbox("Show stats", &m_showStats);
         /*
         if (ImGui::Checkbox("Show axes", &m_showAxes)) {
             showAxes(m_showAxes);
         }
          */
-        drawRenderOptionsMenu();
+        drawRenderOptionsMenu(viewer);
     }
     if (ImGui::CollapsingHeader("Simulation Config (reset to apply)",
                                 ImGuiTreeNodeFlags_DefaultOpen)) {

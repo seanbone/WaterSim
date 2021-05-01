@@ -56,8 +56,10 @@ void SimConfig::setDefaults(bool hard) {
 		setGravity(9.81);
 	if (!m_config.contains("displayGrid"))
 		setDisplayGrid(false);
+	if (!m_config.contains("displayMeshes"))
+		setDisplayMeshes(true, false);
 	if (!m_config.contains("maxParticlesDisplay"))
-		setMaxParticlesDisplay(42420);
+		setMaxParticlesDisplay(424242);
 	if (!m_config.contains("maxSteps"))
 		setMaxSteps(-1);
 	if (!m_config.contains("applyMeteorForce"))
@@ -140,6 +142,22 @@ void SimConfig::setDisplayGrid(bool display) {
 
 bool SimConfig::getDisplayGrid() const {
 	return m_config["displayGrid"];
+}
+
+void SimConfig::setDisplayMeshes(bool displayEdges, bool displayFaces) {
+	m_config["displayMeshes"] = {displayEdges, displayFaces};
+}
+
+bool SimConfig::getDisplayMeshes() const {
+	return m_config["displayMeshes"][0] || m_config["displayMeshes"][1];
+}
+
+bool SimConfig::getDisplayMeshEdges() const {
+	return m_config["displayMeshes"][0];
+}
+
+bool SimConfig::getDisplayMeshFaces() const {
+	return m_config["displayMeshes"][1];
 }
 
 void SimConfig::setMaxParticlesDisplay(int maxParticles) {

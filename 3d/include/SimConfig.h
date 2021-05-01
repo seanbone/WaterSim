@@ -100,6 +100,12 @@ class SimConfig {
 		void setDisplayGrid(bool display);
 		bool getDisplayGrid() const;
 
+		/** Whether to display the meshes in the viewport. */
+		void setDisplayMeshes(bool displayEdges, bool displayFaces);
+		bool getDisplayMeshes() const;
+		bool getDisplayMeshEdges() const;
+		bool getDisplayMeshFaces() const;
+
 		/** Maximum number of particles to display
 		 * Needed to prevent GUI lag for large sims
 		 * If smaller than total number of particles,

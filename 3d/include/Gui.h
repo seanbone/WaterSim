@@ -56,7 +56,7 @@ public:
 	/*
 	 * Setup additional render options menu.
 	 */
-	virtual void drawRenderOptionsMenu() {}
+	virtual void drawRenderOptionsMenu(igl::opengl::glfw::Viewer &viewer) {}
 
 	/*
 	 * Setup your own (additional) ImGUI debugging output.
@@ -139,7 +139,6 @@ private:
 	int m_axesID = -1;  // (lowest) id of the 3 base axes
 	bool m_showAxes = true;
 
-	bool m_showStats = true;
 	double m_timerAverage = 0;  // running average of execution time of
 	// one iteration of the simulation
 	//int m_maxSteps = -1;
@@ -147,6 +146,8 @@ private:
 	int m_numRecords = 100;  // number of records to keep
 
 protected:
+	bool m_showStats = true;
+
 	igl::opengl::glfw::Viewer m_viewer;
 	Simulator *p_simulator = nullptr;
 

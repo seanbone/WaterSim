@@ -24,6 +24,7 @@ FetchContent_Declare(
 FetchContent_GetProperties(netcdf)
 if(NOT netcdf_POPULATED)
     FetchContent_Populate(netcdf)
+    set(NCXX_ENABLE_TESTS OFF CACHE BOOL "Enable tests. Run with 'make test'." FORCE)
     add_subdirectory(${netcdf_SOURCE_DIR} ${netcdf_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
@@ -64,7 +65,6 @@ option(LIBIGL_WITH_XML               "Use XML"            OFF)
 if (NOT LIBIGL_FOUND)
     find_package(LIBIGL REQUIRED QUIET)
 endif()
-
 # Add project files
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB H_FILES ${PROJECT_SOURCE_DIR}/include/*.h)
@@ -76,6 +76,10 @@ file(GLOB H_FILES_CLI src/FLIP.h src/Mac3d.h src/MeshExporter.h src/Particle.h
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(../lib/eigen3)
 
+
+## Enable tests
+add_subdirectory(tests)
+enable_testing()
 
 
 add_definitions(-DIGL_VIEWER_VIEWER_QUIET)

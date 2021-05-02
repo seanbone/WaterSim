@@ -15,6 +15,7 @@ public:
 		}
 
 		waterSim_.updateParams(cfg_);
+		waterSim_.resetMembers();
 		std::cout << cfg_.toString() << std::endl;
 	}
 

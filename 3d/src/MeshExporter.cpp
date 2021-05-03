@@ -1,4 +1,5 @@
 #include "MeshExporter.h"
+#include "tsc_x86.hpp"
 
 /**The constructor already initializes the lists point_, x_avrg_num,
  * r_avrg_num and den.

@@ -1,3 +1,4 @@
+#include "tsc_x86.hpp"
 #include "WaterSim.h"
 
 WaterSim::WaterSim(const SimConfig& cfg) : m_cfg(cfg) {
@@ -48,6 +49,8 @@ bool WaterSim::advance() {
 
     std::cout << "\n\nBegin FLIP step #" << m_step << std::endl;
 
+	tsc::TSCTimer& tsctimer = tsc::TSCTimer::get_timer("timings.json");
+	tsctimer.start_timing("FLIP");
     // Set up for timings of individual functions
     using timer_t = std::chrono::high_resolution_clock;
     using tpoint_t = timer_t::time_point;
@@ -63,26 +66,23 @@ bool WaterSim::advance() {
     p_flip->step_FLIP(m_dt, m_step);
     
     tpoint_t t2 = timer_t::now();
+	tsctimer.stop_timing("FLIP", true, "");
     auto flip_duration = duration_cast<ticks_t>( t2 - t1 ).count() / timer_scale;
     std::cout << "\nFLIP duration: " << flip_duration << timer_unit <<  std::endl;
 
 
     // Compute mesh if required
     if (m_cfg.getDisplayMeshes() || m_cfg.getExportMeshes()) {
-	    std::cout << "\nCompute mesh..." << std::endl;
+		tsctimer.start_timing("compute_mesh");
 	    exp->compute_mesh();
-	    tpoint_t t_comp = timer_t::now();
-	    auto comp_duration = duration_cast<ticks_t>( t_comp - t2 ).count() / timer_scale;
-	    std::cout << "Mesh compute duration: " << comp_duration <<timer_unit<<std::endl;
+		tsctimer.stop_timing("compute_mesh", true, "");
     }
 
 	// Export mesh if required
     if (m_cfg.getExportMeshes()) {
-        std::cout << "\nExport mesh..." << std::endl;
+		tsctimer.start_timing("export_mesh");
         exp->export_mesh();
-        tpoint_t t3 = timer_t::now();
-        auto export_duration = duration_cast<ticks_t>( t3 - t2 ).count() / timer_scale;
-        std::cout << "Export duration: " << export_duration << timer_unit <<  std::endl;
+		tsctimer.stop_timing("export_mesh", true, "");
     }
 
 
@@ -94,6 +94,7 @@ bool WaterSim::advance() {
     // Increase counter and current time
     m_step++;
     m_time += m_dt;
+	tsctimer.step();
 
     return false;
 }

@@ -70,7 +70,6 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 		advance_particles(dt/num_substeps, step);
 	}
 	tsctimer.stop_timing("advance_particles", true, "");
-	tsctimer.step();
 }
 
 

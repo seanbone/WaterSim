@@ -127,6 +127,7 @@ void MeshExporter::level_set(){
 					Eigen::Vector3d cell_pos = Eigen::Vector3d(i*dx, j*dy, k*dz);
 					
 					if(*(den+index2) != 0)
+						// eqn (18)
 						plevel_set_[index] = (cell_pos - x_avrg).norm() - r_avrg;
 					else{
 						if(pMacGrid_->is_fluid(i,j,k))
@@ -146,10 +147,15 @@ void MeshExporter::compute_mesh() {
 	nx = pMacGrid_->get_num_cells_x();
 	ny = pMacGrid_->get_num_cells_y();
 	nz = pMacGrid_->get_num_cells_z();
+	tsc::TSCTimer& tsctimer = tsc::TSCTimer::get_timer("timings.json");
 
 	// Perform calculation of mesh
+	tsctimer.start_timing("level_set");
 	level_set();
+	tsctimer.stop_timing("level_set", true, "");
+	tsctimer.start_timing("marching_cubes");
 	igl::copyleft::marching_cubes(plevel_set_, points_, nx+2, ny+2, nz+2, vertices_, faces_);
+	tsctimer.stop_timing("marching_cubes", true, "");
 }
 
 void MeshExporter::get_mesh(Eigen::MatrixXd &vertices, Eigen::MatrixXi &faces) const {

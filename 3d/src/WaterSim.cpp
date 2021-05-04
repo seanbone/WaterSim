@@ -120,11 +120,13 @@ void WaterSim::initParticles() {
     std::list<Particle> particles;
     
     // Random offsets to particle positions
-    Eigen::VectorXd rnd;
-    if (m_cfg.getJitterParticles())
-        rnd = Eigen::VectorXd::Random(3*particles_per_cell*nx*ny*nz);
-    else
-        rnd = Eigen::VectorXd::Zero(3*particles_per_cell*nx*ny*nz);
+	unsigned int n = 3 * particles_per_cell * nx * ny * nz;
+	Eigen::VectorXd rnd = Eigen::VectorXd::Zero(n);
+    if (m_cfg.getJitterParticles()) {
+    	int seed = m_cfg.getRandomSeed();
+    	std::srand((unsigned int) ((seed >= 0) ? seed : std::time(nullptr)));
+	    rnd = Eigen::VectorXd::Random(n);
+    }
 
     // Get fluid region
 	double fluid_from_x, fluid_from_y, fluid_from_z;

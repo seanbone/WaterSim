@@ -34,11 +34,11 @@ def get_duration_stats(timing_data):
 
 if __name__ == '__main__':
     filename = sys.argv[1] if len(sys.argv) > 1 else 'timings.json'
-    print("Loading timing info from {filename}...")
+    print(f"Loading timing info from {filename}...")
     t = load_timings(filename)
     stats = get_duration_stats(t)
     print("Timing information:")
-    print("Section\t\t\t Mean/Median/Std")
-    print(30*"=")
+    print(f"{'Section' : >25}\t Mean/Median/Std")
+    print(60*"=")
     for section, s in stats.items():
-        print(f"{section}\t\t", '/'.join(map("{:g}".format, (s['mean'], s['median'], s['std']))))
+        print(f"{section : >25}\t", '/'.join(map("{:g}".format, (s['mean'], s['median'], s['std']))))

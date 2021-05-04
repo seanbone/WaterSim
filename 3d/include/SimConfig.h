@@ -141,6 +141,13 @@ class SimConfig {
 						double to_x, double to_y, double to_z);
 		  void getFluidRegion(double& from_x, double& from_y, double& from_z,
 						double& to_x, double& to_y, double& to_z) const;
+
+		  /**
+		   * Set a random seed for the simulation's random number generators.
+		   * If < 0, it should be ignored and a non-deterministic seed used instead.
+		   */
+		  void setRandomSeed(int seed);
+		  int getRandomSeed();
 };
 
 #endif //WATERSIM_SIMCONFIG_H

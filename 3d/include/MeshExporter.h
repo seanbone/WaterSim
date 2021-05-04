@@ -30,7 +30,7 @@ class MeshExporter{
 		unsigned num_exported_ = 0;
 
 		// Name of folder to export file to
-		std::string folder_ = "../out_meshes/";
+		std::string folder_ = "out_meshes/";
 		std::string file_prefix_ = "mesh_";
 	
 	public:

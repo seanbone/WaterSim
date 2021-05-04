@@ -13,7 +13,7 @@ class WaterGui : public Gui {
 
 private:
 
-	std::string configFile = "../config.json";
+	std::string configFile = "config.json";
 	SimConfig m_cfg;
 
 	// Simulation parameters

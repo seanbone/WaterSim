@@ -37,7 +37,7 @@ public:
 int main(int argc, char* argv[]) {
 	bool autostart = false;
 
-	std::string defaultConfigFile =  "../config.json";
+	std::string defaultConfigFile =  "config.json";
 	std::string configFile = defaultConfigFile;
 	if (argc > 1) {
 		std::string tmp = argv[1];

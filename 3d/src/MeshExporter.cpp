@@ -145,42 +145,32 @@ void MeshExporter::level_set(){
         }
     }
     */
-	int s_bg = (N+2)*(M+2); // stride big
-	int s_sm = (N+2); // stride small
+    int s_diff = (N+2)*(M+1); // stride big - stride_small
+    int s_sm = (N+2); // stride small
     int index0 = 0;           // i = -1
-    int index1 = 0;           // i = N
+    int index1 = (N+1);           // i = N
     int index2 = 0;           // j = -1
-    int index3 = 0;           // j = M
+    int index3 = (M+1) * s_sm;           // j = M
     int index4 = 0;           // k = -1
-    int index5 = 0;           // k = L
-    for(int m = -1; m < L+1; ++m) {
-        // the n = -1 cases
-        index0 = (m + 1) * s_bg;
-        index1 = (N + 1) + (m + 1) * s_bg;
-        index2 = (m + 1) * s_sm * (M + 2);
-        index3 = (M + 1) * s_sm + (m + 1) * s_bg;
-        index4 = (m + 1) * s_sm;
-        index5 = (m + 1) * s_sm + (L + 1) * s_bg;
-        plevel_set_[index0] = 0.5 * dx;
-        plevel_set_[index1] = 0.5 * dx;
-        plevel_set_[index2] = 0.5 * dx;
-        plevel_set_[index3] = 0.5 * dx;
-        plevel_set_[index4] = 0.5 * dx;
-        plevel_set_[index5] = 0.5 * dx;
-        for (int n = 0; n < M + 1; ++n) {
-            index0 += s_sm;
-            index1 += s_sm;
-            ++index2;
-            ++index3;
-            ++index4;
-            ++index5;
+    int index5 = (L+1) * (N+2)*(M+2);           // k = L
+    for(int m = 0; m < L+2; ++m) {
+        for (int n = 0; n < M + 2; ++n) {
             plevel_set_[index0] = 0.5 * dx;
             plevel_set_[index1] = 0.5 * dx;
             plevel_set_[index2] = 0.5 * dx;
             plevel_set_[index3] = 0.5 * dx;
             plevel_set_[index4] = 0.5 * dx;
             plevel_set_[index5] = 0.5 * dx;
+            index0 += s_sm;
+            index1 += s_sm;
+            ++index2;
+            ++index3;
+            ++index4;
+            ++index5;
         }
+
+        index2 += s_diff;
+        index3 += s_diff;
     }
 
 	//Compute the values of level set function

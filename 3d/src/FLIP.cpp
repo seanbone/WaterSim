@@ -1,4 +1,5 @@
 #include "FLIP.h"
+#include "tsc_x86.hpp"
 
 FLIP::FLIP(Particle* particles, unsigned num_particles, Mac3d* MACGrid,
 		   const SimConfig& cfg)
@@ -24,70 +25,43 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	 * 7. Update particle positions
 	 */
 
-	using timer_t = std::chrono::high_resolution_clock;
-	using tpoint_t = timer_t::time_point;
-	using namespace std::chrono;
-	using ticks_t = std::chrono::microseconds;
-	double timer_scale = 1e6;
-	auto timer_unit = "s";
-	
-	tpoint_t t1 = timer_t::now();
+	tsc::TSCTimer& tsctimer = tsc::TSCTimer::get_timer("timings.json");
 
-	std::cout << " * Particle to grid... ";
-	
 	// 1.
+	tsctimer.start_timing("velocity_field");
 	compute_velocity_field();
 
 	// 1a.
 	MACGrid_->set_uvw_star();
+	tsctimer.stop_timing("velocity_field", true, "");
 
-	tpoint_t t2 = timer_t::now();
-	auto p2g_duration = duration_cast<ticks_t>( t2 - t1 ).count() / timer_scale;
-	std::cout << p2g_duration << timer_unit <<  std::endl;
-
-	std::cout << " * Apply external forces... ";
-	
 	// 2.
+	tsctimer.start_timing("apply_forces");
 	apply_forces(dt);
 	
 	if (cfg_.getApplyMeteorForce() && step <= 200 ){
 		explode(dt, step, 15, 0, 15, 2, 800);
 	}
 
-	tpoint_t t3 = timer_t::now();
-	auto forces_duration = duration_cast<ticks_t>( t3 - t2 ).count() / timer_scale;
-	std::cout << forces_duration << timer_unit <<  std::endl;
+	tsctimer.stop_timing("apply_forces", true, "");
 
-	std::cout << " * Apply boundary conditions... ";
-	
 	// 3.
+	tsctimer.start_timing("apply_boundary_conditions");
 	apply_boundary_conditions();
-
-	tpoint_t t4 = timer_t::now();
-	auto bc_duration = duration_cast<ticks_t>( t4 - t3 ).count() / timer_scale;
-	std::cout << bc_duration << timer_unit <<  std::endl;
-
-	std::cout << " * Calculate pressures... ";
+	tsctimer.stop_timing("apply_boundary_conditions", true, "");
 	
 	// 4.
+	tsctimer.start_timing("do_pressures");
 	do_pressures(dt);
-
-	tpoint_t t5 = timer_t::now();
-	auto p_duration = duration_cast<ticks_t>( t5 - t4 ).count() / timer_scale;
-	std::cout << p_duration << timer_unit <<  std::endl;
-
-	std::cout << " * Grid to particle... ";
+	tsctimer.stop_timing("do_pressures", true, "");
 	
 	// 5.
+	tsctimer.start_timing("grid_to_particle");
 	grid_to_particle();
+	tsctimer.stop_timing("grid_to_particle", true, "");
 
-	tpoint_t t6 = timer_t::now();
-	auto g2p_duration = duration_cast<ticks_t>( t6 - t5 ).count() / timer_scale;
-	std::cout << g2p_duration << timer_unit <<  std::endl;
-	
-	std::cout << " * Particle advection... ";
-	
 	// 6.
+	tsctimer.start_timing("advance_particles");
 	double dt_new = compute_timestep(dt);
 	double num_substeps = std::ceil(dt/dt_new);
 	for( int s = 0; s < num_substeps ; ++s ){
@@ -95,10 +69,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 		// 7.
 		advance_particles(dt/num_substeps, step);
 	}
-
-	tpoint_t t7 = timer_t::now();
-	auto adv_duration = duration_cast<ticks_t>( t7 - t6 ).count() / timer_scale;
-	std::cout << adv_duration << timer_unit <<  std::endl;
+	tsctimer.stop_timing("advance_particles", true, "");
 }
 
 

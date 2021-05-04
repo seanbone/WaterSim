@@ -4,7 +4,7 @@
 #include <Eigen/Dense>
 
 struct Particle {
-	private:
+	public:
 	
 	// Store the position for every coordinate 
 	double x_;
@@ -23,7 +23,6 @@ struct Particle {
 	double yprev_;
 	double zprev_;
 
-	public:
 	
 	/** Default Constructor
 	 */

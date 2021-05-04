@@ -132,34 +132,78 @@ void MeshExporter::level_set(){
 			}
 		}
 	}
-	
+	/*
+    for(int k = -1; k < L+1; ++k) {
+        for (int j = -1; j < M + 1; ++j) {
+            for (int i = -1; i < N + 1; ++i) {
+                int index = (i + 1) + (j + 1) * (N + 2) + (k + 1) * (N + 2) * (M + 2);
+
+                if (i == -1 || i == N || j == -1 || j == M || k == -1 || k == L) {
+                    plevel_set_[index] = 0.5 * dx;
+                }
+            }
+        }
+    }
+    */
+	int s_bg = (N+2)*(M+2); // stride big
+	int s_sm = (N+2); // stride small
+    int index0 = 0;           // i = -1
+    int index1 = 0;           // i = N
+    int index2 = 0;           // j = -1
+    int index3 = 0;           // j = M
+    int index4 = 0;           // k = -1
+    int index5 = 0;           // k = L
+    for(int m = -1; m < L+1; ++m) {
+        // the n = -1 cases
+        index0 = (m + 1) * s_bg;
+        index1 = (N + 1) + (m + 1) * s_bg;
+        index2 = (m + 1) * s_sm * (M + 2);
+        index3 = (M + 1) * s_sm + (m + 1) * s_bg;
+        index4 = (m + 1) * s_sm;
+        index5 = (m + 1) * s_sm + (L + 1) * s_bg;
+        plevel_set_[index0] = 0.5 * dx;
+        plevel_set_[index1] = 0.5 * dx;
+        plevel_set_[index2] = 0.5 * dx;
+        plevel_set_[index3] = 0.5 * dx;
+        plevel_set_[index4] = 0.5 * dx;
+        plevel_set_[index5] = 0.5 * dx;
+        for (int n = 0; n < M + 1; ++n) {
+            index0 += s_sm;
+            index1 += s_sm;
+            ++index2;
+            ++index3;
+            ++index4;
+            ++index5;
+            plevel_set_[index0] = 0.5 * dx;
+            plevel_set_[index1] = 0.5 * dx;
+            plevel_set_[index2] = 0.5 * dx;
+            plevel_set_[index3] = 0.5 * dx;
+            plevel_set_[index4] = 0.5 * dx;
+            plevel_set_[index5] = 0.5 * dx;
+        }
+    }
+
 	//Compute the values of level set function
-	for(int k = -1; k < L+1; ++k){
-		for(int j = -1; j < M+1; ++j){
-			for(int i = -1; i < N+1; ++i){
+	for(int k = 0; k < L; ++k){
+		for(int j = 0; j < M; ++j){
+			for(int i = 0; i < N; ++i){
 				int index = (i+1) + (j+1)*(N+2) + (k+1)*(N+2)*(M+2);
-				
-				if(i == -1 || i == N || j == -1 || j == M || k == -1 || k == L){
-					plevel_set_[index] = 0.5*dx;
-				}
-				
-				else{
-					int index2 = i + j*N + k*N*M;
-					double temp = *(den+index2);
-					Eigen::Vector3d x_avrg = x_avrg_num[index2]/temp;
-					double r_avrg = 0.87*dx;
-					Eigen::Vector3d cell_pos = Eigen::Vector3d(i*dx, j*dy, k*dz);
-					
-					if(*(den+index2) != 0)
-						// eqn (18)
-						plevel_set_[index] = (cell_pos - x_avrg).norm() - r_avrg;
-					else{
-						if(pMacGrid_->is_fluid(i,j,k))
-							plevel_set_[index] = -1;
-						else
-							plevel_set_[index] = 1;
-					}
-				}
+
+                int index2 = i + j*N + k*N*M;
+                double temp = *(den+index2);
+                Eigen::Vector3d x_avrg = x_avrg_num[index2]/temp;
+                double r_avrg = 0.87*dx;
+                Eigen::Vector3d cell_pos = Eigen::Vector3d(i*dx, j*dy, k*dz);
+
+                if(*(den+index2) != 0)
+                    // eqn (18)
+                    plevel_set_[index] = (cell_pos - x_avrg).norm() - r_avrg;
+                else{
+                    if(pMacGrid_->is_fluid(i,j,k))
+                        plevel_set_[index] = -1;
+                    else
+                        plevel_set_[index] = 1;
+                }
 			}
 		}
 	}

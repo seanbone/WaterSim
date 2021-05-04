@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "MeshExporter.h"
 #include "tsc_x86.hpp"
 
@@ -5,16 +6,22 @@
  * r_avrg_num and den.
  */
 MeshExporter::MeshExporter(Mac3d* Grid, Particle* particles, const int n)
-	:pMacGrid_(Grid), pparticles_(particles), num_particles_(n){
+	:pMacGrid_(Grid), pparticles_(particles), num_particles_(n),
+	dx{pMacGrid_->get_cell_sizex()},
+	dy{pMacGrid_->get_cell_sizey()},
+	dz{pMacGrid_->get_cell_sizez()},
+	sizex_{pMacGrid_->sizex_},
+	sizey_{pMacGrid_->sizey_},
+	sizez_{pMacGrid_->sizez_},
+	N{pMacGrid_->get_num_cells_x()},
+	M{pMacGrid_->get_num_cells_y()},
+	L{pMacGrid_->get_num_cells_z()},
+	h{dx},
+	h_sq_r{1.0/h},
+	weight_factor{0.87*dx}
+{
 	
 	//Grid properties
-	int N = pMacGrid_->get_num_cells_x();
-	int M = pMacGrid_->get_num_cells_y();
-	int L = pMacGrid_->get_num_cells_z();
-	double dx = pMacGrid_->get_cell_sizex();
-	double dy = pMacGrid_->get_cell_sizey();
-	double dz = pMacGrid_->get_cell_sizez();
-	
 	//Initialization of the list points_
 	points_.resize((N+2)*(M+2)*(L+2), 3);
 	points_.setZero();
@@ -66,66 +73,45 @@ void MeshExporter::level_set_easy(){
 
 void MeshExporter::level_set(){
 	//Grid properties
-	int N = pMacGrid_->get_num_cells_x();
-	int M = pMacGrid_->get_num_cells_y();
-	int L = pMacGrid_->get_num_cells_z();
-	double dx = pMacGrid_->get_cell_sizex();
-	double dy = pMacGrid_->get_cell_sizey();
-	double dz = pMacGrid_->get_cell_sizez();
-	double h = dx;
-	double h_sq_r = 1.0/(h*h);
-	double weight_fac = 0.87*dx;
-	
 	//Initialization of plevel_set_, x_avrg_num, r_avrg_num and den
 	plevel_set_.resize((N+2)*(M+2)*(L+2));
 	plevel_set_.setZero();
 	std::fill(x_avrg_num.begin(), x_avrg_num.end(), Eigen::Vector3d::Zero());
 	std::fill(r_avrg_num, r_avrg_num+N*M*L, 0);
 	std::fill(den, den+N*M*L, 0);
-	// get some values from Mac3d
-	double cell_sizex_ = pMacGrid_->cell_sizex_;
-	double cell_sizey_ = pMacGrid_->cell_sizey_;
-	double cell_sizez_ = pMacGrid_->cell_sizez_;
-
-	double sizex_ = pMacGrid_->sizex_;
-	double sizey_ = pMacGrid_->sizey_;
-	double sizez_ = pMacGrid_->sizez_;
 
 	//Compute the values of x_avrg_num, r_avrg_num and den
 	for(unsigned it_particle = 0; it_particle < num_particles_; ++it_particle){
 		const Particle& particle = *(pparticles_+it_particle);
 		const Eigen::Vector3d particle_pos = (pparticles_+it_particle)->get_position();
 		assert(
-			(particle.x_ < sizex_ - 0.5*cell_sizex_
-			 && particle.y_ < sizey_ - 0.5*cell_sizey_
-			 && particle.z_ < sizez_ - 0.5*cell_sizez_
-			 && particle.x_ > -0.5*cell_sizex_
-			 && particle.y_ > -0.5*cell_sizey_
-			 && particle.z_ > -0.5*cell_sizez_
+			(particle.x_ < sizex_ - 0.5*dx
+			 && particle.y_ < sizey_ - 0.5*dy
+			 && particle.z_ < sizez_ - 0.5*dz
+			 && particle.x_ > -0.5*dx
+			 && particle.y_ > -0.5*dy
+			 && particle.z_ > -0.5*dz
 			 ) && "Attention: out of the grid!");
-		const int init_cell_x = int(particle.x_/cell_sizex_ + 0.5);
-		const int init_cell_y = int(particle.y_/cell_sizey_ + 0.5);
-		const int init_cell_z = int(particle.z_/cell_sizez_ + 0.5);
+		const int init_cell_x = int(particle.x_/dx + 0.5);
+		const int init_cell_y = int(particle.y_/dy + 0.5);
+		const int init_cell_z = int(particle.z_/dz + 0.5);
 
-		for(int k = init_cell_x - 2; k <= init_cell_x + 2; ++k){
-			for(int j = init_cell_y - 2; j <= init_cell_y + 2; ++j){
-				for(int i = init_cell_z - 2; i <= init_cell_z + 2; ++i){
-					
-					if (k < 0 or k >= L or j < 0 or j >= M or i < 0 or i >= N ){
-						continue;
-					}
-					
-					int index = i + j*N + k*N*M;
-					double dist_x = i*dx - particle.x_;
-					double dist_y = j*dy - particle.y_;
-					double dist_z = k*dz - particle.z_;
-					double s_sq = (dist_x*dist_x + dist_y*dist_y + dist_z*dist_z) * h_sq_r;
-					
+		int k_max = std::min((int) L, init_cell_x + 2);
+		int j_max = std::min((int) M, init_cell_y + 2);
+		int i_max = std::min((int) N, init_cell_z + 2);
+		for(int k = std::max(0, init_cell_x - 2); k <= k_max; ++k){
+			for(int j = std::max(0, init_cell_y - 2); j <= j_max; ++j){
+				for(int i = std::max(0, init_cell_z - 2); i <= i_max; ++i){
+					const int index = i + j*N + k*N*M;
+					const double dist_x = i*dx - particle.x_;
+					const double dist_y = j*dy - particle.y_;
+					const double dist_z = k*dz - particle.z_;
+					const double s_sq = (dist_x*dist_x + dist_y*dist_y + dist_z*dist_z) * h_sq_r;
 					if (s_sq < 1){
 						double s_sq_inv = 1 - s_sq;
 						double W_surf = s_sq_inv*s_sq_inv*s_sq_inv;
 						x_avrg_num[index] += W_surf*particle_pos;
-						*(r_avrg_num + index) += W_surf*weight_fac;
+						*(r_avrg_num + index) += W_surf*weight_factor;
 						*(den + index) += W_surf;
 					}
 				}

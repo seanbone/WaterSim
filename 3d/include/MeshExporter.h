@@ -32,7 +32,11 @@ class MeshExporter{
 		// Name of folder to export file to
 		std::string folder_ = "../out_meshes/";
 		std::string file_prefix_ = "mesh_";
-	
+		const double dx, dy, dz;
+		const unsigned int N, M, L;
+		const double sizex_, sizey_, sizez_;
+		const double h, h_sq_r;
+		const double weight_factor;
 	public:
 		//pointer to the values of the level set function
 		Eigen::VectorXd plevel_set_;

@@ -32,18 +32,34 @@ class MeshExporter{
 		// Name of folder to export file to
 		std::string folder_ = "../out_meshes/";
 		std::string file_prefix_ = "mesh_";
+
+		// grid spacing (initialized from pMacGrid_->get_cell_size{x,y,z}())
 		const double dx, dy, dz;
-		const unsigned int N, M, L;
+
+		// dimensions of one grid cell (initialized from pMacGrid_->size{x,y,z}_)
 		const double sizex_, sizey_, sizez_;
+
+		// number of grid cells, per direction
+		// (initialized from pMacGrid_->get_num_cells_{x,y,z}_())
+		const unsigned int N, M, L;
+
+		// cell spacing (dx), reciprocal of square of the same number
 		const double h, h_sq_r;
 		const double weight_factor;
 	public:
 		//pointer to the values of the level set function
-		Eigen::VectorXd plevel_set_;
+		double* plevel_set_array;
+
+		using level_set_type = Eigen::Map<Eigen::VectorXd>;
+		level_set_type plevel_set_map;
+		using sdf_points_type = Eigen::Map<Eigen::MatrixXd>;
+		sdf_points_type points_map;
+		const sdf_points_type points_map_c;
 		
 		//vector which contains the numerator of the value x_average
 		//used by the level set function
 		std::vector<Eigen::Vector3d> x_avrg_num;
+		double* x_avrg_num_array;
 		
 		//pointer to the list which contains the numerator of the value
 		//r_average used by the level set function
@@ -77,6 +93,7 @@ class MeshExporter{
 			num_particles_ = 0;
 			delete[] r_avrg_num;
 			delete[] den;
+			delete[] points_d;
 		}
 		
 		/**Level set function:

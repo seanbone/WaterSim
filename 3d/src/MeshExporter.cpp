@@ -37,9 +37,9 @@ MeshExporter::MeshExporter(Mac3d* Grid, Particle* particles, const int n)
 	{
 		const int s_sm = N + 2;
 		const int s_bg = M + 2;
-		for(unsigned int k = 0; k < L+2; ++k){
-			for(unsigned int j = 0; j < M+2; ++j){
-				for(unsigned int i = 0; i < N+2; ++i){
+		for(int k = 0; k < L+2; ++k){
+			for(int j = 0; j < M+2; ++j){
+				for(int i = 0; i < N+2; ++i){
 					int index = i + j*s_sm + k*s_sm*s_bg;
 					points_d[index] = (i-1) * dx;
 					points_d[index+s_sup] = (j-1) * dy;
@@ -125,9 +125,9 @@ void MeshExporter::level_set(){
 	}
 	
 	//Compute the values of level set function
-	for(int k = -1; k < (int)L+1; ++k){
-		for(int j = -1; j < (int)M+1; ++j){
-			for(int i = -1; i < (int)N+1; ++i){
+	for(int k = -1; k < L+1; ++k){
+		for(int j = -1; j < M+1; ++j){
+			for(int i = -1; i < N+1; ++i){
 				int index = (i+1) + (j+1)*(N+2) + (k+1)*(N+2)*(M+2);
 				
 				if(i == -1 || i == N || j == -1 || j == M || k == -1 || k == L){

@@ -35,6 +35,7 @@ class MeshExporter{
 
 		// grid spacing (initialized from pMacGrid_->get_cell_size{x,y,z}())
 		const double dx, dy, dz;
+		const double dx_r, dy_r, dz_r;
 
 		// number of grid cells, per direction
 		// (initialized from pMacGrid_->get_num_cells_{x,y,z}_())
@@ -43,7 +44,7 @@ class MeshExporter{
 
 
 		// cell spacing (dx), reciprocal of square of the same number
-		const double h, h_sq_r;
+		const double h, h_sq;
 		const double weight_factor;
 		double* points_d;
 	public:

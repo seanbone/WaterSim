@@ -10,6 +10,9 @@ MeshExporter::MeshExporter(Mac3d* Grid, Particle* particles, const int n)
 	dx{pMacGrid_->get_cell_sizex()},
 	dy{pMacGrid_->get_cell_sizey()},
 	dz{pMacGrid_->get_cell_sizez()},
+	dx_r{1.0/dx},
+	dy_r{1.0/dy},
+	dz_r{1.0/dz},
 	N{(int) pMacGrid_->get_num_cells_x()},
 	M{(int) pMacGrid_->get_num_cells_y()},
 	L{(int) pMacGrid_->get_num_cells_z()},
@@ -17,7 +20,7 @@ MeshExporter::MeshExporter(Mac3d* Grid, Particle* particles, const int n)
 	sizey_{pMacGrid_->sizey_},
 	sizez_{pMacGrid_->sizez_},
 	h{dx},
-	h_sq_r{1.0/(h*h)},
+	h_sq{h*h},
 	weight_factor{0.87*dx},
 	plevel_set_map(nullptr, 1, 1),
 	points_map(nullptr, 1, 1)
@@ -77,6 +80,7 @@ void MeshExporter::level_set_easy(){
 }
 
 void MeshExporter::level_set(){
+	tsc::TSCTimer& tsctimer = tsc::TSCTimer::get_timer("timings.json");
 	//Grid properties
 	//Initialization of plevel_set_array, x_avrg_num, r_avrg_num and den
 	std::fill(x_avrg_num_array, x_avrg_num_array+3*N*M*L, 0);
@@ -84,6 +88,7 @@ void MeshExporter::level_set(){
 	std::fill(den, den+N*M*L, 0);
 
 	//Compute the values of x_avrg_num, r_avrg_num and den
+	tsctimer.start_timing("first_part");
 	for(unsigned it_particle = 0; it_particle < num_particles_; ++it_particle){
 		const Particle& particle = *(pparticles_+it_particle);
 		// inlined coords_to_index
@@ -95,13 +100,13 @@ void MeshExporter::level_set(){
 			 && particle.y_ > -0.5*dy
 			 && particle.z_ > -0.5*dz
 			 ) && "Attention: out of the grid!");
-		const int init_cell_x = int(particle.x_/dx + 0.5);
-		const int init_cell_y = int(particle.y_/dy + 0.5);
-		const int init_cell_z = int(particle.z_/dz + 0.5);
+		const int init_cell_x = int(particle.x_*dx_r + 0.5);
+		const int init_cell_y = int(particle.y_*dy_r + 0.5);
+		const int init_cell_z = int(particle.z_*dz_r + 0.5);
 
-		int k_max = std::min((int) L, init_cell_z + 2);
-		int j_max = std::min((int) M, init_cell_y + 2);
-		int i_max = std::min((int) N, init_cell_x + 2);
+		const int k_max = std::min((int) L, init_cell_z + 2);
+		const int j_max = std::min((int) M, init_cell_y + 2);
+		const int i_max = std::min((int) N, init_cell_x + 2);
 		for(int k = std::max(0, init_cell_z - 2); k < k_max; ++k){
 			for(int j = std::max(0, init_cell_y - 2); j < j_max; ++j){
 				for(int i = std::max(0, init_cell_x - 2); i < i_max; ++i){
@@ -109,21 +114,22 @@ void MeshExporter::level_set(){
 					const double dist_x = i*dx - particle.x_;
 					const double dist_y = j*dy - particle.y_;
 					const double dist_z = k*dz - particle.z_;
-					const double s_sq = (dist_x*dist_x + dist_y*dist_y + dist_z*dist_z) * h_sq_r;
-					if (s_sq < 1){
-						double s_sq_inv = 1 - s_sq;
-						double W_surf = s_sq_inv*s_sq_inv*s_sq_inv;
+					const double s_sq = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
+					if (s_sq < h_sq){
+						const double s_sq_inv = h_sq - s_sq;
+						const double W_surf = s_sq_inv*s_sq_inv*s_sq_inv;
 						x_avrg_num_array[3*index]   += W_surf*particle.x_;
 						x_avrg_num_array[3*index+1] += W_surf*particle.y_;
 						x_avrg_num_array[3*index+2] += W_surf*particle.z_;
-						*(r_avrg_num + index) += W_surf*weight_factor;
-						*(den + index) += W_surf;
+						r_avrg_num[index] += W_surf;
+						den[index] += W_surf;
 					}
 				}
 			}
 		}
 	}
 	
+	tsctimer.stop_timing("first_part", true, "");
 	//Compute the values of level set function
 	for(int k = -1; k < L+1; ++k){
 		for(int j = -1; j < M+1; ++j){
@@ -136,11 +142,11 @@ void MeshExporter::level_set(){
 				
 				else{
 					int index2 = i + j*N + k*N*M;
-					const double denominator = *(den+index2);
-					const double x_avrg_x = x_avrg_num_array[index2*3]/denominator;
-					const double x_avrg_y = x_avrg_num_array[index2*3+1]/denominator;
-					const double x_avrg_z = x_avrg_num_array[index2*3+2]/denominator;
-					const double r_avrg = 0.87*dx;
+					const double denominator_inv = 1.0/ *(den+index2);
+					const double x_avrg_x = x_avrg_num_array[index2*3  ] * denominator_inv;
+					const double x_avrg_y = x_avrg_num_array[index2*3+1] * denominator_inv;
+					const double x_avrg_z = x_avrg_num_array[index2*3+2] * denominator_inv;
+					const double r_avrg = weight_factor * r_avrg_num[index2] * denominator_inv;
 					// Eigen::Vector3d cell_pos = Eigen::Vector3d(i*dx, j*dy, k*dz);
 					
 					if(*(den+index2) != 0)

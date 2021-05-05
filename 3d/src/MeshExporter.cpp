@@ -20,14 +20,12 @@ MeshExporter::MeshExporter(Mac3d* Grid, Particle* particles, const int n)
 	h_sq_r{1.0/h},
 	weight_factor{0.87*dx},
 	plevel_set_map(nullptr, 1, 1),
-	points_map(nullptr, 1, 1),
-	points_map_c(points_map)
+	points_map(nullptr, 1, 1)
 {
 	
 	//Grid properties
 	//Initialization of the list points_
 	const int s_sup = (N+2)*(M+2)*(L+2);
-	double* points_d;
 	points_d = new double[3*s_sup];
 	//x_avrg_num_array is a matrix of N*M*L 3-vectors. it is in row-major format
 	x_avrg_num_array = new double[3*N*M*L];
@@ -164,10 +162,6 @@ void MeshExporter::level_set(){
 
 
 void MeshExporter::compute_mesh() {
-	unsigned nx, ny, nz;
-	nx = pMacGrid_->get_num_cells_x();
-	ny = pMacGrid_->get_num_cells_y();
-	nz = pMacGrid_->get_num_cells_z();
 	tsc::TSCTimer& tsctimer = tsc::TSCTimer::get_timer("timings.json");
 
 	// Perform calculation of mesh
@@ -175,7 +169,7 @@ void MeshExporter::compute_mesh() {
 	level_set();
 	tsctimer.stop_timing("level_set", true, "");
 	tsctimer.start_timing("marching_cubes");
-	igl::copyleft::marching_cubes(plevel_set_map, points_map_c, nx+2, ny+2, nz+2, vertices_, faces_);
+	igl::copyleft::marching_cubes(plevel_set_map, points_map, N+2, M+2, L+2, vertices_, faces_);
 	tsctimer.stop_timing("marching_cubes", true, "");
 }
 

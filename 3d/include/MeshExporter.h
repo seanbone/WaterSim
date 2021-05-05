@@ -46,6 +46,7 @@ class MeshExporter{
 		// cell spacing (dx), reciprocal of square of the same number
 		const double h, h_sq_r;
 		const double weight_factor;
+		double* points_d;
 	public:
 		//pointer to the values of the level set function
 		double* plevel_set_array;
@@ -54,7 +55,6 @@ class MeshExporter{
 		level_set_type plevel_set_map;
 		using sdf_points_type = Eigen::Map<Eigen::MatrixXd>;
 		sdf_points_type points_map;
-		const sdf_points_type points_map_c;
 		
 		//vector which contains the numerator of the value x_average
 		//used by the level set function

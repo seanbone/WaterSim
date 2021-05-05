@@ -30,18 +30,17 @@ class MeshExporter{
 		unsigned num_exported_ = 0;
 
 		// Name of folder to export file to
-		std::string folder_ = "../out_meshes/";
+		std::string folder_ = "out_meshes/";
 		std::string file_prefix_ = "mesh_";
 
 		// grid spacing (initialized from pMacGrid_->get_cell_size{x,y,z}())
 		const double dx, dy, dz;
 
-		// dimensions of one grid cell (initialized from pMacGrid_->size{x,y,z}_)
-		const double sizex_, sizey_, sizez_;
-
 		// number of grid cells, per direction
 		// (initialized from pMacGrid_->get_num_cells_{x,y,z}_())
-		const unsigned int N, M, L;
+		const int N, M, L;
+		const double sizex_, sizey_, sizez_;
+
 
 		// cell spacing (dx), reciprocal of square of the same number
 		const double h, h_sq_r;

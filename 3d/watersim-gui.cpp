@@ -13,7 +13,7 @@ class WaterGui : public Gui {
 
 private:
 
-	std::string configFile = "../config.json";
+	std::string configFile = "config.json";
 	SimConfig m_cfg;
 
 	// Simulation parameters
@@ -23,6 +23,7 @@ private:
 	bool m_display_meshes;
 	bool m_display_mesh_edges;
 	bool m_display_mesh_faces;
+	int m_random_seed;
 
 	// X, Y and Z dimension of system in meters
 	double m_system_size_x;
@@ -113,6 +114,7 @@ public:
 		m_meteor_force = m_cfg.getApplyMeteorForce();
 		m_cfg.getFluidRegion(m_fluid_from_x, m_fluid_from_y, m_fluid_from_z,
 					   m_fluid_to_x, m_fluid_to_y, m_fluid_to_z);
+		m_random_seed = m_cfg.getRandomSeed();
 	}
 
 	/**
@@ -134,6 +136,7 @@ public:
 		m_cfg.setApplyMeteorForce(m_meteor_force);
 		m_cfg.setFluidRegion(m_fluid_from_x, m_fluid_from_y, m_fluid_from_z,
 		                     m_fluid_to_x, m_fluid_to_y, m_fluid_to_z);
+		m_cfg.setRandomSeed(m_random_seed);
 	}
 
 	/**
@@ -188,6 +191,7 @@ public:
 	void drawSimulationParameterMenu() override {
 		ImGui::Checkbox("Export meshes", &m_export_meshes);
 		ImGui::Checkbox("Randomize particles", &m_jitter_particles);
+		ImGui::InputInt("Random seed", &m_random_seed);
 		ImGui::Checkbox("Meteor force", &m_meteor_force);
 		ImGui::InputDouble("Alpha", &m_alpha, 0, 0);
 		ImGui::InputDouble("Timestep [s]", &m_dt, 0, 0);

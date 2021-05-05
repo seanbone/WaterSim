@@ -66,6 +66,8 @@ void SimConfig::setDefaults(bool hard) {
 		setApplyMeteorForce(false);
 	if (!m_config.contains("fluidRegion"))
 		setFluidRegion(22, 22, 22, 90, 110, 90);
+	if (!m_config.contains("randomSeed"))
+		setRandomSeed(-1);
 }
 
 void SimConfig::setExportMeshes(bool v) {
@@ -203,4 +205,12 @@ void SimConfig::getFluidRegion(double &from_x, double &from_y, double &from_z,
 	simpleSort(from_x, to_x);
 	simpleSort(from_y, to_y);
 	simpleSort(from_z, to_z);
+}
+
+void SimConfig::setRandomSeed(int seed) {
+	m_config["randomSeed"] = seed;
+}
+
+int SimConfig::getRandomSeed() {
+	return m_config["randomSeed"];
 }

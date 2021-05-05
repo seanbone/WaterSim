@@ -28,12 +28,12 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	tsc::TSCTimer& tsctimer = tsc::TSCTimer::get_timer("timings.json");
 
 	// 1.
-	tsctimer.start_timing("velocity_field");
+	tsctimer.start_timing("particle_to_grid");
 	compute_velocity_field();
 
 	// 1a.
 	MACGrid_->set_uvw_star();
-	tsctimer.stop_timing("velocity_field", true, "");
+	tsctimer.stop_timing("particle_to_grid", true, "");
 
 	// 2.
 	tsctimer.start_timing("apply_forces");
@@ -51,9 +51,9 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	tsctimer.stop_timing("apply_boundary_conditions", true, "");
 	
 	// 4.
-	tsctimer.start_timing("do_pressures");
+	tsctimer.start_timing("apply_pressure_correction");
 	do_pressures(dt);
-	tsctimer.stop_timing("do_pressures", true, "");
+	tsctimer.stop_timing("apply_pressure_correction", true, "");
 	
 	// 5.
 	tsctimer.start_timing("grid_to_particle");

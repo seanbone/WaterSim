@@ -10,12 +10,12 @@ MeshExporter::MeshExporter(Mac3d* Grid, Particle* particles, const int n)
 	dx{pMacGrid_->get_cell_sizex()},
 	dy{pMacGrid_->get_cell_sizey()},
 	dz{pMacGrid_->get_cell_sizez()},
+	N{(int) pMacGrid_->get_num_cells_x()},
+	M{(int) pMacGrid_->get_num_cells_y()},
+	L{(int) pMacGrid_->get_num_cells_z()},
 	sizex_{pMacGrid_->sizex_},
 	sizey_{pMacGrid_->sizey_},
 	sizez_{pMacGrid_->sizez_},
-	N{pMacGrid_->get_num_cells_x()},
-	M{pMacGrid_->get_num_cells_y()},
-	L{pMacGrid_->get_num_cells_z()},
 	h{dx},
 	h_sq_r{1.0/h},
 	weight_factor{0.87*dx}
@@ -96,12 +96,12 @@ void MeshExporter::level_set(){
 		const int init_cell_y = int(particle.y_/dy + 0.5);
 		const int init_cell_z = int(particle.z_/dz + 0.5);
 
-		int k_max = std::min((int) L, init_cell_x + 2);
+		int k_max = std::min((int) L, init_cell_z + 2);
 		int j_max = std::min((int) M, init_cell_y + 2);
-		int i_max = std::min((int) N, init_cell_z + 2);
-		for(int k = std::max(0, init_cell_x - 2); k <= k_max; ++k){
-			for(int j = std::max(0, init_cell_y - 2); j <= j_max; ++j){
-				for(int i = std::max(0, init_cell_z - 2); i <= i_max; ++i){
+		int i_max = std::min((int) N, init_cell_x + 2);
+		for(int k = std::max(0, init_cell_z - 2); k < k_max; ++k){
+			for(int j = std::max(0, init_cell_y - 2); j < j_max; ++j){
+				for(int i = std::max(0, init_cell_x - 2); i < i_max; ++i){
 					const int index = i + j*N + k*N*M;
 					const double dist_x = i*dx - particle.x_;
 					const double dist_y = j*dy - particle.y_;

@@ -17,7 +17,7 @@ MeshExporter::MeshExporter(Mac3d* Grid, Particle* particles, const int n)
 	sizey_{pMacGrid_->sizey_},
 	sizez_{pMacGrid_->sizez_},
 	h{dx},
-	h_sq_r{1.0/h},
+	h_sq_r{1.0/(h*h)},
 	weight_factor{0.87*dx}
 {
 	

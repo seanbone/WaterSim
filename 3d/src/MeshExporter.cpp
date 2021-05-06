@@ -128,12 +128,13 @@ void MeshExporter::level_set(){
 			}
 		}
 	}
-	
-	tsctimer.stop_timing("first_part", true, "");
+
+
+    	tsctimer.stop_timing("first_part", true, "");
 	//Compute the values of level set function
-	for(int k = 0; k < L; ++k){
-		for(int j = 0; j < M; ++j){
-			for(int i = 0; i < N; ++i){
+	for(int k = -1; k < L+1; ++k){
+		for(int j = -1; j < M+1; ++j){
+			for(int i = -1; i < N+1; ++i){
 				int index = (i+1) + (j+1)*(N+2) + (k+1)*(N+2)*(M+2);
 				
 				if(i == -1 || i == N || j == -1 || j == M || k == -1 || k == L){

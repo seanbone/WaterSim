@@ -3,3 +3,4 @@
 **/out_vid/*
 *.mkv
 *.png
+**/benchmark-*/

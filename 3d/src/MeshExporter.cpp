@@ -123,7 +123,7 @@ void MeshExporter::level_set(){
 					int index2 = i + j*N + k*N*M;
 					double temp = *(den+index2);
 					Eigen::Vector3d x_avrg = x_avrg_num[index2]/temp;
-					double r_avrg = 0.87*dx;
+					double r_avrg = r_avrg_num[index2]/temp;
 					Eigen::Vector3d cell_pos = Eigen::Vector3d(i*dx, j*dy, k*dz);
 					
 					if(*(den+index2) != 0)

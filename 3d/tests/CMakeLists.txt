@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.1)
 project(WaterSim-Tests)
 
+add_definitions(-DCMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR})
+
 # Add custom targets
 add_custom_target(watersim-tests-build)
-add_custom_target(watersim-tests COMMAND ${CMAKE_CTEST_COMMAND})
+add_custom_target(watersim-tests COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure)
 add_dependencies(watersim-tests watersim-tests-build)
 
 # Auto-detect files in this directory

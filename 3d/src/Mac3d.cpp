@@ -255,7 +255,7 @@ double Mac3d::get_u(const unsigned i, const unsigned j, const unsigned k){
 	if (i < (N_+1) && j < M_ && k < L_)
 		return *(pu_ + (N_+1)*j + i + (N_+1)*M_*k);
 	else{ 
-		std::cout << "Calling get_u: Index out of bounds!" << std::endl;
+		std::cout << "Calling get_u: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 		return 0;
 	}
 	
@@ -265,7 +265,7 @@ double Mac3d::get_v(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < (M_+1) && k < L_)
 		return *(pv_ + N_*j + i + N_*(M_+1)*k);
 	else{ 
-		std::cout << "Calling get_v: Index out of bounds!" << std::endl;
+		std::cout << "Calling get_v: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 		return 0;
 	}
 }
@@ -274,7 +274,7 @@ double Mac3d::get_w(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < (L_+1))
 		return *(pw_ + N_*j + i + N_*M_*k);
 	else{ 
-		std::cout << "Calling get_w: Index out of bounds!" << std::endl;
+		std::cout << "Calling get_w: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 		return 0;
 	}
 }
@@ -283,7 +283,7 @@ double Mac3d::get_u_star(const unsigned i, const unsigned j, const unsigned k) {
 	if (i < (N_+1) && j < M_ && k < L_)
 		return *(pu_star_ + (N_+1)*j + i + (N_+1)*M_*k);
 	else{ 
-		std::cout << "Calling get_u_star: Index out of bounds!" << std::endl;
+		std::cout << "Calling get_u_star: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 		return 0;
 	}
 }
@@ -292,7 +292,7 @@ double Mac3d::get_v_star(const unsigned i, const unsigned j, const unsigned k) {
 	if (i < N_ && j < (M_+1) && k < L_)
 		return *(pv_star_ + N_*j + i + N_*(M_+1)*k);
 	else{ 
-		std::cout << "Calling get_v_star: Index out of bounds!" << std::endl;
+		std::cout << "Calling get_v_star: Index out (" << i << ", " << j << ", " << k << ") of bounds!" << std::endl;
 		return 0;
 	}
 }
@@ -301,7 +301,7 @@ double Mac3d::get_w_star(const unsigned i, const unsigned j, const unsigned k) {
 	if (i < N_ && j < M_ && k < (L_+1))
 		return *(pw_star_ + N_*j + i + N_*M_*k);
 	else{ 
-		std::cout << "Calling get_w_star: Index out of bounds!" << std::endl;
+		std::cout << "Calling get_w_star: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 		return 0;
 	}
 }
@@ -715,7 +715,7 @@ double Mac3d::get_pressure(const unsigned i, const unsigned j, const unsigned k)
 	if (i < N_ && j < M_ && k < L_)
 		return *(ppressure_ + N_*j + i + N_*M_*k);
 	else{ 
-		std::cout << "Calling get_pressure: Index out of bounds!" << std::endl;
+		std::cout << "Calling get_pressure: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 		return 0;
 	}
 }
@@ -725,7 +725,7 @@ bool Mac3d::is_solid(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < L_)
 		return *(psolid_ + N_*j + i + N_*M_*k);
 	else{ 
-		std::cout << "Calling is_solid: Index out of bounds!" << std::endl;
+		std::cout << "Calling is_solid: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 		return 1;
 	}
 }
@@ -734,7 +734,7 @@ bool Mac3d::is_fluid(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < L_)
 		return *(pfluid_ + N_*j + i + N_*M_*k);
 	else{ 
-		std::cout << "Calling is_fluid: Index out of bounds!" << std::endl;
+		std::cout << "Calling is_fluid: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 		return 0;
 	}
 }
@@ -743,7 +743,7 @@ bool Mac3d::is_empty(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < L_)
 		return (!is_fluid(i,j,k) && !is_solid(i,j,k));
 	else{ 
-		std::cout << "Calling is_empty Index out of bounds!" << std::endl;
+		std::cout << "Calling is_empty Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 		return 0;
 	}
 }
@@ -753,7 +753,7 @@ double Mac3d::get_weights_u(const unsigned i, const unsigned j, const unsigned k
 	if (i < (N_+1) && j < M_ && k < L_)
 		return *(pweights_u_ + (N_+1)*j + i + (N_+1)*M_*k);
 	else{ 
-		std::cout << "Calling get_weights_u: Index out of bounds!" << std::endl;
+		std::cout << "Calling get_weights_u: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 		return 0;
 	}
 }
@@ -762,7 +762,7 @@ double Mac3d::get_weights_v(const unsigned i, const unsigned j, const unsigned k
 	if (i < N_ && j < (M_+1) && k < L_)
 		return *(pweights_v_ + N_*j + i + N_*(M_+1)*k);
 	else{ 
-		std::cout << "Calling get_weights_v: Index out of bounds!" << std::endl;
+		std::cout << "Calling get_weights_v: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 		return 0;
 	}
 }
@@ -771,7 +771,7 @@ double Mac3d::get_weights_w(const unsigned i, const unsigned j, const unsigned k
 	if (i < N_ && j < M_ && k < (L_+1))
 		return *(pweights_w_ + N_*j + i + N_*M_*k);
 	else{ 
-		std::cout << "Calling get_weights_w: Index out of bounds!" << std::endl;
+		std::cout << "Calling get_weights_w: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 		return 0;
 	}
 }
@@ -806,21 +806,42 @@ void Mac3d::set_u(const unsigned i, const unsigned j, const unsigned k, double v
 	if (i < (N_+1) && j < M_ && k < L_)
 		*(pu_ + (N_+1)*j + i + (N_+1)*M_*k) = value;
 	else
-		std::cout << "Calling set_u: Index out of bounds!" << std::endl;
+		std::cout << "Calling set_u: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 }
 
 void Mac3d::set_v(const unsigned i, const unsigned j, const unsigned k, double value){
 	if (i < N_ && j < (M_+1) && k < L_)
 		*(pv_ + N_*j + i + N_*(M_+1)*k) = value;
 	else
-		std::cout << "Calling set_v: Index out of bounds!" << std::endl;
+		std::cout << "Calling set_v: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 }
 
 void Mac3d::set_w(const unsigned i, const unsigned j, const unsigned k, double value){
 	if (i < N_ && j < M_ && k < (L_+1))
 		*(pw_ + N_*j + i + N_*M_*k) = value;
 	else
-		std::cout << "Calling set_w: Index out of bounds!" << std::endl;
+		std::cout << "Calling set_w: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
+}
+
+void Mac3d::set_u_star(const unsigned i, const unsigned j, const unsigned k, double value){
+	if (i < (N_+1) && j < M_ && k < L_)
+		*(pu_star_ + (N_+1)*j + i + (N_+1)*M_*k) = value;
+	else
+		std::cout << "Calling set_u_star: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
+}
+
+void Mac3d::set_v_star(const unsigned i, const unsigned j, const unsigned k, double value){
+	if (i < N_ && j < (M_+1) && k < L_)
+		*(pv_star_ + N_*j + i + N_*(M_+1)*k) = value;
+	else
+		std::cout << "Calling set_v_star: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
+}
+
+void Mac3d::set_w_star(const unsigned i, const unsigned j, const unsigned k, double value){
+	if (i < N_ && j < M_ && k < (L_+1))
+		*(pw_star_ + N_*j + i + N_*M_*k) = value;
+	else
+		std::cout << "Calling set_w_star: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 }
 
 void Mac3d::set_uvw_star() {
@@ -840,7 +861,7 @@ void Mac3d::set_pressure(const unsigned i, const unsigned j, const unsigned k, d
 	if (i < N_ && j < M_ && k < L_)
 		*(ppressure_ + N_*j + i + N_*M_*k) = value;
 	else
-		std::cout << "Calling set_pressure: Index out of bounds!" << std::endl;
+		std::cout << "Calling set_pressure: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 }
 
 void Mac3d::set_pressure(const Eigen::VectorXd& p) {
@@ -852,14 +873,14 @@ void Mac3d::set_solid(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < L_)
 		*(psolid_ + N_*j + i + N_*M_*k) = true;
 	else
-		std::cout << "Calling set_solid: Index out of bounds!" << std::endl;
+		std::cout << "Calling set_solid: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 }
 
 void Mac3d::set_fluid(const unsigned i, const unsigned j, const unsigned k){
 	if (i < N_ && j < M_ && k < L_)
 		*(pfluid_ + N_*j + i + N_*M_*k) = true;
 	else
-		std::cout << "Calling set_fluid: Index out of bounds!" << std::endl;
+		std::cout << "Calling set_fluid: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 }
 
 void Mac3d::reset_fluid() {
@@ -871,21 +892,21 @@ void Mac3d::set_weights_u(const unsigned i, const unsigned j, const unsigned k, 
 	if (i < (N_+1) && j < (M_) && k < L_)
 		*(pweights_u_ + (N_+1)*j + i + (N_+1)*M_*k) = value;
 	else
-		std::cout << "Calling set_weights_u: Index out of bounds!" << std::endl;
+		std::cout << "Calling set_weights_u: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 }
 
 void Mac3d::set_weights_v(const unsigned i, const unsigned j, const unsigned k, double value){
 	if (i < (N_) && j < (M_+1) && k < L_)
 		*(pweights_v_ + N_*j + i + N_*(M_+1)*k) = value;
 	else
-		std::cout << "Calling set_weights_v: Index out of bounds!" << std::endl;
+		std::cout << "Calling set_weights_v: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 }
 
 void Mac3d::set_weights_w(const unsigned i, const unsigned j, const unsigned k, double value){
 	if (i < (N_) && j < M_ && k < (L_+1))
 		*(pweights_w_ + N_*j + i + N_*M_*k) = value;
 	else
-		std::cout << "Calling set_weights_w: Index out of bounds!" << std::endl;
+		std::cout << "Calling set_weights_w: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 }
 
 void Mac3d::set_weights_to_zero(){

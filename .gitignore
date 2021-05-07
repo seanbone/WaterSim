@@ -5,3 +5,4 @@ compile_commands.json
 *.mp4
 **/.idea/
 **/config.json
+.vscode

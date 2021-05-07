@@ -1,0 +1,39 @@
+{
+    "alpha": 0.01,
+    "applyMeteorForce": false,
+    "density": 1000.0,
+    "displayGrid": false,
+    "displayMeshes": [
+        true,
+        false
+    ],
+    "exportMeshes": false,
+    "fluidRegion": [
+        [
+            0.0,
+            0.0,
+            0.0
+        ],
+        [
+            50.0,
+            75.0,
+            50.0
+        ]
+    ],
+    "gravity": 9.81,
+    "gridResolution": [
+        480,
+        160,
+        80
+    ],
+    "jitterParticles": true,
+    "maxParticlesDisplay": 800320,
+    "maxSteps": 20,
+    "randomSeed": 42,
+    "systemSize": [
+        300.0,
+        100.0,
+        50.0
+    ],
+    "timeStep": 0.025
+}

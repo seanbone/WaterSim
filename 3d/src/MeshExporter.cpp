@@ -33,6 +33,7 @@ MeshExporter::MeshExporter(Mac3d* Grid, Particle* particles, const int n)
 	//x_avrg_num_array is a matrix of N*M*L 3-vectors. it is in row-major format
 	x_avrg_num_array = new double[3*N*M*L];
 	plevel_set_array = new double[s_sup];
+	const double p_level_init = 0.5*dx;
 
 	// initialize the map objects
 	new (&plevel_set_map) Eigen::Map<Eigen::VectorXd>(plevel_set_array, s_sup, 1);
@@ -47,6 +48,7 @@ MeshExporter::MeshExporter(Mac3d* Grid, Particle* particles, const int n)
 					points_d[index] = (i-1) * dx;
 					points_d[index+s_sup] = (j-1) * dy;
 					points_d[index+2*s_sup] = (k-1) * dz;
+					plevel_set_array[index] = p_level_init;
 				}
 			}
 		}
@@ -130,18 +132,18 @@ void MeshExporter::level_set(){
 	}
 
 
-    	tsctimer.stop_timing("first_part", true, "");
+	tsctimer.stop_timing("first_part", true, "");
 	//Compute the values of level set function
-	for(int k = -1; k < L+1; ++k){
-		for(int j = -1; j < M+1; ++j){
-			for(int i = -1; i < N+1; ++i){
+	for(int k = 0; k < L; ++k){
+		for(int j = 0; j < M; ++j){
+			for(int i = 0; i < N; ++i){
 				int index = (i+1) + (j+1)*(N+2) + (k+1)*(N+2)*(M+2);
 				
-				if(i == -1 || i == N || j == -1 || j == M || k == -1 || k == L){
-					plevel_set_array[index] = 0.5*dx;
-				}
+				//if(i == -1 || i == N || j == -1 || j == M || k == -1 || k == L){
+				//	plevel_set_array[index] = 0.5*dx;
+				//}
 				
-				else{
+				//else{
 					int index2 = i + j*N + k*N*M;
 					const double denominator_inv = 1.0/ *(den+index2);
 					const double x_avrg_x = x_avrg_num_array[index2*3  ] * denominator_inv;
@@ -160,7 +162,7 @@ void MeshExporter::level_set(){
 						else
 							plevel_set_array[index] = 1;
 					}
-				}
+				//}
 			}
 		}
 	}

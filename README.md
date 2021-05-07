@@ -46,6 +46,26 @@ This builds three executables:
 * `watersim-cli` runs without a GUI, and therefore with fewer dependencies. It requires a configuration file as input. Run `./watersim-cli -h` for help.
 * `viewmesh`, which can be used to preview an OBJ mesh.
 
+## Reference data
+
+The reference data used in the unit tests for validation of all the sub-steps of 
+the FLIP::step_FLIP() function is stored in the `3d/validation_data` and 
+comprises of the initial configuration file `validation-config.json` and the 
+netCDF file `ref.nc`, where the model state at a specific timestep is stored.
+
+To generate a new `ref.nc` file in the build directory simply enable the CMake 
+option `WRITE_REFERENCE` as follows:
+
+    mkdir -p 3d/build/
+    cd 3d/build && cmake -DWRITE_REFERENCE=ON ..
+    make -j8
+
+Then run either `watersim-gui` or `watersim-cli` at least until the timestep specified in `3d/CMakeLists.txt` is reached.
+
+Note that to avoid writing reference files in further runs the `WRITE_REFERENCE` 
+option needs to be explicitly turned off by re-running 
+`cmake -DWRITE_REFERENCE=OFF ..`.
+
 ## Unit tests
 
 The `3d/tests` directory defines unit tests for the 3D case.

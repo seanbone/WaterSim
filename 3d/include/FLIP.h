@@ -4,6 +4,7 @@
 #include "Particle.h"
 #include "Mac3d.h"
 #include "SimConfig.h"
+#include "NcWriter.h"
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
 #include <cmath>
@@ -32,7 +33,11 @@ public:
 	 */
 	FLIP(Particle* particles, unsigned num_particles, Mac3d* MACGrid,
 	  const SimConfig& cfg);
-	
+
+    /** Destructor
+	 */	
+	~FLIP();
+
 	/** Perform one FLIP step
 	 * Params:
 	 * - dt is the amount of time to advance the simulation by (may be 
@@ -40,11 +45,71 @@ public:
 	 * - step is the number of steps performed
 	 */
 	void step_FLIP(double dt, unsigned long step);
+
+	/** Compute velocity field by particle-to-grid transfer
+	 *  and extrapolate into air region
+	 */
+	void compute_velocity_field();
+
+	/** Apply external forces to velocities on grid
+	 * Params:
+	 * - dt is the amount of time to advance the simulation by
+	 */
+	void apply_forces(const double dt);
+
+	/** Simulate explosion of the meteorite
+	 * Params:
+	 * - dt is the amount of time to advance the simulation by
+	 * - step is the number of steps performed
+	 * - x, y and z are the indices of the grid-cell on which the impact
+	 *	 will take place
+	 * - r is the radius (in number of cells) of the meteorite
+	 * - value is the amount of force applied by the meteorite on the 
+	 * 	 grid-cells
+	 */
+	void explode(const double dt, const unsigned long step, const int x, const int y, const int z, const double r, const double value);
+
+	/** Enforce boundary conditions for grid & solid boundaries
+	 */
+	void apply_boundary_conditions();
+
+	/** Compute and apply pressures on velocity field
+	 * Params:
+	 * - dt is the amount of time to advance the simulation by
+	 */
+	void do_pressures(const double dt);
+
+	/** Transfer grid velocities to particles
+	 */
+	void grid_to_particle();
+
+	/** Compute timestep to satisfy CFL condition
+	 * Params:
+	 * - dt is the amount of time to advance the simulation by, and to 
+	 * 	 subsample
+	 */
+	double compute_timestep( const double dt );
+
+	/** Apply RK2 to update particle positions
+	 * Params:
+	 * - dt is the amount of time to advance the simulation by
+	 * - step is the number of steps performed
+	 */
+	void advance_particles(const double dt, const unsigned long step);
+
+	/** Get the particle at index i in particles_
+	 * Params:
+	 * - i is the index of the desired particle
+	 */
+	Particle getParticle( unsigned i );
 	
 private:
 
 	// The configuration
 	const SimConfig cfg_;
+
+	// NcWriter object to write reference data
+	NcWriter* ncWriter_;
 	
 	// Array of all particles
 	Particle* particles_;
@@ -70,18 +135,6 @@ private:
 	
 	// RHS of pressure LSE
 	Eigen::VectorXd d_;
-	
-	/** Compute timestep to satisfy CFL condition
-	 * Params:
-	 * - dt is the amount of time to advance the simulation by, and to 
-	 * 	 subsample
-	 */
-	double compute_timestep( const double dt );
-
-	/** Compute velocity field by particle-to-grid transfer
-	 *  and extrapolate into air region
-	 */
-	void compute_velocity_field();
 	
 	/** Check the distance between a particle and a point on the MACGrid
 	 * Params:
@@ -203,48 +256,10 @@ private:
 	 * 	 1 -> visited from compute_velocity_field
 	 */
 	void extrapolate_w( const bool* const visited_w );
-	
-	/** Apply external forces to velocities on grid
-	 * Params:
-	 * - dt is the amount of time to advance the simulation by
-	 */
-	void apply_forces(const double dt);
 
-	/** Enforce boundary conditions for grid & solid boundaries
-	 */
-	void apply_boundary_conditions();
-
-	/** Compute and apply pressures on velocity field
-	 * Params:
-	 * - dt is the amount of time to advance the simulation by
-	 */
-	void do_pressures(const double dt);
 	void compute_pressure_matrix();
 	void compute_pressure_rhs(const double dt);
 	void apply_pressure_gradients(const double dt);
-
-	/** Transfer grid velocities to particles
-	 */
-	void grid_to_particle();
-
-	/** Apply RK2 to update particle positions
-	 * Params:
-	 * - dt is the amount of time to advance the simulation by
-	 * - step is the number of steps performed
-	 */
-	void advance_particles(const double dt, const unsigned long step);
-	
-	/** Simulate explosion of the meteorite
-	 * Params:
-	 * - dt is the amount of time to advance the simulation by
-	 * - step is the number of steps performed
-	 * - x, y and z are the indices of the grid-cell on which the impact
-	 *	 will take place
-	 * - r is the radius (in number of cells) of the meteorite
-	 * - value is the amount of force applied by the meteorite on the 
-	 * 	 grid-cells
-	 */
-	void explode(const double dt, const unsigned long step, const int x, const int y, const int z, const double r, const double value);
 };
 
 #endif

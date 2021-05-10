@@ -331,6 +331,30 @@ class Mac3d{
 		 */
 		void set_w(const unsigned i, const unsigned j, const unsigned k, double value);
 		
+		/**Set pu_star_ (used in validation)
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the velocity 
+		 * 	 is to be set
+		 * - value is the value to which the velocity is set
+		 */
+		void set_u_star(const unsigned i, const unsigned j, const unsigned k, double value); 
+		
+		/**Set pv_star_ (used in validation)
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the velocity 
+		 * 	 is to be set
+		 * - value is the value to which the velocity is set
+		 */
+		void set_v_star(const unsigned i, const unsigned j, const unsigned k, double value);
+		
+		/**Set pw_star_ (used in validation)
+		 * Params:
+		 * - i, j, k indicate in which position of the grid the velocity 
+		 * 	 is to be set
+		 * - value is the value to which the velocity is set
+		 */
+		void set_w_star(const unsigned i, const unsigned j, const unsigned k, double value);
+
 		/**Copy velocity field to temporary copy arrays
 		 */		
 		void set_uvw_star();

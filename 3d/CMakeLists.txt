@@ -29,7 +29,14 @@ if(NOT netcdf_POPULATED)
 endif()
 
 
+# Activate writing to reference file for validation
+option(WRITE_REFERENCE "Write to reference" OFF)
 
+# Timestep at which the data is written in the reference file
+set(TIMESTEP 235)
+if(WRITE_REFERENCE)
+  add_definitions(-DWRITE_REFERENCE=${TIMESTEP})
+endif()
 
 # Finds Libigl
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
@@ -72,9 +79,9 @@ endif()
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB H_FILES ${PROJECT_SOURCE_DIR}/include/*.h)
 file(GLOB SRC_FILES_CLI src/FLIP.cpp src/Mac3d.cpp src/MeshExporter.cpp src/Particle.cpp
-         src/SimConfig.cpp src/WaterSim.cpp)
+         src/SimConfig.cpp src/WaterSim.cpp src/NcWriter.cpp src/NcReader.cpp)
 file(GLOB H_FILES_CLI src/FLIP.h src/Mac3d.h src/MeshExporter.h src/Particle.h
-        src/SimConfig.h src/WaterSim.h)
+        src/SimConfig.h src/WaterSim.h src/NcWriter.h src/NcReader.h)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(../lib/eigen3)

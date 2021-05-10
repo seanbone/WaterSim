@@ -41,6 +41,7 @@ class MeshExporter{
 		// (initialized from pMacGrid_->get_num_cells_{x,y,z}_())
 		const int N, M, L;
 		const double sizex_, sizey_, sizez_;
+		const double r_avrg;
 
 
 		// cell spacing (dx), reciprocal of square of the same number
@@ -60,10 +61,6 @@ class MeshExporter{
 		//used by the level set function
 		std::vector<Eigen::Vector3d> x_avrg_num;
 		double* x_avrg_num_array;
-		
-		//pointer to the list which contains the numerator of the value
-		//r_average used by the level set function
-		double* r_avrg_num;
 		
 		//pointer to the list of the denominator used by both x_average and 
 		//r_average (used by the level set function)
@@ -91,7 +88,6 @@ class MeshExporter{
 		 */
 		~MeshExporter(){
 			num_particles_ = 0;
-			delete[] r_avrg_num;
 			delete[] den;
 			delete[] points_d;
 		}

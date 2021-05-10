@@ -19,6 +19,7 @@ MeshExporter::MeshExporter(Mac3d* Grid, Particle* particles, const int n)
 	sizex_{pMacGrid_->sizex_},
 	sizey_{pMacGrid_->sizey_},
 	sizez_{pMacGrid_->sizez_},
+	r_avrg{0.87*dx},
 	h{dx},
 	h_sq{h*h},
 	weight_factor{0.87*dx},
@@ -54,7 +55,6 @@ MeshExporter::MeshExporter(Mac3d* Grid, Particle* particles, const int n)
 		}
 	}
 	
-	r_avrg_num = new double[N*M*L];
 	den = new double[N*M*L];
 
 	// Create directory if it doesn't exist
@@ -84,12 +84,11 @@ void MeshExporter::level_set_easy(){
 void MeshExporter::level_set(){
 	tsc::TSCTimer& tsctimer = tsc::TSCTimer::get_timer("timings.json");
 	//Grid properties
-	//Initialization of plevel_set_array, x_avrg_num, r_avrg_num and den
+	//Initialization of plevel_set_array, x_avrg_num and den
 	std::fill(x_avrg_num_array, x_avrg_num_array+3*N*M*L, 0);
-	std::fill(r_avrg_num, r_avrg_num+N*M*L, 0);
 	std::fill(den, den+N*M*L, 0);
 
-	//Compute the values of x_avrg_num, r_avrg_num and den
+	//Compute the values of x_avrg_num and den
 	tsctimer.start_timing("first_part");
 	for(unsigned it_particle = 0; it_particle < num_particles_; ++it_particle){
 		const Particle& particle = *(pparticles_+it_particle);
@@ -123,7 +122,6 @@ void MeshExporter::level_set(){
 						x_avrg_num_array[3*index]   += W_surf*particle.x_;
 						x_avrg_num_array[3*index+1] += W_surf*particle.y_;
 						x_avrg_num_array[3*index+2] += W_surf*particle.z_;
-						r_avrg_num[index] += W_surf;
 						den[index] += W_surf;
 					}
 				}
@@ -138,31 +136,26 @@ void MeshExporter::level_set(){
 		for(int j = 0; j < M; ++j){
 			for(int i = 0; i < N; ++i){
 				int index = (i+1) + (j+1)*(N+2) + (k+1)*(N+2)*(M+2);
-				
-				//if(i == -1 || i == N || j == -1 || j == M || k == -1 || k == L){
-				//	plevel_set_array[index] = 0.5*dx;
-				//}
-				
-				//else{
 					int index2 = i + j*N + k*N*M;
 					const double denominator_inv = 1.0/ *(den+index2);
 					const double x_avrg_x = x_avrg_num_array[index2*3  ] * denominator_inv;
 					const double x_avrg_y = x_avrg_num_array[index2*3+1] * denominator_inv;
 					const double x_avrg_z = x_avrg_num_array[index2*3+2] * denominator_inv;
-					const double r_avrg = weight_factor * r_avrg_num[index2] * denominator_inv;
-					// Eigen::Vector3d cell_pos = Eigen::Vector3d(i*dx, j*dy, k*dz);
 					
-					if(*(den+index2) != 0)
+					if(*(den+index2) != 0) {
 						// eqn (18)
-						plevel_set_array[index] = std::sqrt(std::pow(i*dx - x_avrg_x, 2) + std::pow(j*dy - x_avrg_y, 2) + std::pow(k*dz - x_avrg_z, 2)) - r_avrg;
-						// plevel_set_array[index] = (cell_pos - x_avrg).norm() - r_avrg;
+						plevel_set_array[index] = std::sqrt(
+							std::pow(i*dx - x_avrg_x, 2)
+							+ std::pow(j*dy - x_avrg_y, 2)
+							+ std::pow(k*dz - x_avrg_z, 2)
+						) - r_avrg;
+					}
 					else{
 						if(pMacGrid_->is_fluid(i,j,k))
 							plevel_set_array[index] = -1;
 						else
 							plevel_set_array[index] = 1;
 					}
-				//}
 			}
 		}
 	}

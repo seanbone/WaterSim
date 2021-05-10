@@ -23,6 +23,7 @@ MeshExporter::MeshExporter(Mac3d* Grid, Particle* particles, const int n)
 	h{dx},
 	h_sq{h*h},
 	weight_factor{0.87*dx},
+	sdf_trivial{0.5*dx},
 	plevel_set_map(nullptr, 1, 1),
 	points_map(nullptr, 1, 1)
 {
@@ -152,9 +153,9 @@ void MeshExporter::level_set(){
 					}
 					else{
 						if(pMacGrid_->is_fluid(i,j,k))
-							plevel_set_array[index] = -1;
+							plevel_set_array[index] = -sdf_trivial;
 						else
-							plevel_set_array[index] = 1;
+							plevel_set_array[index] = sdf_trivial;
 					}
 			}
 		}

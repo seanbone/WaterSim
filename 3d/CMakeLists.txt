@@ -76,10 +76,11 @@ if (NOT LIBIGL_FOUND)
     find_package(LIBIGL REQUIRED QUIET)
 endif()
 # Add project files
-file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
+file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/src/flip-methods/*.cpp)
 file(GLOB H_FILES ${PROJECT_SOURCE_DIR}/include/*.h)
 file(GLOB SRC_FILES_CLI src/FLIP.cpp src/Mac3d.cpp src/MeshExporter.cpp src/Particle.cpp
-         src/SimConfig.cpp src/WaterSim.cpp src/NcWriter.cpp src/NcReader.cpp)
+         src/SimConfig.cpp src/WaterSim.cpp src/NcWriter.cpp src/NcReader.cpp
+         ${PROJECT_SOURCE_DIR}/src/flip-methods/*.cpp)
 file(GLOB H_FILES_CLI src/FLIP.h src/Mac3d.h src/MeshExporter.h src/Particle.h
         src/SimConfig.h src/WaterSim.h src/NcWriter.h src/NcReader.h)
 

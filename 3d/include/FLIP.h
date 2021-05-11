@@ -77,7 +77,7 @@ public:
 	 * Params:
 	 * - dt is the amount of time to advance the simulation by
 	 */
-	void do_pressures(const double dt);
+	void apply_pressure_correction(const double dt);
 
 	/** Transfer grid velocities to particles
 	 */

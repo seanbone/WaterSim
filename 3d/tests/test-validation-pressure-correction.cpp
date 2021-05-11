@@ -17,7 +17,7 @@ int main(){
 
 	double dt = ncReader->cfg.getTimeStep();
 
-	flip->do_pressures(dt);
+    flip->apply_pressure_correction(dt);
 
 	ncReader->readAll(4);
 	ncReader->validate();

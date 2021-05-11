@@ -14,8 +14,8 @@ int main(){
 	ncReader->toOldStruct();
 	
 	FLIP* flip = new FLIP(ncReader->particles, ncReader->num_particles, ncReader->MACGrid, ncReader->cfg);
-	
-	flip->compute_velocity_field();
+
+    flip->particle_to_grid();
 
 	ncReader->MACGrid->set_uvw_star();
 

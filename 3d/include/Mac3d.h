@@ -14,7 +14,6 @@ class Mac3d{
 		using Triplet_t = Eigen::Triplet<double>; 
 		using Pair_t = std::pair<int, int>; 
 
-	private:
 		//------------------- GRID Properties --------------------------
 		//number of cells respectively in x-direction,
 		//y-direction, z-direction
@@ -34,6 +33,7 @@ class Mac3d{
 		const double cell_sizey_;
 		const double cell_sizez_;
 		
+	private:
 		//---------------- PHYSICAL VALUES objects ---------------------
 		//pointer to array for the pressure
 		double* ppressure_;

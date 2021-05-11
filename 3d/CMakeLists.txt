@@ -42,9 +42,12 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 
 # Custom C++ flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -O3 -Wall -Wextra -Wpedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -std=c++17 -Wall -Wextra -Wpedantic")
 # Ignore some warnings
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-reorder -Wno-unknown-pragmas -Wno-unused-parameter -Wno-misleading-indentation")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-reorder -Wno-unknown-pragmas -Wno-unused-parameter -Wno-misleading-indentation")
+# Ignore some less warnings
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas -Wno-misleading-indentation")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopt-info-missed=report.txt") 
 
 # Export compilation commands for VIM editor
 set( CMAKE_EXPORT_COMPILE_COMMANDS ON )

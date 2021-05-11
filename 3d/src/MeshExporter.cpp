@@ -22,7 +22,6 @@ MeshExporter::MeshExporter(Mac3d* Grid, Particle* particles, const int n)
 	r_avrg{0.87*dx},
 	h{dx},
 	h_sq{h*h},
-	weight_factor{0.87*dx},
 	sdf_trivial{0.5*dx},
 	plevel_set_map(nullptr, 1, 1),
 	points_map(nullptr, 1, 1)

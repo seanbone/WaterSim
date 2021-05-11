@@ -46,7 +46,6 @@ class MeshExporter{
 
 		// cell spacing (dx), reciprocal of square of the same number
 		const double h, h_sq;
-		const double weight_factor;
 		const double sdf_trivial;
 		double* points_d;
 	public:

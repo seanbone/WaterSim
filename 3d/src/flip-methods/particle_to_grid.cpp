@@ -51,8 +51,8 @@ void FLIP::particle_to_grid() {
     for( unsigned int n = 0; n < num_particles_; ++n ){
 
         // Get the position and velocity vector of the current particle
-        pos = (particles_ + n)->get_position();
-        vel = (particles_ + n)->get_velocity();
+        pos = (particlesOLD_ + n)->get_position();
+        vel = (particlesOLD_ + n)->get_velocity();
 
         // Get the indices corresponding to the cell containing the
         // current particle

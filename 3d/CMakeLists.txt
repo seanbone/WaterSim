@@ -80,8 +80,8 @@ file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/src/fl
 file(GLOB H_FILES ${PROJECT_SOURCE_DIR}/include/*.h)
 file(GLOB SRC_FILES_CLI src/FLIP.cpp src/Mac3d.cpp src/MeshExporter.cpp src/Particle.cpp
          src/SimConfig.cpp src/WaterSim.cpp src/NcWriter.cpp src/NcReader.cpp
-         ${PROJECT_SOURCE_DIR}/src/flip-methods/*.cpp)
-file(GLOB H_FILES_CLI src/FLIP.h src/Mac3d.h src/MeshExporter.h src/Particle.h
+         ${PROJECT_SOURCE_DIR}/src/flip-methods/*.cpp src/Particles.cpp)
+file(GLOB H_FILES_CLI src/FLIP.h src/Mac3d.h src/MeshExporter.h src/Particle.h src/Particles.h
         src/SimConfig.h src/WaterSim.h src/NcWriter.h src/NcReader.h)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)

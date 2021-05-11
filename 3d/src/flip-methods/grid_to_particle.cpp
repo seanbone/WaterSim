@@ -25,8 +25,8 @@ void FLIP::grid_to_particle(){
     for(unsigned i = 0; i < num_particles_; ++i){
 
         // Store the initial positions and velocities of the particles
-        Eigen::Vector3d initial_position = (particles_+i)->get_position();
-        Eigen::Vector3d initial_velocity = (particles_+i)->get_velocity();
+        Eigen::Vector3d initial_position = (particlesOLD_ + i)->get_position();
+        Eigen::Vector3d initial_velocity = (particlesOLD_ + i)->get_velocity();
 
         // Get the index of the grid-cell containing the current
         // particle
@@ -78,7 +78,7 @@ void FLIP::grid_to_particle(){
         }
 
         // Finally, update the velocities of the particles
-        (particles_ + i)->set_velocity(u_update);
+        (particlesOLD_ + i)->set_velocity(u_update);
     }
 }
 

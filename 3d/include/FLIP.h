@@ -5,6 +5,7 @@
 #include "Mac3d.h"
 #include "SimConfig.h"
 #include "NcWriter.h"
+#include "Particles.h"
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
 #include <cmath>
@@ -31,12 +32,25 @@ public:
 	 * - alpha is the percentage of PIC method mixed with the FLIP 
 	 *   method
 	 */
-	FLIP(Particle* particles, unsigned num_particles, Mac3d* MACGrid,
+	FLIP(Particle* particlesOLD, Particles& particles, unsigned num_particles, Mac3d* MACGrid,
 	  const SimConfig& cfg);
 
     /** Destructor
 	 */	
 	~FLIP();
+
+	/**
+	 * Method to copy all particle data from OLD data structure to NEW.
+	 * TODO: remove once all methods have been transferred
+	 */
+	void particlesOldToNew();
+
+
+	/**
+	 * Method to copy all particle data from NEW data structure to OLD.
+	 * TODO: remove once all methods have been transferred
+	 */
+	void particlesNewToOld();
 
 	/** Perform one FLIP step
 	 * Params:
@@ -96,7 +110,7 @@ public:
 	 * - step is the number of steps performed
 	 */
 	void advance_particles(const double dt, const unsigned long step);
-	
+
 private:
 
 	// The configuration
@@ -106,9 +120,14 @@ private:
 	NcWriter* ncWriter_;
 	
 	// Array of all particles
-	Particle* particles_;
+	// Note: OLD data structure to be replaced
+	Particle* particlesOLD_;
+
+	// FLIP particles
+	Particles& particles_;
 	
 	// Total number of particles
+	// TODO: use Particles::get_num_particles() instead
 	const unsigned num_particles_;
 	
 	// Density of the fluid to be simulated

@@ -11,7 +11,7 @@ NcReader::NcReader( const std::string& filePath, const std::string& cfgPath ):
 	num_particles = getDim("num_particles");
 	timestep      = readScalar<unsigned>("timestep");
 
-	particles = new Particle[num_particles];
+	particlesOLD = new Particle[num_particles];
 	MACGrid   = new Mac3d(_n, _m, _l, _dx, _dy, _dz);
 
 	unsigned cacheBlockSize = 64;
@@ -36,7 +36,7 @@ NcReader::NcReader( const std::string& filePath, const std::string& cfgPath ):
 
 NcReader::~NcReader(){
 	
-	delete[] particles;
+	delete[] particlesOLD;
 	delete MACGrid;
 	free(x);
 	free(y);
@@ -60,8 +60,8 @@ void NcReader::toOldStruct(){
 
 	for(unsigned i = 0; i < num_particles; ++i){
 		
-		particles[i].set_position(x[i], y[i], z[i]);
-		particles[i].set_velocity(u[i], v[i], w[i]);
+		particlesOLD[i].set_position(x[i], y[i], z[i]);
+		particlesOLD[i].set_velocity(u[i], v[i], w[i]);
 	}
 	
 	for(unsigned i = 0; i < _n+1; ++i){
@@ -155,8 +155,8 @@ void NcReader::validate(){
 	Eigen::Vector3d pos, vel;
 	for(unsigned i = 0; i < num_particles; ++i){
 
-		pos = particles[i].get_position();
-		vel = particles[i].get_velocity();
+		pos = particlesOLD[i].get_position();
+		vel = particlesOLD[i].get_velocity();
 
 		maxErrX = std::max(maxErrX, rErr(x[i], pos(0)));
 		maxErrY = std::max(maxErrY, rErr(y[i], pos(1)));

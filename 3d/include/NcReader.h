@@ -160,7 +160,7 @@ class NcReader {
 	bool* solid_cells;
 
 	// Pointers to old data structures used for the "test simulation"
-	Particle* particles;
+	Particle* particlesOLD;
 	Mac3d* MACGrid;
 
 	// Initial configuration object

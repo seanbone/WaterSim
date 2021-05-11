@@ -57,7 +57,7 @@ void WaterSimGui::updateRenderGeometry() {
      
     m_particles.resize(disp_particles, 3);
     for (unsigned i = 0, j=0; j < disp_particles && i < num_particles; j++, i += particle_step) {
-        m_particles.row(j) = m_watersim.flip_particles[i].get_position();
+        m_particles.row(j) = m_watersim.flip_particlesOLD[i].get_position();
     }
 
     m_particle_colors.resize(disp_particles, 3);

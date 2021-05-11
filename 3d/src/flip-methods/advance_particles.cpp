@@ -19,7 +19,7 @@ double FLIP::compute_timestep( const double dt ){
     double v_max = 0;
     double w_max = 0;
     for( unsigned int n = 0; n < num_particles_; ++n ){
-        vel = (particles_ + n)->get_velocity();
+        vel = (particlesOLD_ + n)->get_velocity();
         if ( std::abs(vel(0)) > std::abs(u_max) ){
             u_max = vel(0);
         }
@@ -77,8 +77,8 @@ void FLIP::advance_particles(const double dt, const unsigned long step) {
     for(unsigned n = 0; n < num_particles_; ++n){
 
         // Get current position and velocity of the particle
-        Eigen::Vector3d pos_curr = (particles_ + n)->get_position();
-        Eigen::Vector3d vel = (particles_ + n)->get_velocity();
+        Eigen::Vector3d pos_curr = (particlesOLD_ + n)->get_position();
+        Eigen::Vector3d vel = (particlesOLD_ + n)->get_velocity();
 
         // Coordinates of the future location of the particle
         Eigen::Vector3d pos_next;
@@ -177,7 +177,7 @@ void FLIP::advance_particles(const double dt, const unsigned long step) {
         }
 
         // Update the position of the current particle
-        (particles_ + n)->set_position(pos_next);
+        (particlesOLD_ + n)->set_position(pos_next);
     }
 }
 

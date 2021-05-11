@@ -2,10 +2,11 @@
 #include "tsc_x86.hpp"
 
 
-FLIP::FLIP(Particle* particles, unsigned num_particles, Mac3d* MACGrid,
+FLIP::FLIP(Particle* particlesOLD, Particles& particles, unsigned num_particles, Mac3d* MACGrid,
 		   const SimConfig& cfg)
-	: particles_(particles), num_particles_(num_particles), MACGrid_(MACGrid), cfg_(cfg),
-	  fluid_density_(cfg.getDensity()), gravity_mag_(cfg.getGravity()), alpha_(cfg.getAlpha()) {
+	: particlesOLD_(particlesOLD), num_particles_(num_particles), MACGrid_(MACGrid), cfg_(cfg),
+      fluid_density_(cfg.getDensity()), gravity_mag_(cfg.getGravity()), alpha_(cfg.getAlpha()),
+      particles_(particles) {
 	
 #ifdef WRITE_REFERENCE
 	ncWriter_ = new NcWriter( "./ref.nc", 
@@ -37,7 +38,6 @@ FLIP::FLIP(Particle* particles, unsigned num_particles, Mac3d* MACGrid,
 	ncWriter_->addVar("fluid_cells", "mac_centers", ncByte);
 	ncWriter_->addVar("solid_cells", "mac_centers", ncByte);
 #endif
-
 }
 
 
@@ -110,7 +110,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 		fluid_cells = (bool*) aligned_alloc(cacheBlockSize, n * m * l * sizeof(bool));
 		solid_cells = (bool*) aligned_alloc(cacheBlockSize, n * m * l * sizeof(bool));
 
-		ncWriter_->toLinArrays(particles_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
+		ncWriter_->toLinArrays(particlesOLD_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
 		ncWriter_->writeAll(0, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
 	}
 #endif
@@ -125,7 +125,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 
 #ifdef WRITE_REFERENCE
 	if (step == WRITE_REFERENCE){
-		ncWriter_->toLinArrays(particles_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
+		ncWriter_->toLinArrays(particlesOLD_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
 		ncWriter_->writeAll(1, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
 	}
 #endif
@@ -142,7 +142,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 
 #ifdef WRITE_REFERENCE
 	if (step == WRITE_REFERENCE){
-		ncWriter_->toLinArrays(particles_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
+		ncWriter_->toLinArrays(particlesOLD_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
 		ncWriter_->writeAll(2, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
 	}
 #endif
@@ -154,7 +154,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 
 #ifdef WRITE_REFERENCE
 	if (step == WRITE_REFERENCE){
-		ncWriter_->toLinArrays(particles_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
+		ncWriter_->toLinArrays(particlesOLD_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
 		ncWriter_->writeAll(3, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
 	}
 #endif
@@ -166,7 +166,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 
 #ifdef WRITE_REFERENCE
 	if (step == WRITE_REFERENCE){
-		ncWriter_->toLinArrays(particles_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
+		ncWriter_->toLinArrays(particlesOLD_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
 		ncWriter_->writeAll(4, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
 	}
 #endif
@@ -178,7 +178,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 
 #ifdef WRITE_REFERENCE
 	if (step == WRITE_REFERENCE){
-		ncWriter_->toLinArrays(particles_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
+		ncWriter_->toLinArrays(particlesOLD_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
 		ncWriter_->writeAll(5, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
 	}
 #endif
@@ -196,7 +196,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 
 #ifdef WRITE_REFERENCE
 	if (step == WRITE_REFERENCE){
-		ncWriter_->toLinArrays(particles_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
+		ncWriter_->toLinArrays(particlesOLD_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
 		ncWriter_->writeAll(6, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
 
 		free(x);
@@ -216,4 +216,29 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 		free(solid_cells);
 	}
 #endif
+}
+
+
+void FLIP::particlesOldToNew() {
+	Particles::particleIdx_t i;
+	for (i = 0; i < particles_.get_num_particles(); i++) {
+		particles_.x[i] = particlesOLD_[i].x_;
+		particles_.y[i] = particlesOLD_[i].y_;
+		particles_.z[i] = particlesOLD_[i].z_;
+		particles_.u[i] = particlesOLD_[i].u_;
+		particles_.v[i] = particlesOLD_[i].v_;
+		particles_.w[i] = particlesOLD_[i].w_;
+	}
+}
+
+void FLIP::particlesNewToOld() {
+	Particles::particleIdx_t i;
+	for (i = 0; i < particles_.get_num_particles(); i++) {
+		particlesOLD_[i].x_ = particles_.x[i];
+		particlesOLD_[i].y_ = particles_.y[i];
+		particlesOLD_[i].z_ = particles_.z[i];
+		particlesOLD_[i].u_ = particles_.u[i];
+		particlesOLD_[i].v_ = particles_.v[i];
+		particlesOLD_[i].w_ = particles_.w[i];
+	}
 }

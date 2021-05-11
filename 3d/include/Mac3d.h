@@ -12,7 +12,10 @@
 class Mac3d{
 	public:
 		using Triplet_t = Eigen::Triplet<double>; 
-		using Pair_t = std::pair<int, int>; 
+		using Pair_t = std::pair<int, int>;
+
+		using cellIdx_t = unsigned int;
+		using globalCellIdx_t = unsigned int;
 
 		//------------------- GRID Properties --------------------------
 		//number of cells respectively in x-direction,
@@ -179,31 +182,31 @@ class Mac3d{
 
 		/**Return the number of cells of the grid in x-direction
 		 */
-		unsigned get_num_cells_x();
+		unsigned get_num_cells_x() const;
 		
 		/**Return the number of cells of the grid in y-direction
 		 */
-		unsigned get_num_cells_y();
+		unsigned get_num_cells_y() const;
 		
 		/**Return the number of cells of the grid in z-direction
 		 */
-		unsigned get_num_cells_z();
+		unsigned get_num_cells_z() const;
 		
 		/**Return the total number of cells of the grid
 		 */
-		unsigned get_num_cells();
+		unsigned get_num_cells() const;
 		
 		/**Return the dimension of one cell in x-direction in meter
 		 */
-		double get_cell_sizex();
+		double get_cell_sizex() const;
 		
 		/**Return the dimension of one cell in y-direction in meter
 		 */
-		double get_cell_sizey();
+		double get_cell_sizey() const;
 		
 		/**Return the dimension of one cell in z-direction in meter
 		 */
-		double get_cell_sizez();
+		double get_cell_sizez() const;
 		
 		/** Return a const-reference to the diagonal of the pressure's matrix A
 		 */

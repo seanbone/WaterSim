@@ -222,31 +222,31 @@ Eigen::Vector3d Mac3d::get_grid_size() const {
 	return Eigen::Vector3d(sizex_, sizey_, sizez_);
 }
 
-unsigned Mac3d::get_num_cells_x() {
+unsigned Mac3d::get_num_cells_x() const {
 	return N_;
 }
 
-unsigned Mac3d::get_num_cells_y() {
+unsigned Mac3d::get_num_cells_y() const {
 	return M_;
 }
 
-unsigned Mac3d::get_num_cells_z() {
+unsigned Mac3d::get_num_cells_z() const {
 	return L_;
 }
 
-unsigned Mac3d::get_num_cells() {
+unsigned Mac3d::get_num_cells() const {
 	return M_*N_*L_;
 }
 
-double Mac3d::get_cell_sizex() {
+double Mac3d::get_cell_sizex() const {
 	return cell_sizex_;
 }
 
-double Mac3d::get_cell_sizey() {
+double Mac3d::get_cell_sizey() const {
 	return cell_sizey_;
 }
 
-double Mac3d::get_cell_sizez() {
+double Mac3d::get_cell_sizez() const {
 	return cell_sizez_;
 }
 

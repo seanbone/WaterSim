@@ -30,7 +30,7 @@ void WaterSim::resetMembers() {
 	initMacGrid();
 
 	// Particles
-	delete [] flip_particles;
+	delete [] flip_particlesOLD;
 	initParticles();
 
 	// FLIP simulator
@@ -109,7 +109,7 @@ void WaterSim::initParticles() {
     unsigned ny = p_mac_grid->get_num_cells_y();
     unsigned nz = p_mac_grid->get_num_cells_z();
 
-    // Note: this must equal the actual number of particles
+	// Note: this must equal the actual number of particles
     // initialized in the loop below
     const unsigned particles_per_cell = 8;
 
@@ -176,8 +176,11 @@ void WaterSim::initParticles() {
         }
     }
 
-    flip_particles = new Particle[m_num_particles];
-    std::move(particles.begin(), particles.end(), flip_particles);
+	flip_particlesOLD = new Particle[m_num_particles];
+    std::move(particles.begin(), particles.end(), flip_particlesOLD);
+
+	// TODO: proper initialization using new struct
+	flip_particles = new Particles(m_num_particles, m_cfg, *p_mac_grid);
 }
 
 void WaterSim::initMacGrid() {
@@ -189,9 +192,12 @@ void WaterSim::initMacGrid() {
 }
 
 void WaterSim::initMeshExp(){
-	exp = new MeshExporter(p_mac_grid, flip_particles, m_num_particles);
+	exp = new MeshExporter(p_mac_grid, flip_particlesOLD, m_num_particles);
 }
 
 void WaterSim::initFLIP() {
-    p_flip = new FLIP(flip_particles, m_num_particles, p_mac_grid, m_cfg);
+    p_flip = new FLIP(flip_particlesOLD, *flip_particles, m_num_particles, p_mac_grid, m_cfg);
+
+	// TODO: remove once new struct is integrated
+	p_flip->particlesOldToNew();
 }

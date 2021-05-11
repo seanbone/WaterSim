@@ -49,7 +49,7 @@ public:
 	/** Compute velocity field by particle-to-grid transfer
 	 *  and extrapolate into air region
 	 */
-	void compute_velocity_field();
+	void particle_to_grid();
 
 	/** Apply external forces to velocities on grid
 	 * Params:
@@ -218,42 +218,42 @@ private:
 	/** Normalize accumulated horizontal velocities
 	 * Params:
 	 * - visited_u is a lists of flags for visited grid-velocities: 
-	 * 	 1 -> visited from compute_velocity_field
+	 * 	 1 -> visited from particle_to_grid
 	 */
 	void normalize_accumulated_u( bool* const visited_u );
 	
 	/** Normalize accumulated vertical velocities
 	 * Params:
 	 * - visited_v is a lists of flags for visited grid-velocities: 
-	 * 	 1 -> visited from compute_velocity_field
+	 * 	 1 -> visited from particle_to_grid
 	 */
 	void normalize_accumulated_v( bool* const visited_v );
 	
 	/** Normalize accumulated outgoing velocities
 	 * Params:
 	 * - visited_w is a lists of flags for visited grid-velocities: 
-	 * 	 1 -> visited from compute_velocity_field
+	 * 	 1 -> visited from particle_to_grid
 	 */
 	void normalize_accumulated_w( bool* const visited_w );
 	
 	/** Extrapolate horizontal velocities into air cells
 	 * Params:
 	 * - visited_u is a lists of flags for visited grid-velocities: 
-	 * 	 1 -> visited from compute_velocity_field
+	 * 	 1 -> visited from particle_to_grid
 	 */
 	void extrapolate_u( const bool* const visited_u );
 	
 	/** Extrapolate vertical velocities into air cells
 	 * Params:
 	 * - visited_v is a lists of flags for visited grid-velocities: 
-	 * 	 1 -> visited from compute_velocity_field
+	 * 	 1 -> visited from particle_to_grid
 	 */
 	void extrapolate_v( const bool* const visited_v );
 	
 	/** Extrapolate outgoing velocities into air cells
 	 * * Params:
 	 * - visited_w is a lists of flags for visited grid-velocities: 
-	 * 	 1 -> visited from compute_velocity_field
+	 * 	 1 -> visited from particle_to_grid
 	 */
 	void extrapolate_w( const bool* const visited_w );
 

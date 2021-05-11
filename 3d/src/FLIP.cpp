@@ -117,7 +117,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 
 	// 1.
 	tsctimer.start_timing("particle_to_grid");
-	compute_velocity_field();
+    particle_to_grid();
 
 	// 1a.
 	MACGrid_->set_uvw_star();
@@ -220,7 +220,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 
 
 /*** COMPUTE VELOCITY FIELD ***/
-void FLIP::compute_velocity_field() {
+void FLIP::particle_to_grid() {
 
 	// Set all grid velocities to zero
 	MACGrid_->set_velocities_to_zero();

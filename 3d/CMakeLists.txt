@@ -75,14 +75,24 @@ option(LIBIGL_WITH_XML               "Use XML"            OFF)
 if (NOT LIBIGL_FOUND)
     find_package(LIBIGL REQUIRED QUIET)
 endif()
-# Add project files
-file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/src/flip-methods/*.cpp)
-file(GLOB H_FILES ${PROJECT_SOURCE_DIR}/include/*.h)
-file(GLOB SRC_FILES_CLI src/FLIP.cpp src/Mac3d.cpp src/Particles.cpp src/MeshExporter.cpp src/Particle.cpp
-         src/SimConfig.cpp src/WaterSim.cpp src/NcWriter.cpp src/NcReader.cpp
-         ${PROJECT_SOURCE_DIR}/src/flip-methods/*.cpp)
-file(GLOB H_FILES_CLI src/FLIP.h src/Mac3d.h src/MeshExporter.h src/Particle.h src/Particles.h
-        src/SimConfig.h src/WaterSim.h src/NcWriter.h src/NcReader.h)
+
+file(GLOB SRC_FILES_CORE
+        ${PROJECT_SOURCE_DIR}/src/FLIP.cpp
+        ${PROJECT_SOURCE_DIR}/src/Mac3d.cpp
+        ${PROJECT_SOURCE_DIR}/src/MeshExporter.cpp
+        ${PROJECT_SOURCE_DIR}/src/NcReader.cpp
+        ${PROJECT_SOURCE_DIR}/src/NcWriter.cpp
+        ${PROJECT_SOURCE_DIR}/src/Particle.cpp
+        ${PROJECT_SOURCE_DIR}/src/Particles.cpp
+        ${PROJECT_SOURCE_DIR}/src/SimConfig.cpp
+        ${PROJECT_SOURCE_DIR}/src/WaterSim.cpp
+        ${PROJECT_SOURCE_DIR}/src/flip-methods/*.cpp
+        )
+
+# Make a library of the "core" FLIP solver
+add_library(watersim-core STATIC ${SRC_FILES_CORE})
+target_include_directories(watersim-core PUBLIC include)
+target_link_libraries(watersim-core igl::core nlohmann_json::nlohmann_json netcdf-cxx4)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(../lib/eigen3)
@@ -94,12 +104,10 @@ enable_testing()
 
 
 add_definitions(-DIGL_VIEWER_VIEWER_QUIET)
-add_executable(watersim-gui watersim-gui.cpp ${SRC_FILES} ${H_FILES})
-add_executable(watersim-cli watersim-cli.cpp ${SRC_FILES_CLI} ${H_FILES_CLI})
+add_executable(watersim-gui watersim-gui.cpp src/Gui.cpp src/WaterSimGui.cpp src/BaseObject.cpp src/RigidObject.cpp)
+add_executable(watersim-cli watersim-cli.cpp)
 add_executable(viewmesh viewmesh.cpp)
-add_executable(netcdf-test netcdf-test.cpp)
-target_link_libraries(watersim-gui igl::core igl::opengl_glfw igl::opengl_glfw_imgui
-        igl::png nlohmann_json::nlohmann_json netcdf-cxx4)
-target_link_libraries(watersim-cli igl::core nlohmann_json::nlohmann_json netcdf-cxx4)
+
+target_link_libraries(watersim-gui watersim-core igl::opengl_glfw igl::opengl_glfw_imgui igl::png)
+target_link_libraries(watersim-cli watersim-core)
 target_link_libraries(viewmesh igl::core igl::opengl_glfw igl::opengl_glfw_imgui igl::png)
-target_link_libraries(netcdf-test netcdf-cxx4)

@@ -203,8 +203,8 @@ void WaterSim::initMacGrid() {
     p_mac_grid = new Mac3d(res_x, res_y, res_z, len_x, len_y, len_z);
 }
 
-void WaterSim::initMeshExp(){
-	exp = new MeshExporter(p_mac_grid, flip_particlesOLD, m_num_particles);
+void WaterSim::initMeshExp() {
+	exp = new MeshExporter(p_mac_grid, *flip_particles);
 }
 
 void WaterSim::initFLIP() {

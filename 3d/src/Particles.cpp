@@ -23,7 +23,7 @@ Particles::~Particles() {
 	free(w);
 }
 
-inline void Particles::get_cell_index(particleIdx_t particleIdx,
+void Particles::get_cell_index(particleIdx_t particleIdx,
                                       Mac3d::cellIdx_t &cellIdxX,
                                       Mac3d::cellIdx_t &cellIdxY,
                                       Mac3d::cellIdx_t &cellIdxZ) const {

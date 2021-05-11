@@ -28,7 +28,7 @@ struct Particles {
 	/**
 	 * Get the indices of the cell the particle is in
 	 */
-	inline void get_cell_index(particleIdx_t particleIdx, Mac3d::cellIdx_t &cellIdxX, Mac3d::cellIdx_t &cellIdxY,
+	void get_cell_index(particleIdx_t particleIdx, Mac3d::cellIdx_t &cellIdxX, Mac3d::cellIdx_t &cellIdxY,
 	                           Mac3d::cellIdx_t &cellIdxZ) const;
 
 	/** Returns the number of particles.

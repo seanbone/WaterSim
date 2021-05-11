@@ -96,12 +96,6 @@ public:
 	 * - step is the number of steps performed
 	 */
 	void advance_particles(const double dt, const unsigned long step);
-
-	/** Get the particle at index i in particles_
-	 * Params:
-	 * - i is the index of the desired particle
-	 */
-	Particle getParticle( unsigned i );
 	
 private:
 

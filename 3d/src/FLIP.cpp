@@ -217,9 +217,3 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	}
 #endif
 }
-
-
-Particle FLIP::getParticle( unsigned i ){
-
-	return particles_[i];
-}

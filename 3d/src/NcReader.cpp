@@ -134,7 +134,7 @@ void NcReader::outputMessage( const bool flag, const std::string& varName, const
 
 void NcReader::validate(){
 
-	double tol = 1e-12;
+	double tol = 1e-11;
 	double maxErrX     = 0.;
 	double maxErrY     = 0.;
 	double maxErrZ     = 0.;

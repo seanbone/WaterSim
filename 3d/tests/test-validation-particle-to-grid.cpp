@@ -17,9 +17,11 @@ int main(){
 	Particles particles(ncReader->num_particles, ncReader->cfg, *ncReader->MACGrid);
 	FLIP* flip = new FLIP(ncReader->particlesOLD, particles, ncReader->num_particles, ncReader->MACGrid, ncReader->cfg);
 	// TODO: remove once new struct is integrated
-	flip->particlesOldToNew();
+    flip->particlesOldToNew();
 
-    flip->particle_to_grid();
+	flip->particle_to_grid();
+
+	flip->particlesNewToOld();
 
 	ncReader->MACGrid->set_uvw_star();
 

@@ -158,12 +158,12 @@ void NcReader::validate(){
 		pos = particlesOLD[i].get_position();
 		vel = particlesOLD[i].get_velocity();
 
-		maxErrX = std::max(maxErrX, rErr(x[i], pos(0)));
-		maxErrY = std::max(maxErrY, rErr(y[i], pos(1)));
-		maxErrZ = std::max(maxErrZ, rErr(z[i], pos(2)));
-		maxErrU = std::max(maxErrU, rErr(u[i], vel(0)));
-		maxErrV = std::max(maxErrV, rErr(v[i], vel(1)));
-		maxErrW = std::max(maxErrW, rErr(w[i], vel(2)));
+		maxErrX = std::max(maxErrX, std::abs(rErr(x[i], pos(0))));
+		maxErrY = std::max(maxErrY, std::abs(rErr(y[i], pos(1))));
+		maxErrZ = std::max(maxErrZ, std::abs(rErr(z[i], pos(2))));
+		maxErrU = std::max(maxErrU, std::abs(rErr(u[i], vel(0))));
+		maxErrV = std::max(maxErrV, std::abs(rErr(v[i], vel(1))));
+		maxErrW = std::max(maxErrW, std::abs(rErr(w[i], vel(2))));
 	}
 
 	for(unsigned i = 0; i < _n+1; ++i){
@@ -171,20 +171,20 @@ void NcReader::validate(){
 			for(unsigned k = 0; k < _l+1; ++k){
 
 				if( j < _m && k < _l ){
-					maxErrUMAC  = std::max(maxErrUMAC,  rErr(uMAC [i + (_n+1) * j + (_n+1) *  _m    * k], MACGrid->get_u(i, j, k)));
-					maxErrUStar = std::max(maxErrUStar, rErr(uStar[i + (_n+1) * j + (_n+1) *  _m    * k], MACGrid->get_u_star(i, j, k)));
+					maxErrUMAC  = std::max(maxErrUMAC,  std::abs(rErr(uMAC [i + (_n+1) * j + (_n+1) *  _m    * k], MACGrid->get_u(i, j, k))));
+					maxErrUStar = std::max(maxErrUStar, std::abs(rErr(uStar[i + (_n+1) * j + (_n+1) *  _m    * k], MACGrid->get_u_star(i, j, k))));
 				}
 				if( i < _n && k < _l ){
-					maxErrVMAC  = std::max(maxErrVMAC,  rErr(vMAC [i +  _n    * j +  _n    * (_m+1) * k], MACGrid->get_v(i, j, k)));
-					maxErrVStar = std::max(maxErrVStar, rErr(vStar[i +  _n    * j +  _n    * (_m+1) * k], MACGrid->get_v_star(i, j, k)));
+					maxErrVMAC  = std::max(maxErrVMAC,  std::abs(rErr(vMAC [i +  _n    * j +  _n    * (_m+1) * k], MACGrid->get_v(i, j, k))));
+					maxErrVStar = std::max(maxErrVStar, std::abs(rErr(vStar[i +  _n    * j +  _n    * (_m+1) * k], MACGrid->get_v_star(i, j, k))));
 				}
 				if( i < _n && j < _m ){
-					maxErrWMAC  = std::max(maxErrWMAC,  rErr(wMAC [i +  _n    * j +  _n    *  _m    * k], MACGrid->get_w(i, j, k)));
-					maxErrWStar = std::max(maxErrWStar, rErr(wStar[i +  _n    * j +  _n    *  _m    * k], MACGrid->get_w_star(i, j, k)));
+					maxErrWMAC  = std::max(maxErrWMAC,  std::abs(rErr(wMAC [i +  _n    * j +  _n    *  _m    * k], MACGrid->get_w(i, j, k))));
+					maxErrWStar = std::max(maxErrWStar, std::abs(rErr(wStar[i +  _n    * j +  _n    *  _m    * k], MACGrid->get_w_star(i, j, k))));
 				}
 				
 				if( i < _n && j < _m && k < _l ) {
-					maxErrPMAC  = std::max(maxErrPMAC,  rErr(pMAC [i +  _n    * j +  _n    *  _m    * k], MACGrid->get_pressure(i, j, k)));
+					maxErrPMAC  = std::max(maxErrPMAC,  std::abs(rErr(pMAC [i +  _n    * j +  _n    *  _m    * k], MACGrid->get_pressure(i, j, k))));
 					fFlag = fFlag && (fluid_cells[i + _n*j + _n*_m*k] == MACGrid->is_fluid(i, j, k));
 					sFlag = sFlag && (solid_cells[i + _n*j + _n*_m*k] == MACGrid->is_solid(i, j, k));
 				}

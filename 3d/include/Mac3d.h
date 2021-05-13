@@ -43,6 +43,9 @@ class Mac3d{
 		const double cell_sizex_; 
 		const double cell_sizey_;
 		const double cell_sizez_;
+		const double rcell_sizex_;
+		const double rcell_sizey_;
+		const double rcell_sizez_;
 
 		//---------------- PHYSICAL VALUES objects ---------------------
 		//pointer to array for the pressure
@@ -78,7 +81,10 @@ class Mac3d{
 		/** Default Constructor
 		*/
 		Mac3d()
-			: N_(0), M_(0), L_(0), sizex_(0), sizey_(0), sizez_(0), cell_sizex_(0), cell_sizey_(0), cell_sizez_(0){}
+			: N_(0), M_(0), L_(0), 
+			  sizex_(0), sizey_(0), sizez_(0), 
+			  cell_sizex_(0), cell_sizey_(0), cell_sizez_(0), 
+			  rcell_sizex_(0), rcell_sizey_(0), rcell_sizez_(0){}
 		
 		/**Constructor
 		 * Params:
@@ -435,5 +441,12 @@ class Mac3d{
 		 * - x,y,z are the coordinate of the point 
 		 */
 		Eigen::Vector3d index_from_coord(const double x, const double y, const double z);
+
+		void index_from_coord( const double x, 
+							   const double y, 
+							   const double z, 
+							   Mac3d::cellIdx_t &cell_idx_x, 
+							   Mac3d::cellIdx_t &cell_idx_y, 
+							   Mac3d::cellIdx_t &cell_idx_z );
 };
 #endif

@@ -28,6 +28,8 @@ int main(){
 		flip->advance_particles(dt/num_substeps, step);
 	}
 
+	flip->particlesNewToOld();
+
 	ncReader->readAll(6);
 	ncReader->validate();
 

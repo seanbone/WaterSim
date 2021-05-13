@@ -152,6 +152,9 @@ private:
 	/** Compute the weight using the SPH Kernels multiplied by the norm 
 	 * 	||x_p - x_uij||
 	 * Params:
+	 * - r2 is the squared norm of x_p - x_uij
+	 * - h2 is the squared value of h
+	 * - h is the particle-grid interaction threshold in meters
 	 */
 	double compute_weight( const double r2,
 						   const double h2,
@@ -159,6 +162,15 @@ private:
 	
 	/** Accumulate velocities and weights
 	 * Params:
+	 * - vel_grid is a pointer to the velocity field on the grid
+	 * - weights is a pointer to an array of weights used to scale velocities 
+	 *   during accumulation
+	 * - vel_particle is the velocity of the current particle
+	 * - x_, y_, z_particle are the coordinates of the current particle
+	 * - face_coord_x, _y, _z are the coordinates on the current cell face where 
+	 *   the velocities are stored
+	 * - h is the particle-grid interaction threshold in meters
+	 * - idx is the global index of the current gridcell
 	 */
 	void accumulate_vel( double* const vel_grid,
 						 double* const weights,
@@ -172,7 +184,7 @@ private:
 						 const double h,
 						 const Mac3d::globalCellIdx_t idx );
 	
-	/** Normalize accumulated horizontal velocities
+	/** Normalize accumulated velocities
 	 * Params:
 	 * - visited_u is a lists of flags for visited grid-velocities: 
 	 * 	 1 -> visited from particle_to_grid
@@ -189,26 +201,20 @@ private:
 									 Mac3d::cellIdx_t ny, 
 									 Mac3d::cellIdx_t nz );
 	
-	/** Extrapolate horizontal velocities into air cells
+	/** Extrapolate velocities into air cells
 	 * Params:
-	 * - visited_u is a lists of flags for visited grid-velocities: 
+	 * - vel is the velocity field on the grid
+	 * - visited_vel is a lists of flags for visited grid-velocities: 
 	 * 	 1 -> visited from particle_to_grid
+	 * - n, m, l are the dimensions of the velocity fields (beware that 
+	 *   velocities are stored on faces, thus a +1 is needed on the primary 
+	 *   dimension, e.g. size(u) = (nx+1)*ny*nz -> n=nx+1, m=ny, l=nz)
 	 */
-	void extrapolate_u( const bool* const visited_u );
-	
-	/** Extrapolate vertical velocities into air cells
-	 * Params:
-	 * - visited_v is a lists of flags for visited grid-velocities: 
-	 * 	 1 -> visited from particle_to_grid
-	 */
-	void extrapolate_v( const bool* const visited_v );
-	
-	/** Extrapolate outgoing velocities into air cells
-	 * * Params:
-	 * - visited_w is a lists of flags for visited grid-velocities: 
-	 * 	 1 -> visited from particle_to_grid
-	 */
-	void extrapolate_w( const bool* const visited_w );
+	void extrapolate_vel( double* const vel,
+						  const bool* const visited_vel,
+						  const Mac3d::cellIdx_t n,
+						  const Mac3d::cellIdx_t m,
+						  const Mac3d::cellIdx_t l );
 
 	void compute_pressure_matrix();
 	void compute_pressure_rhs(const double dt);

@@ -132,9 +132,9 @@ void FLIP::particle_to_grid() {
 	normalize_accumulated_vels(visited_u, visited_v, visited_w, nx, ny, nz);
 	
 	// Extrapolate velocities
-	extrapolate_u( visited_u );
-	extrapolate_v( visited_v );
-	extrapolate_w( visited_w );
+	extrapolate_vel( MACGrid_->pu_, visited_u, nx+1, ny,   nz   );
+	extrapolate_vel( MACGrid_->pv_, visited_v, nx,   ny+1, nz   );
+	extrapolate_vel( MACGrid_->pw_, visited_w, nx,   ny,   nz+1 );
 
 	// Clear the Heap
 	free(visited_u);
@@ -288,60 +288,83 @@ void FLIP::normalize_accumulated_vels( bool* const visited_u,
 }
 
 
-void FLIP::extrapolate_u( const bool* const visited_u ){
-
-	// Get total number of cells on each axis
-	unsigned M = MACGrid_->get_num_cells_y();
-	unsigned N = MACGrid_->get_num_cells_x();
-	unsigned L = MACGrid_->get_num_cells_z();
+void FLIP::extrapolate_vel( double* const vel,
+							const bool* const visited_vel,
+							const Mac3d::cellIdx_t n, 
+							const Mac3d::cellIdx_t m, 
+							const Mac3d::cellIdx_t l )
+{
 
 	// Count the times a specific grid-velocity is accessed (to average
 	// the neighboring velocities)
-	unsigned* counter = (unsigned*) calloc(M*L*(N+1), sizeof(unsigned));
+	unsigned* counter = (unsigned*) calloc(n*m*l, sizeof(unsigned));
+
+	Mac3d::globalCellIdx_t idx;
+	double tmp;
 
 	// Iterate over all horizontal grid-velocities and extrapolate into
 	// the air cells (not visited) the average velocities of the
 	// neighboring fluid/visited cells
-	for( unsigned k = 0; k < L; ++k ){
-		for( unsigned j = 0; j < M; ++j ){
-			for( unsigned i = 0; i < N+1; ++i ){
+	for( Mac3d::cellIdx_t k = 0; k < l; ++k ){
+		for( Mac3d::cellIdx_t j = 0; j < m; ++j ){
+			for( Mac3d::cellIdx_t i = 0; i < n; ++i ){
+				
+				idx = i + n * (j + m*k);
 
-				if ( *(visited_u + (N+1)*j + i + (N+1)*M*k) ){
+				if( visited_vel[idx] ){
+					
+					// Left
+					if( !(i == 0 or visited_vel[idx-1]) ){
+						
+						tmp = vel[idx-1] * counter[idx-1];
+						++counter[idx-1];
 
-					if ( i != 0 and !(*(visited_u + (N+1)*j + (i-1) + (N+1)*M*k)) ){
-						double tmp = MACGrid_->get_u(i-1, j, k) * *(counter + (N+1)*j + (i-1) + (N+1)*M*k);
-						*(counter + (N+1)*j + (i-1) + (N+1)*M*k) += 1;
-						MACGrid_->set_u(i-1, j, k, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*j + (i-1) + (N+1)*M*k)));
+						vel[idx-1] = (tmp + vel[idx])/counter[idx-1];
 					}
 
-					if ( j != 0 and !(*(visited_u + (N+1)*(j-1) + i + (N+1)*M*k)) ){
-						double tmp = MACGrid_->get_u(i, j-1, k) * *(counter + (N+1)*(j-1) + i + (N+1)*M*k);
-						*(counter + (N+1)*(j-1) + i + (N+1)*M*k) += 1;
-						MACGrid_->set_u(i, j-1, k, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*(j-1) + i + (N+1)*M*k)));
+					// Right
+					if( !(i == n-1 or visited_vel[idx+1]) ){
+
+						tmp = vel[idx+1] * counter[idx+1];
+						++counter[idx+1];
+
+						vel[idx+1] = (tmp + vel[idx])/counter[idx+1];
 					}
 
-					if ( k != 0 and !(*(visited_u + (N+1)*j + i + (N+1)*M*(k-1))) ){
-						double tmp = MACGrid_->get_u(i, j, k-1) * *(counter + (N+1)*j + i + (N+1)*M*(k-1));
-						*(counter + (N+1)*j + i + (N+1)*M*(k-1)) += 1;
-						MACGrid_->set_u(i, j, k-1, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*j + i + (N+1)*M*(k-1))));
+					// Lower
+					if( !(j == 0 or visited_vel[idx-n]) ){
+						
+						tmp = vel[idx-n] * counter[idx-n];
+						++counter[idx-n];
+						
+						vel[idx-n] = (tmp + vel[idx])/counter[idx-n];
 					}
 
-					if ( i != N and !(*(visited_u + (N+1)*j + (i+1) + (N+1)*M*k)) ){
-						double tmp = MACGrid_->get_u(i+1, j, k) * *(counter + (N+1)*j + (i+1) + (N+1)*M*k);
-						*(counter + (N+1)*j + (i+1) + (N+1)*M*k) += 1;
-						MACGrid_->set_u(i+1, j, k, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*j + (i+1) + (N+1)*M*k)));
+					// Upper
+					if( !(j == m-1 or visited_vel[idx+n]) ){
+
+						tmp = vel[idx+n] * counter[idx+n];
+						++counter[idx+n];
+						
+						vel[idx+n] = (tmp + vel[idx])/counter[idx+n];
 					}
 
-					if ( j != M-1 and !(*(visited_u + (N+1)*(j+1) + i + (N+1)*M*k)) ){
-						double tmp = MACGrid_->get_u(i, j+1, k) * *(counter + (N+1)*(j+1) + i + (N+1)*M*k);
-						*(counter + (N+1)*(j+1) + i + (N+1)*M*k) += 1;
-						MACGrid_->set_u(i, j+1, k, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*(j+1) + i + (N+1)*M*k)));
+					// Farther
+					if( !(k == 0 or visited_vel[idx-n*m]) ){
+						
+						tmp = vel[idx-n*m] * counter[idx-n*m];
+						++counter[idx-n*m];
+
+						vel[idx-n*m] = (tmp + vel[idx])/counter[idx-n*m];
 					}
 
-					if ( k != L-1 and !(*(visited_u + (N+1)*j + i + (N+1)*M*(k+1))) ){
-						double tmp = MACGrid_->get_u(i, j, k+1) * *(counter + (N+1)*j + i + (N+1)*M*(k+1));
-						*(counter + (N+1)*j + i + (N+1)*M*(k+1)) += 1;
-						MACGrid_->set_u(i, j, k+1, (tmp + MACGrid_->get_u(i, j, k))/(*(counter + (N+1)*j + i + (N+1)*M*(k+1))));
+					// Closer
+					if( !(k == l-1 or visited_vel[idx+n*m]) ){
+						
+						tmp = vel[idx+n*m] * counter[idx+n*m];
+						++counter[idx+n*m];
+
+						vel[idx+n*m] = (tmp + vel[idx])/counter[idx+n*m];
 					}
 				}
 			}
@@ -350,135 +373,5 @@ void FLIP::extrapolate_u( const bool* const visited_u ){
 
 	// Clear the Heap
 	free(counter);
+
 }
-
-void FLIP::extrapolate_v( const bool* const visited_v ){
-
-	// Get total number of cells on each axis
-	unsigned M = MACGrid_->get_num_cells_y();
-	unsigned N = MACGrid_->get_num_cells_x();
-	unsigned L = MACGrid_->get_num_cells_z();
-
-	// Count the times a specific grid-velocity is accessed (to average
-	// the neighboring velocities)
-	unsigned* counter = new unsigned[N*L*(M+1)];
-	std::fill(counter, counter + N*L*(M+1), 0);
-
-	// Iterate over all vertical grid-velocities and extrapolate into
-	// the air cells (not visited) the average velocities of the
-	// neighboring fluid/visited cells
-	for( unsigned k = 0; k < L; ++k ){
-		for( unsigned j = 0; j < M+1; ++j ){
-			for( unsigned i = 0; i < N; ++i ){
-
-				if ( *(visited_v + N*j + i + N*(M+1)*k) ){
-
-					if ( i != 0 and !(*(visited_v + N*j + (i-1) + N*(M+1)*k)) ){
-						double tmp = MACGrid_->get_v(i-1, j, k) * *(counter + N*j + (i-1) + N*(M+1)*k);
-						*(counter + N*j + (i-1) + N*(M+1)*k) += 1;
-						MACGrid_->set_v(i-1, j, k, (tmp + MACGrid_->get_v(i, j, k))/(*(counter + N*j + (i-1) + N*(M+1)*k)));
-					}
-
-					if ( j != 0 and !(*(visited_v + N*(j-1) + i + N*(M+1)*k)) ){
-						double tmp = MACGrid_->get_v(i, j-1, k) * *(counter + N*(j-1) + i + N*(M+1)*k);
-						*(counter + N*(j-1) + i + N*(M+1)*k) += 1;
-						MACGrid_->set_v(i, j-1, k, (tmp + MACGrid_->get_v(i, j, k))/(*(counter + N*(j-1) + i + N*(M+1)*k)));
-					}
-
-					if ( k != 0 and !(*(visited_v + N*j + i + N*(M+1)*(k-1))) ){
-						double tmp = MACGrid_->get_v(i, j, k-1) * *(counter + N*j + i + N*(M+1)*(k-1));
-						*(counter + N*j + i + N*(M+1)*(k-1)) += 1;
-						MACGrid_->set_v(i, j, k-1, (tmp + MACGrid_->get_v(i, j, k))/(*(counter + N*j + i + N*(M+1)*(k-1))));
-					}
-
-					if ( i != N-1 and !(*(visited_v + N*j + (i+1) + N*(M+1)*k)) ){
-						double tmp = MACGrid_->get_v(i+1, j, k) * *(counter + N*j + (i+1) + N*(M+1)*k);
-						*(counter + N*j + (i+1) + N*(M+1)*k) += 1;
-						MACGrid_->set_v(i+1, j, k, (tmp + MACGrid_->get_v(i, j, k))/(*(counter + N*j + (i+1) + N*(M+1)*k)));
-					}
-
-					if ( j != M and !(*(visited_v + N*(j+1) + i + N*(M+1)*k)) ){
-						double tmp = MACGrid_->get_v(i, j+1, k) * *(counter + N*(j+1) + i + N*(M+1)*k);
-						*(counter + N*(j+1) + i + N*(M+1)*k) += 1;
-						MACGrid_->set_v(i, j+1, k, (tmp + MACGrid_->get_v(i, j, k))/(*(counter + N*(j+1) + i + N*(M+1)*k)));
-					}
-
-					if ( k != L-1 and !(*(visited_v + N*j + i + N*(M+1)*(k+1))) ){
-						double tmp = MACGrid_->get_v(i, j, k+1) * *(counter + N*j + i + N*(M+1)*(k+1));
-						*(counter + N*j + i + N*(M+1)*(k+1)) += 1;
-						MACGrid_->set_v(i, j, k+1, (tmp + MACGrid_->get_v(i, j, k))/(*(counter + N*j + i + N*(M+1)*(k+1))));
-					}
-				}
-			}
-		}
-	}
-
-	// Clear the Heap
-	delete[] counter;
-}
-
-void FLIP::extrapolate_w( const bool* const visited_w ){
-
-	// Get total number of cells on each axis
-	unsigned M = MACGrid_->get_num_cells_y();
-	unsigned N = MACGrid_->get_num_cells_x();
-	unsigned L = MACGrid_->get_num_cells_z();
-
-	// Count the times a specific grid-velocity is accessed (to average
-	// the neighboring velocities)
-	unsigned* counter = new unsigned[N*M*(L+1)];
-	std::fill(counter, counter + N*M*(L+1), 0);
-
-	// Iterate over all outgoing grid-velocities and extrapolate into
-	// the air cells (not visited) the average velocities of the
-	// neighboring fluid/visited cells
-	for( unsigned k = 0; k < L+1; ++k ){
-		for( unsigned j = 0; j < M; ++j ){
-			for( unsigned i = 0; i < N; ++i ){
-
-				if ( *(visited_w + N*j + i + N*M*k) ){
-
-					if ( i != 0 and !(*(visited_w + N*j + (i-1) + N*M*k)) ){
-						double tmp = MACGrid_->get_w(i-1, j, k) * *(counter + N*j + (i-1) + N*M*k);
-						*(counter + N*j + (i-1) + N*M*k) += 1;
-						MACGrid_->set_w(i-1, j, k, (tmp + MACGrid_->get_w(i, j, k))/(*(counter + N*j + (i-1) + N*M*k)));
-					}
-
-					if ( j != 0 and !(*(visited_w + N*(j-1) + i + N*M*k)) ){
-						double tmp = MACGrid_->get_w(i, j-1, k) * *(counter + N*(j-1) + i + N*M*k);
-						*(counter + N*(j-1) + i + N*M*k) += 1;
-						MACGrid_->set_w(i, j-1, k, (tmp + MACGrid_->get_w(i, j, k))/(*(counter + N*(j-1) + i + N*M*k)));
-					}
-
-					if ( k != 0 and !(*(visited_w + N*j + i + N*M*(k-1))) ){
-						double tmp = MACGrid_->get_w(i, j, k-1) * *(counter + N*j + i + N*M*(k-1));
-						*(counter + N*j + i + N*M*(k-1)) += 1;
-						MACGrid_->set_w(i, j, k-1, (tmp + MACGrid_->get_w(i, j, k))/(*(counter + N*j + i + N*M*(k-1))));
-					}
-
-					if ( i != N-1 and !(*(visited_w + N*j + (i+1) + N*M*k)) ){
-						double tmp = MACGrid_->get_w(i+1, j, k) * *(counter + N*j + (i+1) + N*M*k);
-						*(counter + N*j + (i+1) + N*M*k) += 1;
-						MACGrid_->set_w(i+1, j, k, (tmp + MACGrid_->get_w(i, j, k))/(*(counter + N*j + (i+1) + N*M*k)));
-					}
-
-					if ( j != M-1 and !(*(visited_w + N*(j+1) + i + N*M*k)) ){
-						double tmp = MACGrid_->get_w(i, j+1, k) * *(counter + N*(j+1) + i + N*M*k);
-						*(counter + N*(j+1) + i + N*M*k) += 1;
-						MACGrid_->set_w(i, j+1, k, (tmp + MACGrid_->get_w(i, j, k))/(*(counter + N*(j+1) + i + N*M*k)));
-					}
-
-					if ( k != L and !(*(visited_w + N*j + i + N*M*(k+1))) ){
-						double tmp = MACGrid_->get_w(i, j, k+1) * *(counter + N*j + i + N*M*(k+1));
-						*(counter + N*j + i + N*M*(k+1)) += 1;
-						MACGrid_->set_w(i, j, k+1, (tmp + MACGrid_->get_w(i, j, k))/(*(counter + N*j + i + N*M*(k+1))));
-					}
-				}
-			}
-		}
-	}
-
-	// Clear the Heap
-	delete[] counter;
-}
-

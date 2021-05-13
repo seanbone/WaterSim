@@ -8,62 +8,48 @@
 /** COMPUTE ADVECTION TIMESTEP BASED ON CFL CONDITIONS */
 double FLIP::compute_timestep( const double dt ){
 
-	// New timestep that satisfies CFL condition
-	double dt_new;
-
 	// Particle velocity
-	Eigen::Vector3d vel;
+	double u_particle;
+	double v_particle;
+	double w_particle;
+
+	// Maximum particle velocity
+	double u_max = 0.;
+	double v_max = 0.;
+	double w_max = 0.;
 
 	// Get the maximal particle velocity components
-	double u_max = 0;
-	double v_max = 0;
-	double w_max = 0;
-	for( unsigned int n = 0; n < num_particles_; ++n ){
-		vel = (particlesOLD_ + n)->get_velocity();
-		if ( std::abs(vel(0)) > std::abs(u_max) ){
-			u_max = vel(0);
-		}
-		if ( std::abs(vel(1)) > std::abs(v_max) ){
-			v_max = vel(1);
-		}
-		if ( std::abs(vel(2)) > std::abs(w_max) ){
-			w_max = vel(2);
-		}
+	for( Particles::particleIdx_t n = 0; n < num_particles_; ++n ){
+
+		u_particle = particles_.u[n];
+		v_particle = particles_.v[n];
+		w_particle = particles_.w[n];
+		
+		if( std::abs(u_particle) > u_max ) u_max = std::abs(u_particle);
+		if( std::abs(v_particle) > v_max ) v_max = std::abs(u_particle);
+		if( std::abs(w_particle) > w_max ) w_max = std::abs(w_particle);
 	}
 
 	// Check if the fastest particles travel a distance larger than the
 	// length of an edge of a cell
-	if ( u_max == 0 ){
-		dt_new = dt;
-	} else {
-		dt_new = std::abs(MACGrid_->get_cell_sizex()/u_max);
-		if ( dt_new > dt){
-			dt_new = dt;
-		}
+
+	// New timestep that satisfies CFL condition
+	double tmp;
+	double dt_new = dt;
+
+	if( u_max != 0. ){
+		tmp = MACGrid_->cell_sizex_/u_max;
+		if( tmp < dt ) dt_new = tmp;
 	}
 
-	if ( v_max == 0 ){
-		dt_new = dt;
-	} else {
-		double tmp = std::abs(MACGrid_->get_cell_sizey()/v_max);
-		if ( tmp < dt_new){
-			dt_new = tmp;
-		}
-		if ( dt_new > dt ){
-			dt_new = dt;
-		}
+	if( v_max != 0. ){
+		tmp = MACGrid_->cell_sizey_/v_max;
+		if( tmp < dt_new ) dt_new = tmp;
 	}
 
-	if ( w_max == 0 ){
-		dt_new = dt;
-	} else {
-		double tmp = std::abs(MACGrid_->get_cell_sizez()/w_max);
-		if ( tmp < dt_new){
-			dt_new = tmp;
-		}
-		if ( dt_new > dt ){
-			dt_new = dt;
-		}
+	if( w_max != 0. ){
+		tmp = MACGrid_->cell_sizez_/w_max;
+		if( tmp < dt_new ) dt_new = tmp;
 	}
 
 	return dt_new;

@@ -115,9 +115,6 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	}
 #endif
 
-	// TODO: remove once new Particles struct is fully integrated
-	particlesOldToNew();
-
 	// 1.
 	tsctimer.start_timing("particle_to_grid");
     particle_to_grid();
@@ -179,8 +176,6 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	grid_to_particle();
 	tsctimer.stop_timing("grid_to_particle", true, "");
 
-	// TODO: remove once new Particles struct is fully integrated
-	particlesOldToNew();
 #ifdef WRITE_REFERENCE
 	if (step == WRITE_REFERENCE){
 		ncWriter_->toLinArrays(particlesOLD_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
@@ -199,8 +194,6 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	}
 	tsctimer.stop_timing("advance_particles", true, "");
 
-	// TODO: remove once new Particles struct is fully integrated
-	particlesOldToNew();
 #ifdef WRITE_REFERENCE
 	if (step == WRITE_REFERENCE){
 		ncWriter_->toLinArrays(particlesOLD_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);

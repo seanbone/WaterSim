@@ -9,76 +9,96 @@
 /*** UPDATE PARTICLE VELOCITIES ***/
 void FLIP::grid_to_particle(){
 
-    // FLIP grid to particle transfer
-    //  -> See slides Fluids II, FLIP_explained.pdf
+	// FLIP grid to particle transfer
+	//  -> See slides Fluids II, FLIP_explained.pdf
 
-    // FLIP: alpha = 0.
-    // PIC: alpha = 1.
-    double alpha = alpha_;
+	// FLIP: alpha = 0.
+	// PIC: alpha = 1.
+	double alpha = alpha_;
 
-    // Get total number of cells on each axis
-    int nx = MACGrid_->get_num_cells_x();
-    int ny = MACGrid_->get_num_cells_y();
-    int nz = MACGrid_->get_num_cells_z();
+	// Get total number of cells on each axis
+	Mac3d::cellIdx_t nx = MACGrid_->get_num_cells_x();
+	Mac3d::cellIdx_t ny = MACGrid_->get_num_cells_y();
+	Mac3d::cellIdx_t nz = MACGrid_->get_num_cells_z();
 
-    // Iterate over all particles
-    for(unsigned i = 0; i < num_particles_; ++i){
+	// Position and velocity of the current particle
+	double x_particle;
+	double y_particle;
+	double z_particle;
+	double u_particle;
+	double v_particle;
+	double w_particle;
 
-        // Store the initial positions and velocities of the particles
-        Eigen::Vector3d initial_position = (particlesOLD_ + i)->get_position();
-        Eigen::Vector3d initial_velocity = (particlesOLD_ + i)->get_velocity();
+	double interp_u_star;
+	double interp_v_star;
+	double interp_w_star;
 
-        // Get the index of the grid-cell containing the current
-        // particle
-        auto initial_idx = MACGrid_->index_from_coord(initial_position(0),
-                                                      initial_position(1),
-                                                      initial_position(2));
+	double interp_u_n1;
+	double interp_v_n1;
+	double interp_w_n1;
 
-        // Initialization of variables
-        Eigen::Vector3d interp_u_star;
-        interp_u_star.setZero();
-        Eigen::Vector3d interp_u_n1;
-        interp_u_n1.setZero();
-        Eigen::Vector3d u_update;
-        u_update.setZero();
+	double u_update;
+	double v_update;
+	double w_update;
 
-        // Aliases for initial_position components
-        double x = initial_position[0];
-        double y = initial_position[1];
-        double z = initial_position[2];
+	// Indices of the cell containing the current particle
+	Mac3d::cellIdx_t cell_idx_x;
+	Mac3d::cellIdx_t cell_idx_y;
+	Mac3d::cellIdx_t cell_idx_z;
 
-        // With u*, v* and w* we can do the interpolation by means of
-        // interp(u*, x_p)
-        // With the new u, v and w we can do the interpolation by means
-        // of interp(u_n1, x_p)
+	// Iterate over all particles
+	for( Particles::particleIdx_t n = 0; n < num_particles_; ++n ){
 
-        // Update the horizontal velocity (trilinear interpolation)
-        interp_u_star[0] = MACGrid_->get_interp_u(x,y,z,true);
-        interp_u_n1[0] = MACGrid_->get_interp_u(x,y,z);
+		// Store the initial positions and velocities of the particles
+		x_particle = particles_.x[n];
+		y_particle = particles_.y[n];
+		z_particle = particles_.z[n];
+		u_particle = particles_.u[n];
+		v_particle = particles_.v[n];
+		w_particle = particles_.w[n];
 
-        // Update the vertical velocity (trilinear interpolation)
-        interp_u_star[1] = MACGrid_->get_interp_v(x,y,z,true);
-        interp_u_n1[1] = MACGrid_->get_interp_v(x,y,z);
+		// With u*, v* and w* we can do the interpolation by means of
+		// interp(u*, x_p)
+		// With the new u, v and w we can do the interpolation by means
+		// of interp(u_n1, x_p)
 
-        // Update the outgoing velocity (trilinear interpolation)
-        interp_u_star[2] = MACGrid_->get_interp_w(x,y,z,true);
-        interp_u_n1[2] = MACGrid_->get_interp_w(x,y,z);
+		// Update the horizontal velocity (trilinear interpolation)
+		interp_u_star = MACGrid_->get_interp_u(x_particle, y_particle, z_particle, true);
+		interp_u_n1   = MACGrid_->get_interp_u(x_particle, y_particle, z_particle);
 
-        // Blend PIC and FLIP, use double the amount of PIC on boundary
-        if (initial_idx(0) == 0 or initial_idx(0) == nx-1
-            or initial_idx(1) == 0 or initial_idx(1) == ny-1
-            or initial_idx(2) == 0 or initial_idx(2) == nz-1){
+		// Update the vertical velocity (trilinear interpolation)
+		interp_v_star = MACGrid_->get_interp_v(x_particle, y_particle, z_particle, true);
+		interp_v_n1   = MACGrid_->get_interp_v(x_particle, y_particle, z_particle);
 
-            u_update = initial_velocity*(1 - std::min(1., 2*alpha)) + interp_u_n1 - interp_u_star*(1 - std::min(1., 2*alpha));
+		// Update the outgoing velocity (trilinear interpolation)
+		interp_w_star = MACGrid_->get_interp_w(x_particle, y_particle, z_particle, true);
+		interp_w_n1   = MACGrid_->get_interp_w(x_particle, y_particle, z_particle);
 
-        } else {
+		// Get the index of the grid-cell containing the current
+		// particle
+		particles_.get_cell_index(n, cell_idx_x, cell_idx_y, cell_idx_z);
 
-            u_update = initial_velocity*(1 - alpha) + interp_u_n1 - interp_u_star*(1 - alpha);
+		// Blend PIC and FLIP, use double the amount of PIC on boundary
+		if( cell_idx_x == 0 or cell_idx_x == nx-1 or 
+			cell_idx_y == 0 or cell_idx_y == ny-1 or 
+			cell_idx_z == 0 or cell_idx_z == nz-1 )
+		{
 
-        }
+			u_update = interp_u_n1 + (u_particle - interp_u_star) * (1. - std::min(1., 2.*alpha));
+			v_update = interp_v_n1 + (v_particle - interp_v_star) * (1. - std::min(1., 2.*alpha));
+			w_update = interp_w_n1 + (w_particle - interp_w_star) * (1. - std::min(1., 2.*alpha));
 
-        // Finally, update the velocities of the particles
-        (particlesOLD_ + i)->set_velocity(u_update);
-    }
+		} else {
+
+			u_update = interp_u_n1 + (u_particle - interp_u_star) * (1. - alpha);
+			v_update = interp_v_n1 + (v_particle - interp_v_star) * (1. - alpha);
+			w_update = interp_w_n1 + (w_particle - interp_w_star) * (1. - alpha);
+
+		}
+
+		// Finally, update the velocities of the particles
+		particles_.u[n] = u_update;
+		particles_.v[n] = v_update;
+		particles_.w[n] = w_update;
+	}
 }
-

@@ -21,6 +21,8 @@ int main(){
 
 	flip->grid_to_particle();
 
+	flip->particlesNewToOld();
+
 	ncReader->readAll(5);
 	ncReader->validate();
 

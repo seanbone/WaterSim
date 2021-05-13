@@ -41,7 +41,7 @@ void FLIP::particle_to_grid() {
 	bool* visited_v = (bool*) calloc(nx*nz*(ny+1), sizeof(bool));
 	bool* visited_w = (bool*) calloc(nx*ny*(nz+1), sizeof(bool));
 
-	// Position and velocity of the particleent particle
+	// Position and velocity of the current particle
 	double x_particle;
 	double y_particle;
 	double z_particle;

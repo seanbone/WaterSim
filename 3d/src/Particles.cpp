@@ -22,16 +22,3 @@ Particles::~Particles() {
 	free(v);
 	free(w);
 }
-
-void Particles::get_cell_index(particleIdx_t particleIdx,
-                                      Mac3d::cellIdx_t &cellIdxX,
-                                      Mac3d::cellIdx_t &cellIdxY,
-                                      Mac3d::cellIdx_t &cellIdxZ) const {
-	cellIdxX = (Mac3d::cellIdx_t) (x[particleIdx] * rcell_size_x_ + 0.5);
-	cellIdxY = (Mac3d::cellIdx_t) (y[particleIdx] * rcell_size_y_ + 0.5);
-	cellIdxZ = (Mac3d::cellIdx_t) (z[particleIdx] * rcell_size_z_ + 0.5);
-}
-
-Particles::particleIdx_t Particles::get_num_particles() const {
-	return num_particles_;
-}

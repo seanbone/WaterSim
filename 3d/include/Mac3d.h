@@ -14,7 +14,15 @@ class Mac3d{
 		using Triplet_t = Eigen::Triplet<double>; 
 		using Pair_t = std::pair<int, int>;
 
+		/**
+		 * Index type for per-axis cell indices.
+		 * Signed type to allow for negative offsets.
+		 */
 		using cellIdx_t = int;
+
+		/**
+		 * Index type for global cell indices.
+		 */
 		using globalCellIdx_t = int;
 
 		//------------------- GRID Properties --------------------------

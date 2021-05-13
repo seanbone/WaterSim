@@ -106,13 +106,10 @@ void MeshExporter::level_set(){
 			 && particle_z > -0.5*dz
 			 ) && "Attention: out of the grid!");
 
-		Mac3d::cellIdx_t tmp_cell_x;
-		Mac3d::cellIdx_t tmp_cell_y;
-		Mac3d::cellIdx_t tmp_cell_z;
-		particles_.get_cell_index(it_particle, tmp_cell_x, tmp_cell_y, tmp_cell_z);
-		const int init_cell_x = tmp_cell_x;
-		const int init_cell_y = tmp_cell_y;
-		const int init_cell_z = tmp_cell_z;
+		Mac3d::cellIdx_t init_cell_x;
+		Mac3d::cellIdx_t init_cell_y;
+		Mac3d::cellIdx_t init_cell_z;
+		particles_.get_cell_index(it_particle, init_cell_x, init_cell_y, init_cell_z);
 
 		const int k_max = std::min((int) L, init_cell_z + 2);
 		const int j_max = std::min((int) M, init_cell_y + 2);

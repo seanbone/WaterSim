@@ -9,6 +9,9 @@
 #include "SimConfig.h"
 
 struct Particles {
+	/**
+	 * Index type for particles.
+	 */
 	using particleIdx_t = unsigned int;
 
 	// Positions

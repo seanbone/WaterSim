@@ -188,7 +188,6 @@ void WaterSim::initParticles() {
 	flip_particlesOLD = new Particle[m_num_particles];
     //std::move(particles.begin(), particles.end(), flip_particlesOLD);
 
-	// TODO: proper initialization using new struct
 	flip_particles = new Particles(m_num_particles, m_cfg, *p_mac_grid);
 	std::move(particles_x.begin(), particles_x.end(), flip_particles->x);
 	std::move(particles_y.begin(), particles_y.end(), flip_particles->y);
@@ -209,7 +208,4 @@ void WaterSim::initMeshExp() {
 
 void WaterSim::initFLIP() {
     p_flip = new FLIP(flip_particlesOLD, *flip_particles, m_num_particles, p_mac_grid, m_cfg);
-
-	// TODO: remove once new struct is integrated
-	p_flip->particlesNewToOld();
 }

@@ -4,7 +4,7 @@
 
 FLIP::FLIP(Particle* particlesOLD, Particles& particles, unsigned num_particles, Mac3d* MACGrid,
 		   const SimConfig& cfg)
-	: particlesOLD_(particlesOLD), num_particles_(num_particles), MACGrid_(MACGrid), cfg_(cfg),
+	: particlesOLD_(particlesOLD), num_particles_(particles.get_num_particles()), MACGrid_(MACGrid), cfg_(cfg),
       fluid_density_(cfg.getDensity()), gravity_mag_(cfg.getGravity()), alpha_(cfg.getAlpha()),
       particles_(particles) {
 	

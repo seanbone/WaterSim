@@ -32,6 +32,7 @@ public:
 	 * - alpha is the percentage of PIC method mixed with the FLIP 
 	 *   method
 	 */
+	// TODO: remove old particle structure and num_particles params
 	FLIP(Particle* particlesOLD, Particles& particles, unsigned num_particles, Mac3d* MACGrid,
 	  const SimConfig& cfg);
 
@@ -127,7 +128,6 @@ private:
 	Particles& particles_;
 	
 	// Total number of particles
-	// TODO: use Particles::get_num_particles() instead
 	const unsigned num_particles_;
 	
 	// Density of the fluid to be simulated

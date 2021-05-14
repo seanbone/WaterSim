@@ -11,11 +11,11 @@ int main(){
 	NcReader* ncReader = new NcReader(validation_data_ref, validation_data_cfg);
 
 	ncReader->readAll(0);
-	ncReader->toOldStruct();
-	
-	FLIP* flip = new FLIP(ncReader->particles, ncReader->num_particles, ncReader->MACGrid, ncReader->cfg);
+	ncReader->toFlipStructures();
 
-    flip->particle_to_grid();
+	FLIP* flip = new FLIP(*(ncReader->particles), ncReader->MACGrid, ncReader->cfg);
+
+	flip->particle_to_grid();
 
 	ncReader->MACGrid->set_uvw_star();
 

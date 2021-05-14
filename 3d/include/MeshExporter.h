@@ -2,8 +2,8 @@
 #define MESHEXPORTER_H
 
 #include "Mac3d.h"
-#include "Particle.h"
 #include "Eigen/Dense"
+#include "Particles.h"
 #include <vector>
 #include <queue>
 #include <limits>
@@ -21,9 +21,9 @@ class MeshExporter{
 		Mac3d* pMacGrid_;
 		
 		//pointer to the fluid particle
-		Particle* pparticles_;
+		Particles& particles_;
 		
-		//number of fluid particles in the list pparticles_
+		//number of fluid particles in the list particles_
 		unsigned num_particles_;
 		
 		//counter for the number of exported meshes
@@ -82,12 +82,11 @@ class MeshExporter{
 		 * - particles is a pointer to a list of Particle
 		 * - n is the number of particles contained in particles
 		 */
-		MeshExporter(Mac3d* Grid, Particle* particles, const int n);
+		MeshExporter(Mac3d* Grid, Particles& particles);
 		
 		/**Destructor
 		 */
 		~MeshExporter(){
-			num_particles_ = 0;
 			delete[] den;
 			delete[] points_d;
 		}

@@ -1,10 +1,10 @@
 #ifndef FLIP_H
 #define FLIP_H
 
-#include "Particle.h"
 #include "Mac3d.h"
 #include "SimConfig.h"
 #include "NcWriter.h"
+#include "Particles.h"
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
 #include <cmath>
@@ -31,8 +31,8 @@ public:
 	 * - alpha is the percentage of PIC method mixed with the FLIP 
 	 *   method
 	 */
-	FLIP(Particle* particles, unsigned num_particles, Mac3d* MACGrid,
-	  const SimConfig& cfg);
+	// TODO: remove old particle structure and num_particles params
+	FLIP(Particles& particles, Mac3d* MACGrid, const SimConfig& cfg);
 
     /** Destructor
 	 */	
@@ -96,7 +96,7 @@ public:
 	 * - step is the number of steps performed
 	 */
 	void advance_particles(const double dt, const unsigned long step);
-	
+
 private:
 
 	// The configuration
@@ -105,8 +105,8 @@ private:
 	// NcWriter object to write reference data
 	NcWriter* ncWriter_;
 	
-	// Array of all particles
-	Particle* particles_;
+	// FLIP particles
+	Particles& particles_;
 	
 	// Total number of particles
 	const unsigned num_particles_;
@@ -130,126 +130,72 @@ private:
 	// RHS of pressure LSE
 	Eigen::VectorXd d_;
 	
-	/** Check the distance between a particle and a point on the MACGrid
-	 * Params:
-	 * - particle_coord is an Eigen vector containing the coordinates of 
-	 * 	 a particle
-	 * - grid_coord is an Eigen vector containing the coordinates of 
-	 * 	 the center of a face on which a grid-velocity is saved
-	 * - h is the distance threshold to be satisfied
-	 */
-	bool check_threshold( const Eigen::Vector3d& particle_coord, 
-						  const Eigen::Vector3d& grid_coord, 
-						  const double h );
-	
 	/** Compute the weight using the SPH Kernels multiplied by the norm 
 	 * 	||x_p - x_uij||
 	 * Params:
-	 * - particle_coord is an Eigen vector containing the coordinates of 
-	 * 	 a particle
-	 * - grid_coord is an Eigen vector containing the coordinates of 
-	 * 	 the center of a face on which a grid-velocity is saved
-	 * - h is the distance threshold to be satisfied
+	 * - r2 is the squared norm of x_p - x_uij
+	 * - h2 is the squared value of h
+	 * - h is the particle-grid interaction threshold in meters
 	 */
-	double compute_weight( const Eigen::Vector3d& particle_coord, 
-						const Eigen::Vector3d& grid_coord, 
-						const double h );
+	double compute_weight( const double r2,
+						   const double h2,
+						   const double h );
 	
-	/** Accumulate velocities and weights for u	
+	/** Accumulate velocities and weights
 	 * Params:
-	 * - pos is an Eigen vector containing the coordinates of a particle
-	 * - vel is an Eigen vector containing the velocity components of a 
-	 * 	 particle
-	 * - grid_coord is an Eigen vector containing the coordinates of 
-	 * 	 the center of a face on which a grid-velocity is saved
-	 * - h is the distance threshold to be satisfied by check_threshold
-	 * - i, j and k are the indices corresponding to a grid-cell
-	 */		
-	void accumulate_u( const Eigen::Vector3d& pos,
-					   const Eigen::Vector3d& vel,
-					   const Eigen::Vector3d& grid_coord,
-					   const double h,
-					   const int i,
-					   const int j,
-					   const int k );
+	 * - vel_grid is a pointer to the velocity field on the grid
+	 * - weights is a pointer to an array of weights used to scale velocities 
+	 *   during accumulation
+	 * - vel_particle is the velocity of the current particle
+	 * - x_, y_, z_particle are the coordinates of the current particle
+	 * - face_coord_x, _y, _z are the coordinates on the current cell face where 
+	 *   the velocities are stored
+	 * - h is the particle-grid interaction threshold in meters
+	 * - idx is the global index of the current gridcell
+	 */
+	void accumulate_vel( double* const vel_grid,
+						 double* const weights,
+						 const double vel_particle,
+						 const double x_particle,
+						 const double y_particle,
+						 const double z_particle,
+						 const double face_coord_x,
+						 const double face_coord_y,
+						 const double face_coord_z,
+						 const double h,
+						 const Mac3d::globalCellIdx_t idx );
 	
-	/** Accumulate velocities and weights for v	
-	 * Params:
-	 * - pos is an Eigen vector containing the coordinates of a particle
-	 * - vel is an Eigen vector containing the velocity components of a 
-	 * 	 particle
-	 * - grid_coord is an Eigen vector containing the coordinates of 
-	 * 	 the center of a face on which a grid-velocity is saved
-	 * - h is the distance threshold to be satisfied by check_threshold
-	 * - i, j and k are the indices corresponding to a grid-cell
-	 */
-	void accumulate_v( const Eigen::Vector3d& pos,
-					   const Eigen::Vector3d& vel,
-					   const Eigen::Vector3d& grid_coord,
-					   const double h,
-					   const int i,
-					   const int j, 
-					   const int k );
-					   
-	/** Accumulate velocities and weights for w	
-	 * Params:
-	 * - pos is an Eigen vector containing the coordinates of a particle
-	 * - vel is an Eigen vector containing the velocity components of a 
-	 * 	 particle
-	 * - grid_coord is an Eigen vector containing the coordinates of 
-	 * 	 the center of a face on which a grid-velocity is saved
-	 * - h is the distance threshold to be satisfied by check_threshold
-	 * - i, j and k are the indices corresponding to a grid-cell
-	 */
-	void accumulate_w( const Eigen::Vector3d& pos,
-					   const Eigen::Vector3d& vel,
-					   const Eigen::Vector3d& grid_coord,
-					   const double h,
-					   const int i,
-					   const int j, 
-					   const int k );
-					   
-	/** Normalize accumulated horizontal velocities
+	/** Normalize accumulated velocities
 	 * Params:
 	 * - visited_u is a lists of flags for visited grid-velocities: 
 	 * 	 1 -> visited from particle_to_grid
-	 */
-	void normalize_accumulated_u( bool* const visited_u );
-	
-	/** Normalize accumulated vertical velocities
-	 * Params:
 	 * - visited_v is a lists of flags for visited grid-velocities: 
 	 * 	 1 -> visited from particle_to_grid
-	 */
-	void normalize_accumulated_v( bool* const visited_v );
-	
-	/** Normalize accumulated outgoing velocities
-	 * Params:
 	 * - visited_w is a lists of flags for visited grid-velocities: 
 	 * 	 1 -> visited from particle_to_grid
+	 * - nx, ny, nz are the grid dimensions
 	 */
-	void normalize_accumulated_w( bool* const visited_w );
+	void normalize_accumulated_vels( bool* const visited_u, 
+									 bool* const visited_v, 
+									 bool* const visited_w, 
+									 Mac3d::cellIdx_t nx, 
+									 Mac3d::cellIdx_t ny, 
+									 Mac3d::cellIdx_t nz );
 	
-	/** Extrapolate horizontal velocities into air cells
+	/** Extrapolate velocities into air cells
 	 * Params:
-	 * - visited_u is a lists of flags for visited grid-velocities: 
+	 * - vel is the velocity field on the grid
+	 * - visited_vel is a lists of flags for visited grid-velocities: 
 	 * 	 1 -> visited from particle_to_grid
+	 * - n, m, l are the dimensions of the velocity fields (beware that 
+	 *   velocities are stored on faces, thus a +1 is needed on the primary 
+	 *   dimension, e.g. size(u) = (nx+1)*ny*nz -> n=nx+1, m=ny, l=nz)
 	 */
-	void extrapolate_u( const bool* const visited_u );
-	
-	/** Extrapolate vertical velocities into air cells
-	 * Params:
-	 * - visited_v is a lists of flags for visited grid-velocities: 
-	 * 	 1 -> visited from particle_to_grid
-	 */
-	void extrapolate_v( const bool* const visited_v );
-	
-	/** Extrapolate outgoing velocities into air cells
-	 * * Params:
-	 * - visited_w is a lists of flags for visited grid-velocities: 
-	 * 	 1 -> visited from particle_to_grid
-	 */
-	void extrapolate_w( const bool* const visited_w );
+	void extrapolate_vel( double* const vel,
+						  const bool* const visited_vel,
+						  const Mac3d::cellIdx_t n,
+						  const Mac3d::cellIdx_t m,
+						  const Mac3d::cellIdx_t l );
 
 	void compute_pressure_matrix();
 	void compute_pressure_rhs(const double dt);

@@ -5,8 +5,8 @@
 /**The constructor already initializes the lists point_, x_avrg_num,
  * r_avrg_num and den.
  */
-MeshExporter::MeshExporter(Mac3d* Grid, Particle* particles, const int n)
-	:pMacGrid_(Grid), pparticles_(particles), num_particles_(n),
+MeshExporter::MeshExporter(Mac3d* Grid, Particles& particles)
+	:pMacGrid_(Grid), particles_(particles), num_particles_(particles.get_num_particles()),
 	dx{pMacGrid_->get_cell_sizex()},
 	dy{pMacGrid_->get_cell_sizey()},
 	dz{pMacGrid_->get_cell_sizez()},
@@ -91,19 +91,25 @@ void MeshExporter::level_set(){
 	//Compute the values of x_avrg_num and den
 	tsctimer.start_timing("first_part");
 	for(unsigned it_particle = 0; it_particle < num_particles_; ++it_particle){
-		const Particle& particle = *(pparticles_+it_particle);
+		//const Particle& particle = *(particles_ + it_particle);
+		double particle_x = particles_.x[it_particle];
+		double particle_y = particles_.y[it_particle];
+		double particle_z = particles_.z[it_particle];
+
 		// inlined coords_to_index
 		assert(
-			(particle.x_ < sizex_ - 0.5*dx
-			 && particle.y_ < sizey_ - 0.5*dy
-			 && particle.z_ < sizez_ - 0.5*dz
-			 && particle.x_ > -0.5*dx
-			 && particle.y_ > -0.5*dy
-			 && particle.z_ > -0.5*dz
+			(particle_x < sizex_ - 0.5*dx
+			 && particle_y < sizey_ - 0.5*dy
+			 && particle_z < sizez_ - 0.5*dz
+			 && particle_x > -0.5*dx
+			 && particle_y > -0.5*dy
+			 && particle_z > -0.5*dz
 			 ) && "Attention: out of the grid!");
-		const int init_cell_x = int(particle.x_*dx_r + 0.5);
-		const int init_cell_y = int(particle.y_*dy_r + 0.5);
-		const int init_cell_z = int(particle.z_*dz_r + 0.5);
+
+		Mac3d::cellIdx_t init_cell_x;
+		Mac3d::cellIdx_t init_cell_y;
+		Mac3d::cellIdx_t init_cell_z;
+		particles_.get_cell_index(it_particle, init_cell_x, init_cell_y, init_cell_z);
 
 		const int k_max = std::min((int) L, init_cell_z + 2);
 		const int j_max = std::min((int) M, init_cell_y + 2);
@@ -112,16 +118,16 @@ void MeshExporter::level_set(){
 			for(int j = std::max(0, init_cell_y - 2); j < j_max; ++j){
 				for(int i = std::max(0, init_cell_x - 2); i < i_max; ++i){
 					const int index = i + j*N + k*N*M;
-					const double dist_x = i*dx - particle.x_;
-					const double dist_y = j*dy - particle.y_;
-					const double dist_z = k*dz - particle.z_;
+					const double dist_x = i*dx - particle_x;
+					const double dist_y = j*dy - particle_y;
+					const double dist_z = k*dz - particle_z;
 					const double s_sq = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
 					if (s_sq < h_sq){
 						const double s_sq_inv = h_sq - s_sq;
 						const double W_surf = s_sq_inv*s_sq_inv*s_sq_inv;
-						x_avrg_num_array[3*index]   += W_surf*particle.x_;
-						x_avrg_num_array[3*index+1] += W_surf*particle.y_;
-						x_avrg_num_array[3*index+2] += W_surf*particle.z_;
+						x_avrg_num_array[3*index]   += W_surf*particle_x;
+						x_avrg_num_array[3*index+1] += W_surf*particle_y;
+						x_avrg_num_array[3*index+2] += W_surf*particle_z;
 						den[index] += W_surf;
 					}
 				}

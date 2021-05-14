@@ -12,7 +12,18 @@
 class Mac3d{
 	public:
 		using Triplet_t = Eigen::Triplet<double>; 
-		using Pair_t = std::pair<int, int>; 
+		using Pair_t = std::pair<int, int>;
+
+		/**
+		 * Index type for per-axis cell indices.
+		 * Signed type to allow for negative offsets.
+		 */
+		using cellIdx_t = int;
+
+		/**
+		 * Index type for global cell indices.
+		 */
+		using globalCellIdx_t = int;
 
 		//------------------- GRID Properties --------------------------
 		//number of cells respectively in x-direction,
@@ -32,8 +43,10 @@ class Mac3d{
 		const double cell_sizex_; 
 		const double cell_sizey_;
 		const double cell_sizez_;
-		
-	private:
+		const double rcell_sizex_;
+		const double rcell_sizey_;
+		const double rcell_sizez_;
+
 		//---------------- PHYSICAL VALUES objects ---------------------
 		//pointer to array for the pressure
 		double* ppressure_;
@@ -64,13 +77,14 @@ class Mac3d{
 		double* pweights_u_;
 		double* pweights_v_;
 		double* pweights_w_;
-
-	public:
 		
 		/** Default Constructor
 		*/
 		Mac3d()
-			: N_(0), M_(0), L_(0), sizex_(0), sizey_(0), sizez_(0), cell_sizex_(0), cell_sizey_(0), cell_sizez_(0){}
+			: N_(0), M_(0), L_(0), 
+			  sizex_(0), sizey_(0), sizez_(0), 
+			  cell_sizex_(0), cell_sizey_(0), cell_sizez_(0), 
+			  rcell_sizex_(0), rcell_sizey_(0), rcell_sizez_(0){}
 		
 		/**Constructor
 		 * Params:
@@ -179,31 +193,31 @@ class Mac3d{
 
 		/**Return the number of cells of the grid in x-direction
 		 */
-		unsigned get_num_cells_x();
+		unsigned get_num_cells_x() const;
 		
 		/**Return the number of cells of the grid in y-direction
 		 */
-		unsigned get_num_cells_y();
+		unsigned get_num_cells_y() const;
 		
 		/**Return the number of cells of the grid in z-direction
 		 */
-		unsigned get_num_cells_z();
+		unsigned get_num_cells_z() const;
 		
 		/**Return the total number of cells of the grid
 		 */
-		unsigned get_num_cells();
+		unsigned get_num_cells() const;
 		
 		/**Return the dimension of one cell in x-direction in meter
 		 */
-		double get_cell_sizex();
+		double get_cell_sizex() const;
 		
 		/**Return the dimension of one cell in y-direction in meter
 		 */
-		double get_cell_sizey();
+		double get_cell_sizey() const;
 		
 		/**Return the dimension of one cell in z-direction in meter
 		 */
-		double get_cell_sizez();
+		double get_cell_sizez() const;
 		
 		/** Return a const-reference to the diagonal of the pressure's matrix A
 		 */
@@ -427,5 +441,12 @@ class Mac3d{
 		 * - x,y,z are the coordinate of the point 
 		 */
 		Eigen::Vector3d index_from_coord(const double x, const double y, const double z);
+
+		void index_from_coord( const double x, 
+							   const double y, 
+							   const double z, 
+							   Mac3d::cellIdx_t &cell_idx_x, 
+							   Mac3d::cellIdx_t &cell_idx_y, 
+							   Mac3d::cellIdx_t &cell_idx_z );
 };
 #endif

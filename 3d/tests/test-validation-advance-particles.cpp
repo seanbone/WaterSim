@@ -11,9 +11,9 @@ int main(){
 	NcReader* ncReader = new NcReader(validation_data_ref, validation_data_cfg);
 
 	ncReader->readAll(5);
-	ncReader->toOldStruct();
-	
-	FLIP* flip = new FLIP(ncReader->particles, ncReader->num_particles, ncReader->MACGrid, ncReader->cfg);
+	ncReader->toFlipStructures();
+
+	FLIP* flip = new FLIP(*(ncReader->particles), ncReader->MACGrid, ncReader->cfg);
 
 	unsigned step = ncReader->timestep;
 	double dt = ncReader->cfg.getTimeStep();

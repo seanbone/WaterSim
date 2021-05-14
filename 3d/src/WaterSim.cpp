@@ -30,7 +30,7 @@ void WaterSim::resetMembers() {
 	initMacGrid();
 
 	// Particles
-	delete [] flip_particles;
+	delete flip_particles;
 	initParticles();
 
 	// FLIP simulator
@@ -109,7 +109,7 @@ void WaterSim::initParticles() {
     unsigned ny = p_mac_grid->get_num_cells_y();
     unsigned nz = p_mac_grid->get_num_cells_z();
 
-    // Note: this must equal the actual number of particles
+	// Note: this must equal the actual number of particles
     // initialized in the loop below
     const unsigned particles_per_cell = 8;
 
@@ -117,9 +117,11 @@ void WaterSim::initParticles() {
     unsigned idx = 0;
 
     // Constant complexity for .push_back
-    std::list<Particle> particles;
-    
-    // Random offsets to particle positions
+    std::list<double> particles_x;
+	std::list<double> particles_y;
+	std::list<double> particles_z;
+
+	// Random offsets to particle positions
 	unsigned int n = 3 * particles_per_cell * nx * ny * nz;
 	Eigen::VectorXd rnd = Eigen::VectorXd::Zero(n);
     if (m_cfg.getJitterParticles()) {
@@ -134,6 +136,12 @@ void WaterSim::initParticles() {
 	m_cfg.getFluidRegion(fluid_from_x, fluid_from_y, fluid_from_z,
 	                     fluid_to_x, fluid_to_y, fluid_to_z);
 
+	auto is_fluid = [&](double cx, double cy, double cz) {
+		return cx >= fluid_from_x && cx <= fluid_to_x
+			&& cy >= fluid_from_y && cy <= fluid_to_y
+			&& cz >= fluid_from_z && cz <= fluid_to_z;
+	};
+
 	// Initialize particles_per_cell particles per fluid cell
     for (unsigned z = 0; z < nz; z++) {
         for (unsigned y = 0; y < ny; y++) {
@@ -145,11 +153,7 @@ void WaterSim::initParticles() {
 	            double cz = z * sz;
 
 	            // Only populate cells flagged as fluid
-                bool is_fluid = cx >= fluid_from_x && cx <= fluid_to_x;
-	            is_fluid &= cy >= fluid_from_y && cy <= fluid_to_y;
-	            is_fluid &= cz >= fluid_from_z && cz <= fluid_to_z;
-	            //if (!is_fluid_[x + y*nx + z*nx*ny])
-	            if (!is_fluid)
+	            if (!is_fluid(cx, cy, cz))
                     continue;
 
                 const double f = 4.;
@@ -166,8 +170,10 @@ void WaterSim::initParticles() {
                     { cx + sx/f + rnd(idx+21)*sx/(2*f), cy + sy/f + rnd(idx+22)*sy/(2*f), cz + sz/f + rnd(idx+23)*sz/(2*f)}
                 };
 
-                for (unsigned p = 0; p < particles_per_cell; p++) {
-                    particles.push_back(Particle(positions[p][0], positions[p][1], positions[p][2]));
+                for (auto & position : positions) {
+                    particles_x.push_back(position[0]);
+	                particles_y.push_back(position[1]);
+	                particles_z.push_back(position[2]);
                 }
 
                 idx += particles_per_cell;
@@ -176,8 +182,10 @@ void WaterSim::initParticles() {
         }
     }
 
-    flip_particles = new Particle[m_num_particles];
-    std::move(particles.begin(), particles.end(), flip_particles);
+	flip_particles = new Particles(m_num_particles, m_cfg, *p_mac_grid);
+	std::move(particles_x.begin(), particles_x.end(), flip_particles->x);
+	std::move(particles_y.begin(), particles_y.end(), flip_particles->y);
+	std::move(particles_z.begin(), particles_z.end(), flip_particles->z);
 }
 
 void WaterSim::initMacGrid() {
@@ -188,10 +196,10 @@ void WaterSim::initMacGrid() {
     p_mac_grid = new Mac3d(res_x, res_y, res_z, len_x, len_y, len_z);
 }
 
-void WaterSim::initMeshExp(){
-	exp = new MeshExporter(p_mac_grid, flip_particles, m_num_particles);
+void WaterSim::initMeshExp() {
+	exp = new MeshExporter(p_mac_grid, *flip_particles);
 }
 
 void WaterSim::initFLIP() {
-    p_flip = new FLIP(flip_particles, m_num_particles, p_mac_grid, m_cfg);
+    p_flip = new FLIP(*flip_particles, p_mac_grid, m_cfg);
 }

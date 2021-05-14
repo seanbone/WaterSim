@@ -37,8 +37,8 @@ public:
 	//MAC grid data structure
 	Mac3d *p_mac_grid;
 
-	// List of Particles
-	Particle *flip_particles;
+	// Simulation Particles
+	Particles* flip_particles;
 
 	// FLIP simulator
 	FLIP *p_flip;
@@ -51,7 +51,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	WaterSim(const SimConfig& cfg);
+	explicit WaterSim(const SimConfig& cfg);
 
 	/**
 	 * Destructor
@@ -59,7 +59,7 @@ public:
 	~WaterSim() {
 		delete p_mac_grid;
 		delete p_flip;
-		delete[] flip_particles;
+		delete flip_particles;
 	}
 
 	/**

@@ -11,16 +11,11 @@ NcReader::NcReader( const std::string& filePath, const std::string& cfgPath ):
 	num_particles = getDim("num_particles");
 	timestep      = readScalar<unsigned>("timestep");
 
-	particles = new Particle[num_particles];
 	MACGrid   = new Mac3d(_n, _m, _l, _dx, _dy, _dz);
+	particles = new Particles(num_particles, cfg, *MACGrid);
+	referenceParticles = new Particles(num_particles, cfg, *MACGrid);
 
 	unsigned cacheBlockSize = 64;
-	x     = (double*) aligned_alloc(cacheBlockSize, num_particles    * sizeof(double));
-	y     = (double*) aligned_alloc(cacheBlockSize, num_particles    * sizeof(double));
-	z     = (double*) aligned_alloc(cacheBlockSize, num_particles    * sizeof(double));
-	u     = (double*) aligned_alloc(cacheBlockSize, num_particles    * sizeof(double));
-	v     = (double*) aligned_alloc(cacheBlockSize, num_particles    * sizeof(double));
-	w     = (double*) aligned_alloc(cacheBlockSize, num_particles    * sizeof(double));
 	uMAC  = (double*) aligned_alloc(cacheBlockSize, (_n+1) * _m * _l * sizeof(double));
 	vMAC  = (double*) aligned_alloc(cacheBlockSize, _n * (_m+1) * _l * sizeof(double));
 	wMAC  = (double*) aligned_alloc(cacheBlockSize, _n * _m * (_l+1) * sizeof(double));
@@ -36,14 +31,9 @@ NcReader::NcReader( const std::string& filePath, const std::string& cfgPath ):
 
 NcReader::~NcReader(){
 	
-	delete[] particles;
 	delete MACGrid;
-	free(x);
-	free(y);
-	free(z);
-	free(u);
-	free(v);
-	free(w);
+	delete particles;
+	delete referenceParticles;
 	free(uMAC);
 	free(vMAC);
 	free(wMAC);
@@ -56,14 +46,15 @@ NcReader::~NcReader(){
 }
 
 
-void NcReader::toOldStruct(){
+void NcReader::toFlipStructures(){
 
-	for(unsigned i = 0; i < num_particles; ++i){
-		
-		particles[i].set_position(x[i], y[i], z[i]);
-		particles[i].set_velocity(u[i], v[i], w[i]);
-	}
-	
+	std::copy(referenceParticles->x, referenceParticles->x + num_particles, particles->x);
+	std::copy(referenceParticles->y, referenceParticles->y + num_particles, particles->y);
+	std::copy(referenceParticles->z, referenceParticles->z + num_particles, particles->z);
+	std::copy(referenceParticles->u, referenceParticles->u + num_particles, particles->u);
+	std::copy(referenceParticles->v, referenceParticles->v + num_particles, particles->v);
+	std::copy(referenceParticles->w, referenceParticles->w + num_particles, particles->w);
+
 	for(unsigned i = 0; i < _n+1; ++i){
 		for(unsigned j = 0; j < _m+1; ++j){
 			for(unsigned k = 0; k < _l+1; ++k){
@@ -93,13 +84,13 @@ void NcReader::toOldStruct(){
 
 
 void NcReader::readAll( unsigned breakPt ){
-	
-	read(breakPt, "x", x);
-	read(breakPt, "y", y);
-	read(breakPt, "z", z);
-	read(breakPt, "u", u);
-	read(breakPt, "v", v);
-	read(breakPt, "w", w);
+
+	read(breakPt, "x", referenceParticles->x);
+	read(breakPt, "y", referenceParticles->y);
+	read(breakPt, "z", referenceParticles->z);
+	read(breakPt, "u", referenceParticles->u);
+	read(breakPt, "v", referenceParticles->v);
+	read(breakPt, "w", referenceParticles->w);
 	read(breakPt, "uMAC", uMAC);
 	read(breakPt, "vMAC", vMAC);
 	read(breakPt, "wMAC", wMAC);
@@ -134,7 +125,7 @@ void NcReader::outputMessage( const bool flag, const std::string& varName, const
 
 void NcReader::validate(){
 
-	double tol = 1e-12;
+	double tol = 1e-11;
 	double maxErrX     = 0.;
 	double maxErrY     = 0.;
 	double maxErrZ     = 0.;
@@ -152,18 +143,13 @@ void NcReader::validate(){
 	bool fFlag = true;
 	bool sFlag = true;
 
-	Eigen::Vector3d pos, vel;
 	for(unsigned i = 0; i < num_particles; ++i){
-
-		pos = particles[i].get_position();
-		vel = particles[i].get_velocity();
-
-		maxErrX = std::max(maxErrX, rErr(x[i], pos(0)));
-		maxErrY = std::max(maxErrY, rErr(y[i], pos(1)));
-		maxErrZ = std::max(maxErrZ, rErr(z[i], pos(2)));
-		maxErrU = std::max(maxErrU, rErr(u[i], vel(0)));
-		maxErrV = std::max(maxErrV, rErr(v[i], vel(1)));
-		maxErrW = std::max(maxErrW, rErr(w[i], vel(2)));
+		maxErrX = std::max(maxErrX, std::abs(rErr(referenceParticles->x[i], particles->x[i])));
+		maxErrY = std::max(maxErrY, std::abs(rErr(referenceParticles->y[i], particles->y[i])));
+		maxErrZ = std::max(maxErrZ, std::abs(rErr(referenceParticles->z[i], particles->z[i])));
+		maxErrU = std::max(maxErrU, std::abs(rErr(referenceParticles->u[i], particles->u[i])));
+		maxErrV = std::max(maxErrV, std::abs(rErr(referenceParticles->v[i], particles->v[i])));
+		maxErrW = std::max(maxErrW, std::abs(rErr(referenceParticles->w[i], particles->w[i])));
 	}
 
 	for(unsigned i = 0; i < _n+1; ++i){
@@ -171,20 +157,20 @@ void NcReader::validate(){
 			for(unsigned k = 0; k < _l+1; ++k){
 
 				if( j < _m && k < _l ){
-					maxErrUMAC  = std::max(maxErrUMAC,  rErr(uMAC [i + (_n+1) * j + (_n+1) *  _m    * k], MACGrid->get_u(i, j, k)));
-					maxErrUStar = std::max(maxErrUStar, rErr(uStar[i + (_n+1) * j + (_n+1) *  _m    * k], MACGrid->get_u_star(i, j, k)));
+					maxErrUMAC  = std::max(maxErrUMAC,  std::abs(rErr(uMAC [i + (_n+1) * j + (_n+1) *  _m    * k], MACGrid->get_u(i, j, k))));
+					maxErrUStar = std::max(maxErrUStar, std::abs(rErr(uStar[i + (_n+1) * j + (_n+1) *  _m    * k], MACGrid->get_u_star(i, j, k))));
 				}
 				if( i < _n && k < _l ){
-					maxErrVMAC  = std::max(maxErrVMAC,  rErr(vMAC [i +  _n    * j +  _n    * (_m+1) * k], MACGrid->get_v(i, j, k)));
-					maxErrVStar = std::max(maxErrVStar, rErr(vStar[i +  _n    * j +  _n    * (_m+1) * k], MACGrid->get_v_star(i, j, k)));
+					maxErrVMAC  = std::max(maxErrVMAC,  std::abs(rErr(vMAC [i +  _n    * j +  _n    * (_m+1) * k], MACGrid->get_v(i, j, k))));
+					maxErrVStar = std::max(maxErrVStar, std::abs(rErr(vStar[i +  _n    * j +  _n    * (_m+1) * k], MACGrid->get_v_star(i, j, k))));
 				}
 				if( i < _n && j < _m ){
-					maxErrWMAC  = std::max(maxErrWMAC,  rErr(wMAC [i +  _n    * j +  _n    *  _m    * k], MACGrid->get_w(i, j, k)));
-					maxErrWStar = std::max(maxErrWStar, rErr(wStar[i +  _n    * j +  _n    *  _m    * k], MACGrid->get_w_star(i, j, k)));
+					maxErrWMAC  = std::max(maxErrWMAC,  std::abs(rErr(wMAC [i +  _n    * j +  _n    *  _m    * k], MACGrid->get_w(i, j, k))));
+					maxErrWStar = std::max(maxErrWStar, std::abs(rErr(wStar[i +  _n    * j +  _n    *  _m    * k], MACGrid->get_w_star(i, j, k))));
 				}
 				
 				if( i < _n && j < _m && k < _l ) {
-					maxErrPMAC  = std::max(maxErrPMAC,  rErr(pMAC [i +  _n    * j +  _n    *  _m    * k], MACGrid->get_pressure(i, j, k)));
+					maxErrPMAC  = std::max(maxErrPMAC,  std::abs(rErr(pMAC [i +  _n    * j +  _n    *  _m    * k], MACGrid->get_pressure(i, j, k))));
 					fFlag = fFlag && (fluid_cells[i + _n*j + _n*_m*k] == MACGrid->is_fluid(i, j, k));
 					sFlag = sFlag && (solid_cells[i + _n*j + _n*_m*k] == MACGrid->is_solid(i, j, k));
 				}

@@ -5,7 +5,8 @@ Mac3d::Mac3d(const unsigned n, const unsigned m, const unsigned l,
 			 const double dx, const double dy, const double dz)
 	: N_(n), M_(m), L_(l), sizex_(dx), sizey_(dy), sizez_(dz), 
 	  cell_sizex_(sizex_/(1.*N_)), cell_sizey_(sizey_/(1.*M_)), 
-	  cell_sizez_(sizez_/(1.*L_)){
+	  cell_sizez_(sizez_/(1.*L_)), rcell_sizex_(1./cell_sizex_), 
+	  rcell_sizey_(1./cell_sizey_), rcell_sizez_(1./cell_sizez_){
 	
 	//Initialization of the arrays 
 	initArrays();
@@ -222,31 +223,31 @@ Eigen::Vector3d Mac3d::get_grid_size() const {
 	return Eigen::Vector3d(sizex_, sizey_, sizez_);
 }
 
-unsigned Mac3d::get_num_cells_x() {
+unsigned Mac3d::get_num_cells_x() const {
 	return N_;
 }
 
-unsigned Mac3d::get_num_cells_y() {
+unsigned Mac3d::get_num_cells_y() const {
 	return M_;
 }
 
-unsigned Mac3d::get_num_cells_z() {
+unsigned Mac3d::get_num_cells_z() const {
 	return L_;
 }
 
-unsigned Mac3d::get_num_cells() {
+unsigned Mac3d::get_num_cells() const {
 	return M_*N_*L_;
 }
 
-double Mac3d::get_cell_sizex() {
+double Mac3d::get_cell_sizex() const {
 	return cell_sizex_;
 }
 
-double Mac3d::get_cell_sizey() {
+double Mac3d::get_cell_sizey() const {
 	return cell_sizey_;
 }
 
-double Mac3d::get_cell_sizez() {
+double Mac3d::get_cell_sizez() const {
 	return cell_sizez_;
 }
 
@@ -788,6 +789,18 @@ Eigen::Vector3d Mac3d::index_from_coord(const double x, const double y, const do
 			&& "Attention: out of the grid!");
 	Eigen::Vector3d result(int(x/cell_sizex_ + 0.5), int(y/cell_sizey_ + 0.5), int(z/cell_sizez_ + 0.5));
 	return result;
+}
+
+ void Mac3d::index_from_coord( const double x, 
+							   const double y, 
+							   const double z, 
+							   Mac3d::cellIdx_t &cell_idx_x, 
+							   Mac3d::cellIdx_t &cell_idx_y, 
+							   Mac3d::cellIdx_t &cell_idx_z )
+{
+	cell_idx_x = (Mac3d::cellIdx_t) (x * rcell_sizex_ + 0.5);
+	cell_idx_y = (Mac3d::cellIdx_t) (y * rcell_sizey_ + 0.5);
+	cell_idx_z = (Mac3d::cellIdx_t) (z * rcell_sizez_ + 0.5);
 }
 
 

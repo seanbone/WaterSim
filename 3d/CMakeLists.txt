@@ -82,7 +82,7 @@ file(GLOB SRC_FILES_CORE
         ${PROJECT_SOURCE_DIR}/src/MeshExporter.cpp
         ${PROJECT_SOURCE_DIR}/src/NcReader.cpp
         ${PROJECT_SOURCE_DIR}/src/NcWriter.cpp
-        ${PROJECT_SOURCE_DIR}/src/Particle.cpp
+        ${PROJECT_SOURCE_DIR}/src/Particles.cpp
         ${PROJECT_SOURCE_DIR}/src/SimConfig.cpp
         ${PROJECT_SOURCE_DIR}/src/WaterSim.cpp
         ${PROJECT_SOURCE_DIR}/src/flip-methods/*.cpp

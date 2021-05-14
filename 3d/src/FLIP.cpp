@@ -4,8 +4,8 @@
 
 FLIP::FLIP(Particles& particles, Mac3d* MACGrid, const SimConfig& cfg)
 	: num_particles_(particles.get_num_particles()), MACGrid_(MACGrid), cfg_(cfg),
-      fluid_density_(cfg.getDensity()), gravity_mag_(cfg.getGravity()), alpha_(cfg.getAlpha()),
-      particles_(particles) {
+	  fluid_density_(cfg.getDensity()), gravity_mag_(cfg.getGravity()), alpha_(cfg.getAlpha()),
+	  particles_(particles) {
 	
 #ifdef WRITE_REFERENCE
 	ncWriter_ = new NcWriter( "./ref.nc", 
@@ -67,51 +67,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	tsc::TSCTimer& tsctimer = tsc::TSCTimer::get_timer("timings.json");
 
 #ifdef WRITE_REFERENCE
-	unsigned n, m, l;
-	double* x;
-	double* y;
-	double* z;
-	double* u;
-	double* v;
-	double* w;
-	double* uMAC;
-	double* vMAC;
-	double* wMAC;
-	double* uStar;
-	double* vStar;
-	double* wStar;
-	double* pMAC;
-	bool* fluid_cells;
-	bool* solid_cells;
-
-	if (step == WRITE_REFERENCE){
-
-		unsigned cacheBlockSize = 64;
-
-		n = MACGrid_->get_num_cells_x();
-		m = MACGrid_->get_num_cells_y();
-		l = MACGrid_->get_num_cells_z();
-
-		x     = (double*) aligned_alloc(cacheBlockSize, num_particles_ * sizeof(double));
-		y     = (double*) aligned_alloc(cacheBlockSize, num_particles_ * sizeof(double));
-		z     = (double*) aligned_alloc(cacheBlockSize, num_particles_ * sizeof(double));
-		u     = (double*) aligned_alloc(cacheBlockSize, num_particles_ * sizeof(double));
-		v     = (double*) aligned_alloc(cacheBlockSize, num_particles_ * sizeof(double));
-		w     = (double*) aligned_alloc(cacheBlockSize, num_particles_ * sizeof(double));
-		uMAC  = (double*) aligned_alloc(cacheBlockSize, (n+1) * m * l  * sizeof(double));
-		vMAC  = (double*) aligned_alloc(cacheBlockSize, n * (m+1) * l  * sizeof(double));
-		wMAC  = (double*) aligned_alloc(cacheBlockSize, n * m * (l+1)  * sizeof(double));
-		uStar = (double*) aligned_alloc(cacheBlockSize, (n+1) * m * l  * sizeof(double));
-		vStar = (double*) aligned_alloc(cacheBlockSize, n * (m+1) * l  * sizeof(double));
-		wStar = (double*) aligned_alloc(cacheBlockSize, n * m * (l+1)  * sizeof(double));
-		pMAC  = (double*) aligned_alloc(cacheBlockSize, n * m * l      * sizeof(double));
-
-		fluid_cells = (bool*) aligned_alloc(cacheBlockSize, n * m * l * sizeof(bool));
-		solid_cells = (bool*) aligned_alloc(cacheBlockSize, n * m * l * sizeof(bool));
-
-		ncWriter_->toLinArrays(particlesOLD_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
-		ncWriter_->writeAll(0, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
-	}
+	if (step == WRITE_REFERENCE) ncWriter_->writeAll(0, particles_, MACGrid_);
 #endif
 
 	// 1.
@@ -123,10 +79,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	tsctimer.stop_timing("particle_to_grid", true, "");
 
 #ifdef WRITE_REFERENCE
-	if (step == WRITE_REFERENCE){
-		ncWriter_->toLinArrays(particlesOLD_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
-		ncWriter_->writeAll(1, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
-	}
+	if (step == WRITE_REFERENCE) ncWriter_->writeAll(1, particles_, MACGrid_);
 #endif
 
 	// 2.
@@ -140,10 +93,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	tsctimer.stop_timing("apply_forces", true, "");
 
 #ifdef WRITE_REFERENCE
-	if (step == WRITE_REFERENCE){
-		ncWriter_->toLinArrays(particlesOLD_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
-		ncWriter_->writeAll(2, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
-	}
+	if (step == WRITE_REFERENCE) ncWriter_->writeAll(2, particles_, MACGrid_);
 #endif
 
 	// 3.
@@ -152,10 +102,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	tsctimer.stop_timing("apply_boundary_conditions", true, "");
 
 #ifdef WRITE_REFERENCE
-	if (step == WRITE_REFERENCE){
-		ncWriter_->toLinArrays(particlesOLD_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
-		ncWriter_->writeAll(3, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
-	}
+	if (step == WRITE_REFERENCE) ncWriter_->writeAll(3, particles_, MACGrid_);
 #endif
 
 	// 4.
@@ -164,10 +111,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	tsctimer.stop_timing("apply_pressure_correction", true, "");
 
 #ifdef WRITE_REFERENCE
-	if (step == WRITE_REFERENCE){
-		ncWriter_->toLinArrays(particlesOLD_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
-		ncWriter_->writeAll(4, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
-	}
+	if (step == WRITE_REFERENCE) ncWriter_->writeAll(4, particles_, MACGrid_);
 #endif
 
 	// 5.
@@ -176,10 +120,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	tsctimer.stop_timing("grid_to_particle", true, "");
 
 #ifdef WRITE_REFERENCE
-	if (step == WRITE_REFERENCE){
-		ncWriter_->toLinArrays(particlesOLD_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
-		ncWriter_->writeAll(5, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
-	}
+	if (step == WRITE_REFERENCE) ncWriter_->writeAll(5, particles_, MACGrid_);
 #endif
 
 	// 6.
@@ -194,25 +135,6 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	tsctimer.stop_timing("advance_particles", true, "");
 
 #ifdef WRITE_REFERENCE
-	if (step == WRITE_REFERENCE){
-		ncWriter_->toLinArrays(particlesOLD_, num_particles_, MACGrid_, n, m, l, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
-		ncWriter_->writeAll(6, x, y, z, u, v, w, uMAC, vMAC, wMAC, uStar, vStar, wStar, pMAC, fluid_cells, solid_cells);
-
-		free(x);
-		free(y);
-		free(z);
-		free(u);
-		free(v);
-		free(w);
-		free(uMAC);
-		free(vMAC);
-		free(wMAC);
-		free(uStar);
-		free(vStar);
-		free(wStar);
-		free(pMAC);
-		free(fluid_cells);
-		free(solid_cells);
-	}
+	if (step == WRITE_REFERENCE) ncWriter_->writeAll(6, particles_, MACGrid_);
 #endif
 }

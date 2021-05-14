@@ -5,7 +5,7 @@
 #include <netcdf>
 #include <string>
 #include <vector>
-#include "Particle.h"
+#include "Particles.h"
 #include "Mac3d.h"
 
 using namespace netCDF;
@@ -113,67 +113,20 @@ class NcWriter {
 			std::cout << e.what() << std::endl;
 		}
 	}
-
-
-	/** Convert the old data structures (Particle and Mac3d) to linear arrays
-	 * Params:
-	 * - particles is a pointer to an array of Particles
-	 * - num_particles is the total number of particles
-	 * - MACGrid is a pointer to the MAC Grid
-	 * - n is the x-dimension of the MAC grid
-	 * - m is the y-dimension of the MAC grid
-	 * - l is the z-dimension of the MAC grid
-	 * - The remaining arguments are the linear arrays where the data will be 
-	 *   stored
-	 */
-	void toLinArrays( Particle* particles, 
-					  unsigned num_particles, 
-					  Mac3d* MACGrid, 
-					  unsigned n, 
-					  unsigned m, 
-					  unsigned l, 
-					  double* x, 
-					  double* y, 
-					  double* z, 
-					  double* u, 
-					  double* v, 
-					  double* w, 
-					  double* uMAC, 
-					  double* vMAC, 
-					  double* wMAC, 
-					  double* uStar, 
-					  double* vStar, 
-					  double* wStar, 
-					  double* pMAC, 
-					  bool* fluid_cells, 
-					  bool* solid_cells );
 	
 
 	/** Write all the relevant arrays of the FLIP::step_FLIP() function to the 
 	 *  reference file for a specific break point
 	 * - breakPt is the number of the desired break point (see FLIP::step_FLIP 
 	 *   method)
-	 * - The remaining arguments are the linear arrays containing the data to be 
-	 *   written
+	 * - The remaining arguments contain the linear arrays containing the data 
+	 *   to be written
 	 */
-	void writeAll( unsigned breakPt, 
-				   double* x, 
-				   double* y, 
-				   double* z, 
-				   double* u, 
-				   double* v, 
-				   double* w, 
-				   double* uMAC, 
-				   double* vMAC, 
-				   double* wMAC, 
-				   double* uStar, 
-				   double* vStar, 
-				   double* wStar, 
-				   double* pMAC, 
-				   bool* fluid_cells, 
-				   bool* solid_cells );
-
+	void writeAll( const unsigned breakPt, 
+				   const Particles& particles, 
+				   const Mac3d* const MACGrid );
 	
+
 	private:
 	
 	// String containing the path to the file to write

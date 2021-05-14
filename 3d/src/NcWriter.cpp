@@ -64,106 +64,25 @@ void NcWriter::addVar( const std::string& varName, const std::string& dimName, N
 }
 
 
-void NcWriter::toLinArrays( Particle* particles, 
-							unsigned num_particles, 
-							Mac3d* MACGrid, 
-							unsigned n, 
-							unsigned m, 
-							unsigned l, 
-							double* x, 
-							double* y, 
-							double* z, 
-							double* u, 
-							double* v, 
-							double* w, 
-							double* uMAC, 
-							double* vMAC, 
-							double* wMAC, 
-							double* uStar, 
-						 	double* vStar, 
-						 	double* wStar, 
-							double* pMAC, 
-							bool* fluid_cells, 
-							bool* solid_cells )
-{
-	
-	Eigen::Vector3d pos;
-	Eigen::Vector3d vel;
-
-	for(unsigned i = 0; i < num_particles; ++i){
-
-		pos = (particles + i)->get_position();
-		vel = (particles + i)->get_velocity();
-
-		x[i] = pos(0);
-		y[i] = pos(1);
-		z[i] = pos(2);
-		u[i] = vel(0);
-		v[i] = vel(1);
-		w[i] = vel(2);
-	}
-
-	for(unsigned i = 0; i < n+1; ++i){
-		for(unsigned j = 0; j < m+1; ++j){
-			for(unsigned k = 0; k < l+1; ++k){
-
-				if( j < m && k < l ){
-					uMAC [i + (n+1) * j + (n+1) *  m    * k] = MACGrid->get_u(i, j, k);
-					uStar[i + (n+1) * j + (n+1) *  m    * k] = MACGrid->get_u_star(i, j, k);
-				}
-				if( i < n && k < l ){
-					vMAC [i +  n    * j +  n    * (m+1) * k] = MACGrid->get_v(i, j, k);
-					vStar[i +  n    * j +  n    * (m+1) * k] = MACGrid->get_v_star(i, j, k);
-				}
-				if( i < n && j < m ){
-					wMAC [i +  n    * j +  n    *  m    * k] = MACGrid->get_w(i, j, k);
-					wStar[i +  n    * j +  n    *  m    * k] = MACGrid->get_w_star(i, j, k);
-				}
-				
-				if( i < n && j < m && k < l ){
-					pMAC[i + n*j + n*m*k] = MACGrid->get_pressure(i, j, k);
-					fluid_cells[i + n*j + n*m*k] = MACGrid->is_fluid(i, j, k);
-					solid_cells[i + n*j + n*m*k] = MACGrid->is_solid(i, j, k);
-				}
-			}
-		}
-	}
-
-}
-
-
-void NcWriter::writeAll( unsigned breakPt, 
-						 double* x, 
-						 double* y, 
-						 double* z, 
-						 double* u, 
-						 double* v, 
-					 	 double* w, 
-				 		 double* uMAC, 
-						 double* vMAC, 
-						 double* wMAC, 
-						 double* uStar, 
-						 double* vStar, 
-						 double* wStar, 
-						 double* pMAC, 
-						 bool* fluid_cells, 
-						 bool* solid_cells )
+void NcWriter::writeAll( const unsigned breakPt, 
+						 const Particles& particles, 
+						 const Mac3d* const MACGrid )
 {
 
-	write(breakPt, "x", x);
-	write(breakPt, "y", y);
-	write(breakPt, "z", z);
-	write(breakPt, "u", u);
-	write(breakPt, "v", v);
-	write(breakPt, "w", w);
-	write(breakPt, "uMAC", uMAC);
-	write(breakPt, "vMAC", vMAC);
-	write(breakPt, "wMAC", wMAC);
-	write(breakPt, "uStar", uStar);
-	write(breakPt, "vStar", vStar);
-	write(breakPt, "wStar", wStar);
-	write(breakPt, "pMAC", pMAC);
-	write(breakPt, "fluid_cells", fluid_cells);
-	write(breakPt, "solid_cells", solid_cells);
+	write(breakPt, "x", particles.x);
+	write(breakPt, "y", particles.y);
+	write(breakPt, "z", particles.z);
+	write(breakPt, "u", particles.u);
+	write(breakPt, "v", particles.v);
+	write(breakPt, "w", particles.w);
+	write(breakPt, "uMAC", MACGrid->pu_);
+	write(breakPt, "vMAC", MACGrid->pv_);
+	write(breakPt, "wMAC", MACGrid->pw_);
+	write(breakPt, "uStar", MACGrid->pu_star_);
+	write(breakPt, "vStar", MACGrid->pv_star_);
+	write(breakPt, "wStar", MACGrid->pw_star_);
+	write(breakPt, "pMAC", MACGrid->ppressure_);
+	write(breakPt, "fluid_cells", MACGrid->pfluid_);
+	write(breakPt, "solid_cells", MACGrid->psolid_);
 
 }

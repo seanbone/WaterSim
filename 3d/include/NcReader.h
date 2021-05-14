@@ -112,9 +112,9 @@ class NcReader {
 
 
 	/** Convert the linear arrays read from _filePath to the data structures of 
-	 *  the original FLIP algorithm implementation (Particle and Mac3d)
+	 *  the FLIP algorithm implementation (Particles and Mac3d)
 	 */
-	void toOldStruct();
+	void toFlipStructures();
 
 
 	/** Read all the arrays present in the reference file for a specific break 

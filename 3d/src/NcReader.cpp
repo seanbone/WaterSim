@@ -46,7 +46,7 @@ NcReader::~NcReader(){
 }
 
 
-void NcReader::toOldStruct(){
+void NcReader::toFlipStructures(){
 
 	std::copy(referenceParticles->x, referenceParticles->x + num_particles, particles->x);
 	std::copy(referenceParticles->y, referenceParticles->y + num_particles, particles->y);

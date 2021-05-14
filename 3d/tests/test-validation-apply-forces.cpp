@@ -11,7 +11,7 @@ int main(){
 	NcReader* ncReader = new NcReader(validation_data_ref, validation_data_cfg);
 
 	ncReader->readAll(1);
-	ncReader->toOldStruct();
+	ncReader->toFlipStructures();
 
 	FLIP* flip = new FLIP(*(ncReader->particles), ncReader->MACGrid, ncReader->cfg);
 

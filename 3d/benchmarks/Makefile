@@ -6,6 +6,8 @@
 # Note: executable watersim-cli is assumed to exist in build directory
 build-directory ?= ../build/
 
+post-script ?= ../../scripts/load_timing_info.py
+
 # List of all benchmarks to run. Divided into "fast" and "slow" benchmarks
 fast-benchmarks = benchmark-1-0 benchmark-2-0
 slow-benchmarks = benchmark-1-1 benchmark-1-2 benchmark-1-3 benchmark-1-4 benchmark-2-1 benchmark-2-2 benchmark-2-3 benchmark-2-4
@@ -29,6 +31,7 @@ $(fast-benchmark-files) $(slow-benchmark-files): .FORCE
 	mkdir -p $(basename $@)
 	cd $(basename $@)
 	../$(build-directory)watersim-cli -y ../$@ > $(basename $@).log
+	python3 ../$(post-script) timings.json > timing_info.txt
 	echo "Done."
 
 .PHONY: .FORCE

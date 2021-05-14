@@ -1,7 +1,6 @@
 #ifndef FLIP_H
 #define FLIP_H
 
-#include "Particle.h"
 #include "Mac3d.h"
 #include "SimConfig.h"
 #include "NcWriter.h"
@@ -33,25 +32,11 @@ public:
 	 *   method
 	 */
 	// TODO: remove old particle structure and num_particles params
-	FLIP(Particle* particlesOLD, Particles& particles, unsigned num_particles, Mac3d* MACGrid,
-	  const SimConfig& cfg);
+	FLIP(Particles& particles, Mac3d* MACGrid, const SimConfig& cfg);
 
     /** Destructor
 	 */	
 	~FLIP();
-
-	/**
-	 * Method to copy all particle data from OLD data structure to NEW.
-	 * TODO: remove once all methods have been transferred
-	 */
-	void particlesOldToNew();
-
-
-	/**
-	 * Method to copy all particle data from NEW data structure to OLD.
-	 * TODO: remove once all methods have been transferred
-	 */
-	void particlesNewToOld();
 
 	/** Perform one FLIP step
 	 * Params:
@@ -120,10 +105,6 @@ private:
 	// NcWriter object to write reference data
 	NcWriter* ncWriter_;
 	
-	// Array of all particles
-	// Note: OLD data structure to be replaced
-	Particle* particlesOLD_;
-
 	// FLIP particles
 	Particles& particles_;
 	

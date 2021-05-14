@@ -30,7 +30,6 @@ void WaterSim::resetMembers() {
 	initMacGrid();
 
 	// Particles
-	delete [] flip_particlesOLD;
 	delete flip_particles;
 	initParticles();
 
@@ -172,7 +171,6 @@ void WaterSim::initParticles() {
                 };
 
                 for (auto & position : positions) {
-                    //particles.push_back(Particle(positions[p][0], positions[p][1], positions[p][2]));
                     particles_x.push_back(position[0]);
 	                particles_y.push_back(position[1]);
 	                particles_z.push_back(position[2]);
@@ -183,10 +181,6 @@ void WaterSim::initParticles() {
             }
         }
     }
-
-	// TODO: remove once new struct is integrated
-	flip_particlesOLD = new Particle[m_num_particles];
-    //std::move(particles.begin(), particles.end(), flip_particlesOLD);
 
 	flip_particles = new Particles(m_num_particles, m_cfg, *p_mac_grid);
 	std::move(particles_x.begin(), particles_x.end(), flip_particles->x);
@@ -207,5 +201,5 @@ void WaterSim::initMeshExp() {
 }
 
 void WaterSim::initFLIP() {
-    p_flip = new FLIP(flip_particlesOLD, *flip_particles, m_num_particles, p_mac_grid, m_cfg);
+    p_flip = new FLIP(*flip_particles, p_mac_grid, m_cfg);
 }

@@ -2,9 +2,8 @@
 #include "tsc_x86.hpp"
 
 
-FLIP::FLIP(Particle* particlesOLD, Particles& particles, unsigned num_particles, Mac3d* MACGrid,
-		   const SimConfig& cfg)
-	: particlesOLD_(particlesOLD), num_particles_(particles.get_num_particles()), MACGrid_(MACGrid), cfg_(cfg),
+FLIP::FLIP(Particles& particles, Mac3d* MACGrid, const SimConfig& cfg)
+	: num_particles_(particles.get_num_particles()), MACGrid_(MACGrid), cfg_(cfg),
       fluid_density_(cfg.getDensity()), gravity_mag_(cfg.getGravity()), alpha_(cfg.getAlpha()),
       particles_(particles) {
 	
@@ -216,29 +215,4 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 		free(solid_cells);
 	}
 #endif
-}
-
-
-void FLIP::particlesOldToNew() {
-	Particles::particleIdx_t i;
-	for (i = 0; i < particles_.get_num_particles(); i++) {
-		particles_.x[i] = particlesOLD_[i].x_;
-		particles_.y[i] = particlesOLD_[i].y_;
-		particles_.z[i] = particlesOLD_[i].z_;
-		particles_.u[i] = particlesOLD_[i].u_;
-		particles_.v[i] = particlesOLD_[i].v_;
-		particles_.w[i] = particlesOLD_[i].w_;
-	}
-}
-
-void FLIP::particlesNewToOld() {
-	Particles::particleIdx_t i;
-	for (i = 0; i < particles_.get_num_particles(); i++) {
-		particlesOLD_[i].x_ = particles_.x[i];
-		particlesOLD_[i].y_ = particles_.y[i];
-		particlesOLD_[i].z_ = particles_.z[i];
-		particlesOLD_[i].u_ = particles_.u[i];
-		particlesOLD_[i].v_ = particles_.v[i];
-		particlesOLD_[i].w_ = particles_.w[i];
-	}
 }

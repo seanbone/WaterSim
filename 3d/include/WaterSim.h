@@ -37,10 +37,7 @@ public:
 	//MAC grid data structure
 	Mac3d *p_mac_grid;
 
-	// List of Particles
-	// TODO: remove once new struct has been fully integrated
-	Particle *flip_particlesOLD;
-
+	// Simulation Particles
 	Particles* flip_particles;
 
 	// FLIP simulator
@@ -62,7 +59,6 @@ public:
 	~WaterSim() {
 		delete p_mac_grid;
 		delete p_flip;
-		delete[] flip_particlesOLD;
 		delete flip_particles;
 	}
 

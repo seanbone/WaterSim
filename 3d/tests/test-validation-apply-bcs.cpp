@@ -13,11 +13,7 @@ int main(){
 	ncReader->readAll(2);
 	ncReader->toOldStruct();
 
-	// TODO: initialize Particles struct in ncReader instead.
-	Particles particles(ncReader->num_particles, ncReader->cfg, *ncReader->MACGrid);
-	FLIP* flip = new FLIP(ncReader->particlesOLD, particles, ncReader->num_particles, ncReader->MACGrid, ncReader->cfg);
-	// TODO: remove once new struct is integrated
-	flip->particlesOldToNew();
+	FLIP* flip = new FLIP(*(ncReader->particles), ncReader->MACGrid, ncReader->cfg);
 
 	flip->apply_boundary_conditions();
 

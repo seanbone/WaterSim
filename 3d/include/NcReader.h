@@ -7,7 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
-#include "Particle.h"
+#include "Particles.h"
 #include "Mac3d.h"
 #include "SimConfig.h"
 
@@ -143,12 +143,6 @@ class NcReader {
 	unsigned timestep;
 
 	// Reference linear arrays
-	double* x;
-	double* y;
-	double* z;
-	double* u;
-	double* v;
-	double* w;
 	double* uMAC;
 	double* vMAC;
 	double* wMAC;
@@ -159,8 +153,10 @@ class NcReader {
 	bool* fluid_cells;
 	bool* solid_cells;
 
+	Particles* particles;
+	Particles* referenceParticles;
+
 	// Pointers to old data structures used for the "test simulation"
-	Particle* particlesOLD;
 	Mac3d* MACGrid;
 
 	// Initial configuration object

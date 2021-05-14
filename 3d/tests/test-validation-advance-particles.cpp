@@ -13,11 +13,7 @@ int main(){
 	ncReader->readAll(5);
 	ncReader->toOldStruct();
 
-	// TODO: initialize Particles struct in ncReader instead.
-	Particles particles(ncReader->num_particles, ncReader->cfg, *ncReader->MACGrid);
-	FLIP* flip = new FLIP(ncReader->particlesOLD, particles, ncReader->num_particles, ncReader->MACGrid, ncReader->cfg);
-	// TODO: remove once new struct is integrated
-	flip->particlesOldToNew();
+	FLIP* flip = new FLIP(*(ncReader->particles), ncReader->MACGrid, ncReader->cfg);
 
 	unsigned step = ncReader->timestep;
 	double dt = ncReader->cfg.getTimeStep();
@@ -27,8 +23,6 @@ int main(){
 		
 		flip->advance_particles(dt/num_substeps, step);
 	}
-
-	flip->particlesNewToOld();
 
 	ncReader->readAll(6);
 	ncReader->validate();

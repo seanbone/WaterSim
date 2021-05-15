@@ -73,7 +73,7 @@ namespace cg {
 
         inline void dot_product(double * a, double * b, const unsigned n, double *res);
 
-        inline void Mat_mult(SparseMat *M,double *a, double *res);
+        static void Mat_mult(SparseMat *M, const double *a, double *res);
 
         void solve( cg::SparseMat* A, const double* rhs, double* sol);
 	};
@@ -156,7 +156,7 @@ inline void cg::ICConjugateGradientSolver::dot_product(double *a, double *b, con
     *res= tmp;
 }
 
-inline void cg::ICConjugateGradientSolver::Mat_mult(SparseMat *M,double *a, double *res){
+inline void cg::ICConjugateGradientSolver::Mat_mult(SparseMat *M, const double *a, double *res) {
     const unsigned v = M->v;
     const unsigned r = M->r;
     double tmp = 0;

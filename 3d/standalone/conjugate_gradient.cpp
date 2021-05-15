@@ -1,4 +1,4 @@
-#include "conjugate_gradient.hpp"
+#include "ConjugateGradient.hpp"
 
 // standalone file for development of conjugate gradient solver
 

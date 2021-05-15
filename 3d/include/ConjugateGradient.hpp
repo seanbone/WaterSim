@@ -3,8 +3,11 @@
 
 // NOTE included new header
 #include<algorithm>
+#include<cmath>
+#include "Mac3d.h"
 
 namespace cg {
+	// incomplete cholesky conjugate gradient
     struct SparseMat {
         SparseMat() = default;
         SparseMat(unsigned a, unsigned b);
@@ -19,14 +22,15 @@ namespace cg {
         unsigned *col_idx;
         unsigned *row_idx;
     };
-	// incomplete cholesky conjugate gradient
 	class ICConjugateGradientSolver {
 
 	    // preconditioner Matrix
-	    SparseMat M;
 
 	    // number of rows aka. len of rhs aka. len of res, guess vector ect.
         unsigned num_rows;
+
+		const Mac3d& grid;
+		const unsigned n_cells_x, n_cells_y, n_cells_z;
 
         // initial guess
 	    double *p;
@@ -40,9 +44,6 @@ namespace cg {
 	    // search vector
 	    double *s;
 
-	    // sigmas, alpha and beta
-	    double sig, sig_new, alpha, beta;
-
         // current step and max steps
 	    unsigned step, max_steps;
 
@@ -53,29 +54,26 @@ namespace cg {
 	    const double rho = 1.;
 	    const double rho_inv = 1.;
 
-	    // result of dotprod of s and z
-	    double dots;
-
-
-
-
         public:
         ICConjugateGradientSolver();
         ~ICConjugateGradientSolver();
-        ICConjugateGradientSolver(SparseMat Precon, unsigned max_steps);
+        ICConjugateGradientSolver(unsigned max_steps, const Mac3d& grid);
+
+		void applyPreconditioner(const double *r, double *z);
+		void applyA(const double *z, double *s);
 
         // not sure where to put this
         //res[i] = a[i] * b + c[i]
         inline void sca_product(double* a, double b, double* c,  const unsigned n, double *res);
 
         // res[] += a[] * b
-        inline void sca_add_product(double * a, double b, const unsigned n, double *res);
+        inline void sca_add_product(const double * a, const double b, const unsigned n, double *res);
 
-        inline void dot_product(double * a, double * b, const unsigned n, double *res);
+        inline double dot_product(double * a, double * b, const unsigned n);
 
         static void Mat_mult(SparseMat *M, const double *a, double *res);
 
-        void solve( cg::SparseMat* A, const double* rhs, double* sol);
+        void solve(const double* rhs, double* p);
 	};
 
 }
@@ -97,8 +95,11 @@ cg::SparseMat::SparseMat(SparseMat &M): v(M.v), r(M.r){
     int row_idx[r];
 };
 */
-cg::ICConjugateGradientSolver::ICConjugateGradientSolver(cg::SparseMat Precon, unsigned max_steps)
-        :M(Precon), max_steps(max_steps) {
+cg::ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, const Mac3d& grid)
+        :max_steps(max_steps),
+		grid{grid},
+		n_cells_x{grid.get_num_cells_x()}, n_cells_y{grid.get_num_cells_y()}, n_cells_z{grid.get_num_cells_z()},
+{
     // the -1 is beacuse we assume a past the end entry for r
     num_rows = M.r - 1;
     step = 0;
@@ -106,54 +107,23 @@ cg::ICConjugateGradientSolver::ICConjugateGradientSolver(cg::SparseMat Precon, u
     r = new double [num_rows];
     z = new double [num_rows];
     s = new double [num_rows];
-
-
 }
+
 cg::ICConjugateGradientSolver::~ICConjugateGradientSolver() {
     delete [] p;
     delete [] r;
     delete [] z;
     delete [] s;
 
-
 }
 
-void cg::ICConjugateGradientSolver::solve( cg::SparseMat* A, const double* rhs, double* sol) {
-    // initial phase
-    std::copy(rhs,rhs+num_rows,r);
-    // unsure about pass by ref
-    Mat_mult(&M,r,z);
-    std::copy(z,z+num_rows,s);
-    dot_product(z,r,num_rows, &sig);
 
-
-    while( step < max_steps){
-        Mat_mult(A,s,z);
-        dot_product(z,s,num_rows,&dots);
-        alpha = rho/dots;
-        sca_add_product(s,alpha,num_rows,p);
-        // r [] -= alph * z[]
-        sca_add_product(z,-alpha,num_rows,r);
-
-        //check if exit cond is met : inf norm < then some thresh
-        if( *std::max_element(r,r+num_rows) < thresh)
-            sol = p; return;
-        Mat_mult(&M,r,z);
-        dot_product(z,r,num_rows,&sig_new);
-
-        beta = sig_new * rho_inv;
-        //Bug potential: aliasing
-        sca_product(s,beta,z,num_rows,s);
-    }
-    sol = p;
-}
-
-inline void cg::ICConjugateGradientSolver::dot_product(double *a, double *b, const unsigned int n, double *res) {
+inline double cg::ICConjugateGradientSolver::dot_product(double *a, double *b, const unsigned int n) {
     double tmp = 0;
     for(unsigned i = 0 ; i < n; ++i ) {
         tmp += a[i]*b[i];
     }
-    *res= tmp;
+    return tmp;
 }
 
 inline void cg::ICConjugateGradientSolver::Mat_mult(SparseMat *M, const double *a, double *res) {
@@ -176,7 +146,7 @@ inline void cg::ICConjugateGradientSolver::Mat_mult(SparseMat *M, const double *
     }
 }
 
-inline void cg::ICConjugateGradientSolver::sca_add_product(double *a, double b, const unsigned int n, double *res) {
+inline void cg::ICConjugateGradientSolver::sca_add_product(const double *a, const double b, const unsigned int n, double *res) {
     for(unsigned i = 0 ; i < n; ++i ) {
         res [i] += a[i] * b;
     }
@@ -186,7 +156,5 @@ inline void cg::ICConjugateGradientSolver::sca_product(double *a, double b,doubl
         res[i] = a[i] * b + c[i];
     }
 }
-
-
 
 #endif

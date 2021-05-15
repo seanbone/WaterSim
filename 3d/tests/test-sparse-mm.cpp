@@ -1,7 +1,7 @@
 /*
  * A test to check the sparse matrix multiplication for the MICCG solver
  */
-#include "conjugate_gradient.hpp"
+#include "ConjugateGradient.hpp"
 #include <Eigen/Sparse>	//used for the matrix A
 
 cg::SparseMat from_eigen(const Eigen::SparseMatrix<double, Eigen::RowMajor> A_eigen) {

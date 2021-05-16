@@ -29,8 +29,10 @@ namespace cg {
 		const Mac3d& grid;
 		const unsigned n_cells_x, n_cells_y, n_cells_z;
 
+		const double tau;
+
 	    // number of rows aka. len of rhs aka. len of res, guess vector ect.
-        const unsigned num_rows;
+        const unsigned num_cells;
 
         // initial guess
 	    double *p;
@@ -43,6 +45,9 @@ namespace cg {
 
 	    // search vector
 	    double *s;
+		
+		// diagonal of preconditioner matrix
+	    double *precon_diag;
 
 		// diagonal of matrix A
 		double* A_diag;
@@ -62,6 +67,7 @@ namespace cg {
         ~ICConjugateGradientSolver();
         ICConjugateGradientSolver(unsigned max_steps, const Mac3d& grid);
 
+		void computePreconDiag();
 		void applyPreconditioner(const double *r, double *z);
 		void applyA(const double *z, double *s);
 
@@ -99,16 +105,19 @@ cg::SparseMat::SparseMat(SparseMat &M): v(M.v), r(M.r){
 };
 */
 cg::ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, const Mac3d& grid)
-        :max_steps(max_steps),
+	:
 		grid{grid},
 		n_cells_x{grid.get_num_cells_x()}, n_cells_y{grid.get_num_cells_y()}, n_cells_z{grid.get_num_cells_z()},
-	num_rows{n_cells_x * n_cells_y * n_cells_z}
+		tau{0.97},
+		num_cells{n_cells_x * n_cells_y * n_cells_z},
+		max_steps(max_steps)
 {
     step = 0;
-    p = new double [num_rows];
-    r = new double [num_rows];
-    z = new double [num_rows];
-    s = new double [num_rows];
+    p = new double [num_cells];
+    r = new double [num_cells];
+    z = new double [num_cells];
+    s = new double [num_cells];
+    precon_diag = new double [num_cells];
 }
 
 cg::ICConjugateGradientSolver::~ICConjugateGradientSolver() {
@@ -116,6 +125,7 @@ cg::ICConjugateGradientSolver::~ICConjugateGradientSolver() {
     delete [] r;
     delete [] z;
     delete [] s;
+    delete [] precon_diag;
 
 }
 

@@ -12,6 +12,21 @@ void ICConjugateGradientSolver::applyPreconditioner(const double *r, double *z) 
 	}
 }
 
+void ICConjugateGradientSolver::computePreconDiag() {
+    unsigned cellidx = 0;
+	for (unsigned k = 0; k < n_cells_z; k++) {
+		for (unsigned j = 0; j < n_cells_y; j++) {
+			for (unsigned i = 0; i < n_cells_x; i++, cellidx++) {
+				double e = A_diag[cellidx]
+					- std::pow(-1 * precon_diag[cellidx-1], 2)
+					- std::pow(-1 * precon_diag[cellidx-n_cells_x], 2)
+					- std::pow(-1 * precon_diag[cellidx-n_cells_x * n_cells_y], 2);
+				precon_diag[cellidx] = 1 / std::sqrt(e + 1e-30);
+			}
+		}
+	}
+}
+
 // apply the matrix A
 // element order: k-j-i
 void ICConjugateGradientSolver::applyA(const double *z, double *s) {
@@ -69,38 +84,38 @@ void ICConjugateGradientSolver::applyA(const double *z, double *s) {
 
 void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
     // initialize initial guess and residual
-    std::fill(p,p+num_rows,0);
-    std::copy(rhs,rhs+num_rows,r);
+    std::fill(p,p+num_cells,0);
+    std::copy(rhs,rhs+num_cells,r);
 
 	applyPreconditioner(r, z);
-    std::copy(z,z+num_rows,s);
+    std::copy(z,z+num_cells,s);
 
-    double sigma = dot_product(z, r, num_rows);
+    double sigma = dot_product(z, r, num_cells);
 
 	// load A_diag
 
     for(unsigned step = 0; step < max_steps; step++){
 		applyA(z, s);
 
-        double dots = dot_product(z,s,num_rows);
+        double dots = dot_product(z,s,num_cells);
         double alpha = rho/dots;
 
-        sca_add_product(s,alpha,num_rows,p);
-        sca_add_product(z,-alpha,num_rows,r);
+        sca_add_product(s,alpha,num_cells,p);
+        sca_add_product(z,-alpha,num_cells,r);
 
         //check if exit cond is met : inf norm < then some thresh
 		{
 			bool thresh_exceeded = false;
-			for (double* el = r; el < r+num_rows; el++) {
+			for (double* el = r; el < r+num_cells; el++) {
 				if (std::abs(*el) > thresh) thresh_exceeded = true;
 			}
 			if (not thresh_exceeded) return;
 		}
 
 		applyPreconditioner(r, z);
-		sigma = dot_product(z, r, num_rows);
+		sigma = dot_product(z, r, num_cells);
         double beta = sigma * rho_inv;
         //Bug potential: aliasing
-        sca_product(s, beta, z, num_rows, s);
+        sca_product(s, beta, z, num_cells, s);
     }
 }

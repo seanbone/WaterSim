@@ -29,13 +29,20 @@ namespace cg {
 		const Mac3d& grid;
 		const unsigned n_cells_x, n_cells_y, n_cells_z;
 
+		const unsigned stride_x = 1;
+		const unsigned stride_y = n_cells_x;
+		const unsigned stride_z = n_cells_x * n_cells_y;
+
 		const double tau;
 
 	    // number of rows aka. len of rhs aka. len of res, guess vector ect.
         const unsigned num_cells;
 
-        // initial guess
+        // pressure
 	    double *p;
+		
+		// intermediate vector for pressure solution
+	    double *q;
 
 	    // residual vector
 	    double *r;
@@ -104,28 +111,15 @@ cg::SparseMat::SparseMat(SparseMat &M): v(M.v), r(M.r){
     int row_idx[r];
 };
 */
-cg::ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, const Mac3d& grid)
-	:
-		grid{grid},
-		n_cells_x{grid.get_num_cells_x()}, n_cells_y{grid.get_num_cells_y()}, n_cells_z{grid.get_num_cells_z()},
-		tau{0.97},
-		num_cells{n_cells_x * n_cells_y * n_cells_z},
-		max_steps(max_steps)
-{
-    step = 0;
-    p = new double [num_cells];
-    r = new double [num_cells];
-    z = new double [num_cells];
-    s = new double [num_cells];
-    precon_diag = new double [num_cells];
-}
 
 cg::ICConjugateGradientSolver::~ICConjugateGradientSolver() {
     delete [] p;
+    delete [] q;
     delete [] r;
     delete [] z;
     delete [] s;
     delete [] precon_diag;
+    delete [] A_diag;
 
 }
 

@@ -26,11 +26,11 @@ namespace cg {
 
 	    // preconditioner Matrix
 
-	    // number of rows aka. len of rhs aka. len of res, guess vector ect.
-        unsigned num_rows;
-
 		const Mac3d& grid;
 		const unsigned n_cells_x, n_cells_y, n_cells_z;
+
+	    // number of rows aka. len of rhs aka. len of res, guess vector ect.
+        const unsigned num_rows;
 
         // initial guess
 	    double *p;
@@ -43,6 +43,9 @@ namespace cg {
 
 	    // search vector
 	    double *s;
+
+		// diagonal of matrix A
+		double* A_diag;
 
         // current step and max steps
 	    unsigned step, max_steps;
@@ -99,9 +102,8 @@ cg::ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, con
         :max_steps(max_steps),
 		grid{grid},
 		n_cells_x{grid.get_num_cells_x()}, n_cells_y{grid.get_num_cells_y()}, n_cells_z{grid.get_num_cells_z()},
+	num_rows{n_cells_x * n_cells_y * n_cells_z}
 {
-    // the -1 is beacuse we assume a past the end entry for r
-    num_rows = M.r - 1;
     step = 0;
     p = new double [num_rows];
     r = new double [num_rows];

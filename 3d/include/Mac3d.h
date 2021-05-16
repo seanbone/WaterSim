@@ -183,7 +183,7 @@ class Mac3d{
 		 * Params:
 		 * - i, j, k indicate for which cell the physical property is asked.
 		 */
-		bool is_fluid(const unsigned i, const unsigned j, const unsigned k = 0);
+		bool is_fluid(const unsigned i, const unsigned j, const unsigned k = 0) const;
 		
 		/**Return if the cell with center (i,j,k) is empty (not solid && not fluid)
 		 * Params:
@@ -221,7 +221,7 @@ class Mac3d{
 		
 		/** Return a const-reference to the diagonal of the pressure's matrix A
 		 */
-		const std::vector< Triplet_t >& get_a_diag();
+		const std::vector< Triplet_t >& get_a_diag() const;
 		
 		/**Return the weights for u in the mathematical point (i-1/2, j, k)
 		 * Params:

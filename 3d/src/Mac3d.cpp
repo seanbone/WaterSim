@@ -731,7 +731,7 @@ bool Mac3d::is_solid(const unsigned i, const unsigned j, const unsigned k){
 	}
 }
 
-bool Mac3d::is_fluid(const unsigned i, const unsigned j, const unsigned k){
+bool Mac3d::is_fluid(const unsigned i, const unsigned j, const unsigned k) const{
 	if (i < N_ && j < M_ && k < L_)
 		return *(pfluid_ + N_*j + i + N_*M_*k);
 	else{ 
@@ -778,7 +778,7 @@ double Mac3d::get_weights_w(const unsigned i, const unsigned j, const unsigned k
 }
 
 //6. Diagonal of A -----------------------------------------------------
-const std::vector< Mac3d::Triplet_t >& Mac3d::get_a_diag() {
+const std::vector< Mac3d::Triplet_t >& Mac3d::get_a_diag() const {
 	return A_diag_;
 }
 

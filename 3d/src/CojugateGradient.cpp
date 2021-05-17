@@ -37,8 +37,8 @@ cg::ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, con
 void ICConjugateGradientSolver::applyPreconditioner(const double *r, double *z) {
     unsigned cellidx = stride_x + stride_y + stride_z;
 	// element 1,1,1
-	for (unsigned k = 1; k < n_cells_z; k++) {
-		for (unsigned j = 1; j < n_cells_y; j++) {
+	for (unsigned k = 1; k < n_cells_z; k++, cellidx += stride_z) {
+		for (unsigned j = 1; j < n_cells_y; j++, cellidx += stride_y) {
 			for (unsigned i = 1; i < n_cells_x; i++, cellidx++) {
 				double t = r[cellidx]
 					- (-1 * precon_diag[cellidx - stride_x] * q[cellidx - stride_x])
@@ -48,8 +48,8 @@ void ICConjugateGradientSolver::applyPreconditioner(const double *r, double *z) 
 			}
 		}
 	}
-	for (unsigned k = n_cells_z-1; k >= 1; k--) {
-		for (unsigned j = n_cells_y-1; j >= 1; j--) {
+	for (unsigned k = n_cells_z-1; k >= 1; k--, cellidx -= stride_z) {
+		for (unsigned j = n_cells_y-1; j >= 1; j--, cellidx -= stride_y) {
 			for (unsigned i = n_cells_x-1; i >= 1; i--, cellidx--) {
 				double t = q[cellidx]
 					- (-1 * precon_diag[cellidx] * z[cellidx + stride_x])
@@ -59,14 +59,14 @@ void ICConjugateGradientSolver::applyPreconditioner(const double *r, double *z) 
 			}
 		}
 	}
-    assert (cellidx = stride_x + stride_y + stride_z);
+    assert (cellidx == stride_x + stride_y + stride_z);
 }
 
 void ICConjugateGradientSolver::computePreconDiag() {
     unsigned cellidx = stride_x + stride_y + stride_z;
 	// Q: where is precon_diag[i=0|j=0|k=0] initialized?
-	for (unsigned k = 1; k < n_cells_z; k++) {
-		for (unsigned j = 1; j < n_cells_y; j++) {
+	for (unsigned k = 1; k < n_cells_z; k++, cellidx += stride_z) {
+		for (unsigned j = 1; j < n_cells_y; j++, cellidx += stride_y) {
 			for (unsigned i = 1; i < n_cells_x; i++, cellidx++) {
 				const double e = A_diag[cellidx]
 					- std::pow(-1 * precon_diag[cellidx-stride_x], 2)

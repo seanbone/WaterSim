@@ -25,6 +25,17 @@ class Mac3d{
 		 */
 		using globalCellIdx_t = int;
 
+		/**
+		 * Used to tell methods which grid to operate on.
+		 */
+		enum GRID { GRID_P, GRID_U, GRID_V, GRID_W, GRID_U_STAR, GRID_V_STAR, GRID_W_STAR };
+
+		/**
+		 * Offsets of the grids from the origin.
+		 * The first entry of grid GRID will be at spatial coordinates GRID_OFFSETS[GRID].
+		 */
+		double GRID_OFFSETS[7][3];
+
 		//------------------- GRID Properties --------------------------
 		//number of cells respectively in x-direction,
 		//y-direction, z-direction
@@ -575,6 +586,294 @@ class Mac3d{
 		}
 
 
-		/********** END WIP INTERPOLATION **********/
+		template<GRID grid_name>
+		double grid_interpolate(double pos_x, double pos_y, double pos_z) {
+			// We are working on the staggered grid - that is, the grid where the pressures
+			// (or velocities) are not the the center of the cells (cell faces), but at the
+			// intersection points of the grid. Therefore we have one fewer cell on each axis.
+			unsigned nx;
+			unsigned ny;
+			unsigned nz;
+			double* g;
+			// The different arrays have different dimensions
+			// get_grid_properties is a funky template hack to have this evaluation done at compile time
+			get_grid_properties<grid_name>(nx, ny, nz, g);
+
+			const double& offset_x = GRID_OFFSETS[grid_name][0];
+			const double& offset_y = GRID_OFFSETS[grid_name][1];
+			const double& offset_z = GRID_OFFSETS[grid_name][2];
+
+			double pos_x_offset = pos_x - offset_x;
+			double pos_y_offset = pos_y - offset_y;
+			double pos_z_offset = pos_z - offset_z;
+
+			int cell_x = pos_x_offset * rcell_sizex_;
+			int cell_y = pos_y_offset * rcell_sizey_;
+			int cell_z = pos_z_offset * rcell_sizez_;
+
+			int i000 = (cell_x    ) + nx * (cell_y    ) + ny * nx * (cell_z    );
+			double min_x = offset_x + cell_sizex_*cell_x;
+			double min_y = offset_y + cell_sizey_*cell_y;
+			double min_z = offset_z + cell_sizez_*cell_z;
+
+			bool inside_left = pos_x_offset > 0;
+			bool inside_right = pos_x_offset < (nx-1) * cell_sizex_;
+			bool inside_bottom = pos_y_offset > 0;
+			bool inside_top = pos_y_offset < (ny-1) * cell_sizey_;
+			bool inside_front = pos_z_offset > 0;
+			bool inside_back = pos_z_offset < (nz-1) * cell_sizez_;
+
+			bool inside = inside_left && inside_right && inside_bottom && inside_top && inside_front && inside_back;
+			if (!inside) {
+				if (!inside_left) {
+					if (!inside_top) {
+						// linear interpolation on top-left edge
+						int i0 = nx*(ny-1) + nx*ny*cell_z;
+						int i1 = i0 + nx*ny;
+						return linear_interpolation(g[i0], g[i1], min_z, rcell_sizez_, pos_z);
+					} else if (!inside_bottom) {
+						// linear interpolation on bottom-left edge
+						int i0 = nx*ny*cell_z;
+						int i1 = i0 + nx*ny;
+						//std::cout << "<<<<\n";
+						//std::cout << i0 << std::endl;
+						//std::cout << i1 << std::endl;
+						//std::cout << g[i0] << std::endl;
+						//std::cout << g[i1] << std::endl;
+						//std::cout << "min_z " << min_z << std::endl;
+						//std::cout << "rcell_size_z " << rcell_sizez_ << std::endl;
+						//std::cout << "pos_z " << pos_z << std::endl;
+						//std::cout << "<<<<\n";
+						return linear_interpolation(g[i0], g[i1], min_z, rcell_sizez_, pos_z);
+					} else if (!inside_front) {
+						// linear interpolation on front-left edge
+						int i0 = nx*cell_y;
+						int i1 = i0 + nx;
+						return linear_interpolation(g[i0], g[i1], min_y, rcell_sizey_, pos_y);
+					} else if (!inside_back) {
+						// linear interpolation on back-left edge
+						int i0 = nx*cell_y + nx*ny*(nz-1);
+						int i1 = i0 + nx;
+						return linear_interpolation(g[i0], g[i1], min_y, rcell_sizey_, pos_y);
+					} else {
+						// Bilinear interpolation on left face
+						std::cout << " * Bilinear on left face" << std::endl;
+						int i00 = nx*cell_y + nx*ny*cell_z;
+						int i01 = i00 + nx*ny;
+						int i10 = i00 + nx;
+						int i11 = i00 + nx + nx*ny;
+						return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
+									min_z, min_y, rcell_sizez_, rcell_sizey_, pos_z, pos_y);
+					}
+				} else if (!inside_right) {
+					if (!inside_top) {
+						// Linear interpolation on right-top edge
+						int i0 = nx-1 + nx*(ny-1) + nx*ny*cell_z;
+						int i1 = i0 + nx*ny;
+						return linear_interpolation(g[i0], g[i1], min_z, rcell_sizez_, pos_z);
+					} else if (!inside_bottom) {
+						// Linear interpolation on right-bottom edge
+						int i0 = nx-1 + nx*ny*cell_z;
+						int i1 = i0 + nx*ny;
+						return linear_interpolation(g[i0], g[i1], min_z, rcell_sizez_, pos_z);
+					} else if (!inside_front) {
+						// Linear interpolation on right-front edge
+						int i0 = nx-1 + nx*cell_y;
+						int i1 = i0 + nx;
+						return linear_interpolation(g[i0], g[i1], min_y, rcell_sizey_, pos_y);
+					} else if (!inside_back) {
+						// Linear interpolation on right-back edge
+						int i0 = nx-1 + nx*cell_y + nx*ny*(nz-1);
+						int i1 = i0 + nx;
+						return linear_interpolation(g[i0], g[i1], min_y, rcell_sizey_, pos_y);
+					} else {
+						// Bilinear on right face
+						std::cout << " * Bilinear on right face" << std::endl;
+						int i00 = nx-1 + nx*cell_y + nx*ny*cell_z;
+						int i01 = i00 + nx*ny;
+						int i10 = i00 + nx;
+						int i11 = i00 + nx + nx*ny;
+						return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
+						                              min_z, min_y, rcell_sizez_, rcell_sizey_, pos_z, pos_y);
+					}
+				} // we now know that inside_left && inside_right
+				else if (!inside_top) {
+					if (!inside_front) {
+						// Linear interpolation on top-front edge
+						int i0 = cell_x + nx*(ny-1);
+						int i1 = i0+1;
+						return linear_interpolation(g[i0], g[i1], min_x, rcell_sizex_, pos_x);
+					} else if (!inside_back) {
+						// Linear interpolation on top-back edge
+						int i0 = cell_x + nx*(ny-1) + nx*ny*(nz-1);
+						int i1 = i0+1;
+						return linear_interpolation(g[i0], g[i1], min_x, rcell_sizex_, pos_x);
+					} else {
+						// bilinear on top face
+						int i00 = cell_x + nx * (ny-1) + nx*ny*cell_z;
+						int i01 = i00 + 1;
+						int i10 = i00 + nx*ny;
+						int i11 = i10 + 1;
+						//std::cout << "bilinear interp" << std::endl;
+						//std::cout << "cell_x " << cell_x << std::endl;
+						//std::cout << "cell_y " << cell_y << std::endl;
+						//std::cout << "cell_z " << cell_z << std::endl;
+						//std::cout << "min_x " << min_x << std::endl;
+						//std::cout << "min_y " << min_y << std::endl;
+						//std::cout << "min_z " << min_z << std::endl;
+						//std::cout << "cell_sizex_ " << cell_sizex_ << std::endl;
+						//std::cout << "cell_sizey_ " << cell_sizey_ << std::endl;
+						//std::cout << "cell_sizez_ " << cell_sizez_ << std::endl;
+						//std::cout << "pos_x " << pos_x << std::endl;
+						//std::cout << "pos_y " << pos_y << std::endl;
+						//std::cout << "pos_z " << pos_z << std::endl;
+						//std::cout << i00 << std::endl;
+						//std::cout << i01 << std::endl;
+						//std::cout << i10 << std::endl;
+						//std::cout << i11 << std::endl;
+						//std::cout << g[i00] << std::endl;
+						//std::cout << g[i01] << std::endl;
+						//std::cout << g[i10] << std::endl;
+						//std::cout << g[i11] << std::endl;
+						return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
+						                              min_x, min_z, rcell_sizex_, rcell_sizez_, pos_x, pos_z);
+					}
+				} else if (!inside_bottom) {
+					if (!inside_front) {
+						// Linear interpolation on bottom-front edge
+						int i0 = cell_x;
+						int i1 = i0+1;
+						return linear_interpolation(g[i0], g[i1], min_x, rcell_sizex_, pos_x);
+					} else if (!inside_back) {
+						// Linear interpolation on bottom-back
+						int i0 = cell_x + nx*ny*(nz-1);
+						int i1 = i0+1;
+						return linear_interpolation(g[i0], g[i1], min_x, rcell_sizex_, pos_x);
+					} else {
+						// Bilinear interpolation on bottom face
+						int i00 = cell_x + nx*ny*cell_z;
+						int i01 = i00 + 1;
+						int i10 = i00 + nx*ny;
+						int i11 = i10 + 1;
+						return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
+						                              min_x, min_z, rcell_sizex_, rcell_sizez_, pos_x, pos_z);
+					}
+				} else if (!inside_front) {
+					// Bilinear interpolation on front face
+					int i00 = cell_x + nx*cell_y;
+					int i01 = i00 + nx;
+					int i10 = i00 + 1;
+					int i11 = i10 + nx;
+					return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
+					                              min_x, min_y, rcell_sizex_, rcell_sizey_, pos_x, pos_y);
+				} else {
+					// Bilinear interpolation on back face
+					int i00 = cell_x + nx*cell_y + nx*ny*(nz-1);
+					int i01 = i00 + nx;
+					int i10 = i00 + 1;
+					int i11 = i10 + nx;
+					return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
+					                              min_x, min_y, rcell_sizex_, rcell_sizey_, pos_x, pos_y);
+				}
+			}
+
+			int i001 = (cell_x    ) + nx * (cell_y    ) + ny * nx * (cell_z + 1);
+			int i010 = (cell_x    ) + nx * (cell_y + 1) + ny * nx * (cell_z    );
+			int i011 = (cell_x    ) + nx * (cell_y + 1) + ny * nx * (cell_z + 1);
+			int i100 = (cell_x + 1) + nx * (cell_y    ) + ny * nx * (cell_z    );
+			int i101 = (cell_x + 1) + nx * (cell_y    ) + ny * nx * (cell_z + 1);
+			int i110 = (cell_x + 1) + nx * (cell_y + 1) + ny * nx * (cell_z    );
+			int i111 = (cell_x + 1) + nx * (cell_y + 1) + ny * nx * (cell_z + 1);
+
+			/*
+			std::cout << "cell_x " << cell_x << std::endl;
+			std::cout << "cell_y " << cell_y << std::endl;
+			std::cout << "cell_z " << cell_z << std::endl;
+			std::cout << i000 << std::endl;
+			std::cout << i100 << std::endl;
+			std::cout << i010 << std::endl;
+			std::cout << i110 << std::endl;
+			std::cout << i001 << std::endl;
+			std::cout << i101 << std::endl;
+			std::cout << i011 << std::endl;
+			std::cout << i111 << std::endl;
+			 */
+
+			return trilinear_interpolation(g[i000], g[i001], g[i010], g[i011],
+								           g[i100], g[i101], g[i110], g[i111],
+								           min_x, min_y, min_z,
+								           rcell_sizex_, rcell_sizey_, rcell_sizez_,
+								           pos_x, pos_y, pos_z);
+		}
+
+		template<GRID grid_type>
+		double grid_interpolate_marginal(double pos_x, double pos_y, double pos_z) {
+
+		}
+
+		template<GRID grid_type>
+		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid) {
+			get_grid_properties(nx, ny, nz, grid, Identity<grid_type>());
+		}
+
+	private:
+		template<GRID grid_type>
+		struct Identity { };
+
+		template<GRID grid_type>
+		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid, Identity<grid_type>) {
+			throw std::runtime_error("[Mac3d::get_grid_properties] Invalid grid type!");
+		}
+
+		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid, Identity<GRID_P>) {
+			nx = M_;
+			ny = N_;
+			nz = L_;
+			grid = ppressure_;
+		}
+
+		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid, Identity<GRID_U>) {
+			nx = M_+1;
+			ny = N_;
+			nz = L_;
+			grid = pu_;
+		}
+
+		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid, Identity<GRID_V>) {
+			nx = M_;
+			ny = N_+1;
+			nz = L_;
+			grid = pv_;
+		}
+
+		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid, Identity<GRID_W>) {
+			nx = M_;
+			ny = N_;
+			nz = L_+1;
+			grid = pw_;
+		}
+
+		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid, Identity<GRID_U_STAR>) {
+			nx = M_+1;
+			ny = N_;
+			nz = L_;
+			grid = pu_star_;
+		}
+
+		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid, Identity<GRID_V_STAR>) {
+			nx = M_;
+			ny = N_+1;
+			nz = L_;
+			grid = pv_star_;
+		}
+
+		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid, Identity<GRID_W_STAR>) {
+			nx = M_;
+			ny = N_;
+			nz = L_+1;
+			grid = pw_star_;
+		}
+
+	/********** END WIP INTERPOLATION **********/
 };
 #endif

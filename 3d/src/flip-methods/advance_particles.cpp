@@ -119,6 +119,22 @@ void FLIP::advance_particles(const double dt, const unsigned long step) {
 		y_next = y_particle + dt*MACGrid_->get_interp_v(x_half, y_half, z_half);
 		z_next = z_particle + dt*MACGrid_->get_interp_w(x_half, y_half, z_half);
 
+		//double x_next2 = x_particle + dt*MACGrid_->grid_interpolate<Mac3d::GRID_U>(x_half, y_half, z_half);
+		double y_next2 = y_particle + dt*MACGrid_->grid_interpolate<Mac3d::GRID_V>(x_half, y_half, z_half);
+		//double z_next2 = z_particle + dt*MACGrid_->grid_interpolate<Mac3d::GRID_W>(x_half, y_half, z_half);
+		if (std::abs(y_next - y_next2)/y_next > 1e-11) {
+			std::cout << y_next / MACGrid_->cell_sizey_ << std::endl;
+			std::cout << y_next2 / MACGrid_->cell_sizey_ << std::endl;
+			std::cout << std::endl;
+			std::cout << x_half / MACGrid_->cell_sizex_ << std::endl;
+			std::cout << y_half / MACGrid_->cell_sizey_ << std::endl;
+			std::cout << z_half / MACGrid_->cell_sizez_ << std::endl;
+			std::cout << "********************************************************************************" << std::endl;
+		}
+		//x_next = x_particle + dt*MACGrid_->grid_interpolate<Mac3d::GRID_U>(x_half, y_half, z_half);
+		//y_next = y_particle + dt*MACGrid_->grid_interpolate<Mac3d::GRID_V>(x_half, y_half, z_half);
+		//z_next = z_particle + dt*MACGrid_->grid_interpolate<Mac3d::GRID_W>(x_half, y_half, z_half);
+
 		// Check if the particle exits the grid
 		if(x_next <= x_lower_bound) x_next = 0.;
 		if(y_next <= y_lower_bound) y_next = 0.;

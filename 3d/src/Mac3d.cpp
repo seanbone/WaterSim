@@ -13,6 +13,34 @@ Mac3d::Mac3d(const unsigned n, const unsigned m, const unsigned l,
 
 	//Initialization of the diagonal of A
 	initAdiag();
+
+	GRID_OFFSETS[GRID_P][0] = 0;
+	GRID_OFFSETS[GRID_P][1] = 0;
+	GRID_OFFSETS[GRID_P][2] = 0;
+
+	GRID_OFFSETS[GRID_U][0] = -0.5 * cell_sizex_;
+	GRID_OFFSETS[GRID_U][1] = 0;
+	GRID_OFFSETS[GRID_U][2] = 0;
+
+	GRID_OFFSETS[GRID_U_STAR][0] = -0.5 * cell_sizex_;
+	GRID_OFFSETS[GRID_U_STAR][1] = 0;
+	GRID_OFFSETS[GRID_U_STAR][2] = 0;
+
+	GRID_OFFSETS[GRID_V][0] = 0;
+	GRID_OFFSETS[GRID_V][1] = -0.5 * cell_sizey_;
+	GRID_OFFSETS[GRID_V][2] = 0;
+
+	GRID_OFFSETS[GRID_V_STAR][0] = 0;
+	GRID_OFFSETS[GRID_V_STAR][1] = -0.5 * cell_sizey_;
+	GRID_OFFSETS[GRID_V_STAR][2] = 0;
+
+	GRID_OFFSETS[GRID_W][0] = 0;
+	GRID_OFFSETS[GRID_W][1] = 0;
+	GRID_OFFSETS[GRID_W][2] = -0.5 * cell_sizez_;
+
+	GRID_OFFSETS[GRID_W_STAR][0] = 0;
+	GRID_OFFSETS[GRID_W_STAR][1] = 0;
+	GRID_OFFSETS[GRID_W_STAR][2] = -0.5 * cell_sizez_;
 }
 
 void Mac3d::initArrays() {

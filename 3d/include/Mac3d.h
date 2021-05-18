@@ -448,5 +448,133 @@ class Mac3d{
 							   Mac3d::cellIdx_t &cell_idx_x, 
 							   Mac3d::cellIdx_t &cell_idx_y, 
 							   Mac3d::cellIdx_t &cell_idx_z );
+
+
+
+		/********** WIP INTERPOLATION **********/
+
+
+		/**
+		 * Perform linear interpolation on the normalized [0, 1] domain.
+		 * @param value0 	Value at position x=0
+		 * @param value1 	Value at position x=1
+		 * @param alpha 	Position in the [0, 1] space to interpolate to
+		 */
+		static inline double linear_interpolation_normalized(double value0, double value1, double alpha) {
+			return value0 + alpha * (value1 - value0);
+		}
+
+		/**
+		 * Perform bilinear interpolation on the normalized [0,1]x[0,1] domain.
+		 * @param v00 	Value at position (0, 0)
+		 * @param v01 	Value at position (0, 1)
+		 * @param v10 	Value at position (1, 0)
+		 * @param v11 	Value at position (1, 1)
+		 * @param alpha	Position on the x-axis in [0, 1] space to interpolate to
+		 * @param beta 	Position on the y-axis in [0, 1] space to interpolate to
+		 */
+		static inline double bilinear_interpolation_normalized(double v00, double v01,
+		                                                       double v10, double v11,
+		                                                       double alpha, double beta) {
+			double v0 = (v00 + alpha*(v10 - v00));
+			double v1 = (v01 + alpha*(v11 - v01));
+			return v0 + beta*(v1 - v0);
+		}
+
+
+		/**
+		 * Perform trilinear interpolation on the normalized [0,1]x[0,1]x[0,1] domain.
+		 * @param v000	Value at position (0, 0, 0)
+		 * @param v001	Value at position (0, 0, 1)
+		 * @param v010	Value at position (0, 1, 0)
+		 * @param v011	Value at position (0, 1, 1)
+		 * @param v100	Value at position (1, 0, 0)
+		 * @param v101	Value at position (1, 0, 1)
+		 * @param v110	Value at position (1, 1, 0)
+		 * @param v111	Value at position (1, 1, 1)
+		 * @param alpha Position on the x-axis in [0, 1] space to interpolate to
+		 * @param beta 	Position on the y-axis in [0, 1] space to interpolate to
+		 * @param gamma Position on the z-axis in [0, 1] space to interpolate to
+		 */
+		static inline double trilinear_interpolation_normalized(double v000, double v001, double v010, double v011,
+		                                                        double v100, double v101, double v110, double v111,
+		                                                        double alpha, double beta, double gamma) {
+			double v00 = v000 + alpha*(v100 - v000);
+			double v01 = v001 + alpha*(v101 - v001);
+			double v10 = v010 + alpha*(v110 - v010);
+			double v11 = v011 + alpha*(v111 - v011);
+
+			double v0 = v00 + beta*(v10 - v00);
+			double v1 = v01 + beta*(v11 - v01);
+
+			return v0 + gamma*(v1 - v0);
+		}
+
+
+		/**
+		 * Perform linear interpolation on the general [min_pos, min_pos + 1/r_size] domain.
+		 * @param v0 		Value at start of the domain, x = min_pos.
+		 * @param v1 		Value at end of the domain, x = min_pos + 1/r_size.
+		 * @param min_pos 	Start of domain.
+		 * @param r_size	Reciprocal of the size of the domain.
+		 * @param pos 		Position to interpolate to.
+		 */
+		static inline double linear_interpolation(double v0, double v1, double min_pos, double r_size, double pos) {
+			double alpha = (pos - min_pos) * r_size;
+			return linear_interpolation_normalized(v0, v1, alpha);
+		}
+
+		/**
+		 * Perform bilinear interpolation on the general
+		 * [x_min, x_min + 1/r_size_x] x [y_min, y_min + 1/r_size_y] domain.
+		 * @param v00 		Value at position (x_min, y_min)
+		 * @param v01  		Value at position (x_min, y_min + 1/r_size_y)
+		 * @param v10  		Value at position (x_min + 1/r_size_x, y_min)
+		 * @param v11 		Value at position (x_min + 1/r_size_x, y_min + 1/r_size_y)
+		 * @param min_x 	Start of domain in X axis.
+		 * @param min_y 	Start of domain in Y axis.
+		 * @param r_size_x 	Reciprocal of the domain size on the X axis.
+		 * @param r_size_y 	Reciprocal of the domain size on the Y axis.
+		 * @param pos_x 	Position to interpolate to on X axis.
+		 * @param pos_y 	Position to interpolate to on Y axis.
+		 */
+		static inline double bilinear_interpolation(double v00, double v01,
+		                                            double v10, double v11,
+		                                            double min_x, double min_y,
+		                                            double r_size_x, double r_size_y,
+		                                            double pos_x, double pos_y) {
+			double alpha = (pos_x - min_x) * r_size_x;
+			double beta  = (pos_y - min_y) * r_size_y;
+			return bilinear_interpolation_normalized(v00, v01, v10, v11, alpha, beta);
+		}
+
+		/**
+		 * Perform trilinear interpolation on the general domain
+		 * [x_min, x_min + 1/r_size_x] x [y_min, y_min + 1/r_size_y] x [z_min, z_min + 1/r_size_z]
+		 * @param min_x  	Start of domain in X axis.
+		 * @param min_y  	Start of domain in Y axis.
+		 * @param min_z   	Start of domain in Z axis.
+		 * @param r_size_x 	Reciprocal of the domain size on the X axis.
+		 * @param r_size_y 	Reciprocal of the domain size on the Y axis.
+		 * @param r_size_z 	Reciprocal of the domain size on the Z axis.
+		 * @param pos_x 	Position to interpolate to on X axis.
+		 * @param pos_y 	Position to interpolate to on Y axis.
+		 * @param pos_z 	Position to interpolate to on Z axis.
+		 */
+		static inline double trilinear_interpolation(double v000, double v001, double v010, double v011,
+		                                             double v100, double v101, double v110, double v111,
+		                                             double min_x, double min_y, double min_z,
+		                                             double r_size_x, double r_size_y, double r_size_z,
+		                                             double pos_x, double pos_y, double pos_z) {
+			double alpha = (pos_x - min_x) * r_size_x;
+			double beta  = (pos_y - min_y) * r_size_y;
+			double gamma = (pos_z - min_z) * r_size_z;
+			return trilinear_interpolation_normalized(v000, v001, v010, v011,
+											          v100, v101, v110, v111,
+											          alpha, beta, gamma);
+		}
+
+
+		/********** END WIP INTERPOLATION **********/
 };
 #endif

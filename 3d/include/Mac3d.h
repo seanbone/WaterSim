@@ -591,14 +591,36 @@ class Mac3d{
 			// We are working on the staggered grid - that is, the grid where the pressures
 			// (or velocities) are not the the center of the cells (cell faces), but at the
 			// intersection points of the grid. Therefore we have one fewer cell on each axis.
-			unsigned nx;
-			unsigned ny;
-			unsigned nz;
+			unsigned nx = N_;
+			unsigned ny = M_;
+			unsigned nz = L_;
 			double* g;
-			// The different arrays have different dimensions
-			// get_grid_properties is a funky template hack to have this evaluation done at compile time
-			get_grid_properties<grid_name>(nx, ny, nz, g);
 
+			// The different arrays have different dimensions
+			// `if constexpr` is evaluated at compile time
+			if constexpr(grid_name == GRID_P) { // TODO: remove support for interpolation on P
+				g = ppressure_;
+			} else if constexpr(grid_name == GRID_U) {
+				nx += 1;
+				g = pu_;
+			} else if constexpr(grid_name == GRID_U_STAR) {
+				nx += 1;
+				g = pu_star_;
+			} else if constexpr(grid_name == GRID_V) {
+				ny += 1;
+				g = pv_;
+			} else if constexpr(grid_name == GRID_V_STAR) {
+				ny += 1;
+				g = pv_star_;
+			} else if constexpr(grid_name == GRID_W) {
+				nz += 1;
+				g = pw_;
+			} else if constexpr(grid_name == GRID_W_STAR) {
+				nz += 1;
+				g = pw_star_;
+			}
+
+			// TODO: do this inside the ifs above instead
 			const double& offset_x = GRID_OFFSETS[grid_name][0];
 			const double& offset_y = GRID_OFFSETS[grid_name][1];
 			const double& offset_z = GRID_OFFSETS[grid_name][2];
@@ -761,70 +783,6 @@ class Mac3d{
 								           rcell_sizex_, rcell_sizey_, rcell_sizez_,
 								           pos_x, pos_y, pos_z);
 		}
-
-		template<GRID grid_type>
-		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid) {
-			get_grid_properties(nx, ny, nz, grid, Identity<grid_type>());
-		}
-
-	private:
-		template<GRID grid_type>
-		struct Identity { };
-
-		template<GRID grid_type>
-		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid, Identity<grid_type>) {
-			throw std::runtime_error("[Mac3d::get_grid_properties] Invalid grid type!");
-		}
-
-		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid, Identity<GRID_P>) {
-			nx = N_;
-			ny = M_;
-			nz = L_;
-			grid = ppressure_;
-		}
-
-		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid, Identity<GRID_U>) {
-			nx = N_+1;
-			ny = M_;
-			nz = L_;
-			grid = pu_;
-		}
-
-		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid, Identity<GRID_V>) {
-			nx = N_;
-			ny = M_+1;
-			nz = L_;
-			grid = pv_;
-		}
-
-		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid, Identity<GRID_W>) {
-			nx = N_;
-			ny = M_;
-			nz = L_+1;
-			grid = pw_;
-		}
-
-		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid, Identity<GRID_U_STAR>) {
-			nx = N_+1;
-			ny = M_;
-			nz = L_;
-			grid = pu_star_;
-		}
-
-		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid, Identity<GRID_V_STAR>) {
-			nx = N_;
-			ny = M_+1;
-			nz = L_;
-			grid = pv_star_;
-		}
-
-		inline void get_grid_properties(unsigned& nx, unsigned& ny, unsigned& nz, double*& grid, Identity<GRID_W_STAR>) {
-			nx = N_;
-			ny = M_;
-			nz = L_+1;
-			grid = pw_star_;
-		}
-
 	/********** END WIP INTERPOLATION **********/
 };
 #endif

@@ -12,21 +12,15 @@ void FLIP::apply_forces(const double dt) {
     // Apply them to the velocity field via forward euler
     // Only worry about gravity for now
 
-    // Alias for MAC Grid
-    auto& g = MACGrid_;
+    // Get total number of faces on the y-axis
+    const Mac3d::globalCellIdx_t n_vfaces = MACGrid_->N_ * MACGrid_->L_ * (MACGrid_->M_+1);
 
-    // Get total number of cells on each axis
-    const unsigned N = g->get_num_cells_x();
-    const unsigned M = g->get_num_cells_y();
-    const unsigned L = g->get_num_cells_z();
+    const double dv = -dt * gravity_mag_;
 
     // Iterate over cells & update: dv = dt*g
-    for(unsigned k = 0; k < L; ++k){
-        for (unsigned j = 0; j <= M; ++j){
-            for (unsigned i = 0; i < N; ++i){
-                g->set_v(i, j, k, g->get_v(i,j,k) - dt*gravity_mag_);
-            }
-        }
+    for(Mac3d::globalCellIdx_t idx = 0; idx < n_vfaces; ++idx){
+
+        MACGrid_->pv_[idx] += dv;
     }
 }
 

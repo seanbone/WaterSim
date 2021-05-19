@@ -291,9 +291,11 @@ double Mac3d::get_u(const unsigned i, const unsigned j, const unsigned k){
 }
 
 double Mac3d::get_v(const unsigned i, const unsigned j, const unsigned k){
-	if (i < N_ && j < (M_+1) && k < L_)
-		return *(pv_ + N_*j + i + N_*(M_+1)*k);
-	else{ 
+	if (i < N_ && j < (M_+1) && k < L_) {
+		//if (i == 0 && j == 1 && k == 0)
+		//	std::cout << "-> " << N_ * j + i + N_ * (M_ + 1) * k << std::endl;
+		return *(pv_ + N_ * j + i + N_ * (M_ + 1) * k);
+	} else {
 		std::cout << "Calling get_v: Index (" << i << ", " << j << ", " << k << ") out of bounds!" << std::endl;
 		return 0;
 	}
@@ -522,11 +524,19 @@ double Mac3d::get_interp_v(double x, double y, double z, const bool use_v_star){
 	iy1 = iy0 + 1;
 	y0 = (iy0-0.5)*cell_sizey_;
 	y1 = (iy1-0.5)*cell_sizey_;
-	
+
+	//if (verbose) {
+	//	std::cout << " + " << x << std::endl;
+	//	std::cout << " + " << y << std::endl;
+	//	std::cout << " + " << z << std::endl;
+	//}
+
 	//Assigning of the indices and the values in x and z
 	//and trilinear interpolation
 	if(x >= 0 && x <= sizex_ - cell_sizex_){
 		if(z >= 0 && z <= sizez_ - cell_sizez_){
+			//if (verbose)
+			//	std::cout << " + Trilinear" << std::endl;
 			assign_x(x, indices[0], ix0, ix1, x0, x1);
 			assign_z(z, indices[2], iz0, iz1, z0, z1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);			
@@ -571,23 +581,43 @@ double Mac3d::get_interp_v(double x, double y, double z, const bool use_v_star){
 	}
 	else if (x < 0){
 		if(z >= 0 && z <= sizez_ - cell_sizez_){
+			//if (verbose)
+			//	std::cout << " + Bilinear on left face" << std::endl;
 			assign_z(z, indices[2], iz0, iz1, z0, z1);
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
 			v00 = (this->*get_vel)(0, iy0, iz0);
 			v01 = (this->*get_vel)(0, iy0, iz1);
 			v10 = (this->*get_vel)(0, iy1, iz0);
 			v11 = (this->*get_vel)(0, iy1, iz1);
+			//if (verbose) {
+			//	std::cout << "+++ Values:" << std::endl;
+			//	std::cout << " + " << v00 << std::endl;
+			//	std::cout << " + " << v01 << std::endl;
+			//	std::cout << " + " << v10 << std::endl;
+			//	std::cout << " + " << v11 << std::endl;
+			//	std::cout << "+++ Indices:" << std::endl;
+			//	std::cout << " + " << iy0 << " " << iz0 << std::endl;
+			//	std::cout << " + " << iy0 << " " << iz1 << std::endl;
+			//	std::cout << " + " << iy1 << " " << iz0 << std::endl;
+			//	std::cout << " + " << iy1 << " " << iz1 << std::endl;
+			//	std::cout << " + yd: " << yd << std::endl;
+			//	std::cout << " + zd: " << zd << std::endl;
+			//}
 			v0 = v00*(1-yd) + v10*yd;
 			v1 = v01*(1-yd) + v11*yd;
 			return v0*(1-zd) + v1*zd;
 		}
 		else if (z < 0){
+			//if (verbose)
+			//	std::cout << " + Linear on front-left edge" << std::endl;
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
 			v0 = (this->*get_vel)(0, iy0, 0);
 			v1 = (this->*get_vel)(0, iy1, 0);
 			return v0*(1-yd) + v1*yd;				
 		}
 		else{
+			//if (verbose)
+			//	std::cout << " + Linear on back-left edge" << std::endl;
 			assign_d(xd, yd, zd, x0, x1, y0, y1, z0, z1, x, y, z);
 			v0 = (this->*get_vel)(0, iy0, L_-1);
 			v1 = (this->*get_vel)(0, iy1, L_-1);

@@ -113,7 +113,7 @@ int main() {
 		double pz = norm_pz * mac.cell_sizez_ + offset_z;
 
 		double expected = Mac3d::bilinear_interpolation_normalized(
-				g[0], g[30], g[6], g[36], norm_pz, norm_py);
+				g[0], g[30], g[6], g[36], norm_py, norm_pz);
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
@@ -207,7 +207,7 @@ int main() {
 		double pz = norm_pz * mac.cell_sizez_ + offset_z;
 
 		double expected = Mac3d::bilinear_interpolation_normalized(
-				g[5], g[35], g[11], g[41], norm_pz, norm_py);
+				g[5], g[35], g[11], g[41], norm_py, norm_pz);
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
@@ -266,7 +266,7 @@ int main() {
 		double pz = norm_pz * mac.cell_sizez_ + offset_z;
 
 		double expected = Mac3d::bilinear_interpolation_normalized(
-				g[55], g[56], g[85], g[86], norm_px-int(norm_px), norm_pz-int(norm_pz));
+				g[55], g[56], g[85], g[86], norm_pz-int(norm_pz), norm_px-int(norm_px));
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
@@ -325,7 +325,7 @@ int main() {
 		double pz = norm_pz * mac.cell_sizez_ + offset_z;
 
 		double expected = Mac3d::bilinear_interpolation_normalized(
-				g[31], g[32], g[61], g[62], norm_px-int(norm_px), norm_pz-int(norm_pz));
+				g[31], g[32], g[61], g[62], norm_pz-int(norm_pz), norm_px-int(norm_px));
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 

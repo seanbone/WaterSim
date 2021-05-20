@@ -42,13 +42,9 @@ int main() {
 
 		double expected = 4986; // (54**2 + 84**2)/2
 
-		/*
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
-		 */
 		double ret1, ret2;
 		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
 		assert(std::abs(expected - ret1) < interpolation_tolerance);
@@ -69,8 +65,10 @@ int main() {
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 	{
@@ -87,8 +85,10 @@ int main() {
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 	{
@@ -105,8 +105,10 @@ int main() {
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 	{
@@ -120,13 +122,9 @@ int main() {
 
 		double expected = Mac3d::bilinear_interpolation_normalized(
 				g[0], g[30], g[6], g[36], norm_py, norm_pz);
-		/*
+
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
-
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
-		 */
 
 		double ret1, ret2;
 		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
@@ -152,8 +150,10 @@ int main() {
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 	{
@@ -170,8 +170,10 @@ int main() {
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 	{
@@ -188,8 +190,10 @@ int main() {
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 	{
@@ -206,8 +210,10 @@ int main() {
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 	{
@@ -221,11 +227,14 @@ int main() {
 
 		double expected = Mac3d::bilinear_interpolation_normalized(
 				g[5], g[35], g[11], g[41], norm_py, norm_pz);
+
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 
@@ -247,8 +256,10 @@ int main() {
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 	{
@@ -265,8 +276,10 @@ int main() {
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 	{
@@ -280,11 +293,14 @@ int main() {
 
 		double expected = Mac3d::bilinear_interpolation_normalized(
 				g[55], g[56], g[85], g[86], norm_pz-int(norm_pz), norm_px-int(norm_px));
+
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 
@@ -306,8 +322,10 @@ int main() {
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 	{
@@ -324,8 +342,10 @@ int main() {
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 	{
@@ -339,16 +359,14 @@ int main() {
 
 		double expected = Mac3d::bilinear_interpolation_normalized(
 				g[31], g[32], g[61], g[62], norm_pz-int(norm_pz), norm_px-int(norm_px));
+
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
-		/*
-		std::cout << "expected " << expected << std::endl;
-		std::cout << "returned " << returned << std::endl;
-		 */
-
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 
@@ -367,11 +385,14 @@ int main() {
 
 		double expected = Mac3d::bilinear_interpolation_normalized(
 				g[7], g[13], g[8], g[14], norm_px-1, norm_py-1);
+
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 
@@ -390,11 +411,14 @@ int main() {
 
 		double expected = Mac3d::bilinear_interpolation_normalized(
 				g[127], g[133], g[128], g[134], norm_px-1, norm_py-1);
+
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 
@@ -415,12 +439,6 @@ int main() {
 		unsigned cell_y = norm_py;
 		unsigned cell_z = norm_pz;
 
-		/*
-		std::cout << "cell_x " << cell_x << std::endl;
-		std::cout << "cell_y " << cell_y << std::endl;
-		std::cout << "cell_z " << cell_z << std::endl;
-		 */
-
 		double* p = mac.pu_;
 
 		unsigned i000 = (cell_x    ) + (nx+1) * (cell_y    ) + ny * (nx+1) * (cell_z    );
@@ -432,58 +450,16 @@ int main() {
 		unsigned i110 = (cell_x + 1) + (nx+1) * (cell_y + 1) + ny * (nx+1) * (cell_z    );
 		unsigned i111 = (cell_x + 1) + (nx+1) * (cell_y + 1) + ny * (nx+1) * (cell_z + 1);
 
-		/*
-		std::cout << "**********" << std::endl;
-		std::cout << "Indices:" << std::endl;
-		std::cout << i000 << std::endl;
-		std::cout << i100 << std::endl;
-		std::cout << i010 << std::endl;
-		std::cout << i110 << std::endl;
-		std::cout << i001 << std::endl;
-		std::cout << i101 << std::endl;
-		std::cout << i011 << std::endl;
-		std::cout << i111 << std::endl;
-
-		std::cout << "Values:" << std::endl;
-		std::cout << p[i000] << std::endl;
-		std::cout << p[i100] << std::endl;
-		std::cout << p[i010] << std::endl;
-		std::cout << p[i110] << std::endl;
-		std::cout << p[i001] << std::endl;
-		std::cout << p[i101] << std::endl;
-		std::cout << p[i011] << std::endl;
-		std::cout << p[i111] << std::endl;
-		std::cout << "**********" << std::endl;
-		 */
-
 		double expected = Mac3d::trilinear_interpolation_normalized(p[i000], p[i001], p[i010], p[i011],
 															        p[i100], p[i101], p[i110], p[i111],
 															        norm_px - cell_x, norm_py - cell_y, norm_pz - cell_z);
 
-		// Check both ways of doing u_star
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
-		assert(std::abs(expected - returned) < interpolation_tolerance);
-
-		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
 		double ret1, ret2;
 		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
 		assert(std::abs(expected - ret1) < interpolation_tolerance);
 		assert(std::abs(expected - ret2) < interpolation_tolerance);
-		/*
-		std::cout << "***\nexpected: " << expected << std::endl;
-		std::cout << "returned: " << returned << std::endl;
-		 */
-
 	}
-
-
-
-
-
-
-
-	return 0;
-
 }

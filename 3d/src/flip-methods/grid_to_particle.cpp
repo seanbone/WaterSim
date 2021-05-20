@@ -57,31 +57,9 @@ void FLIP::grid_to_particle(){
 		v_particle = particles_.v[n];
 		w_particle = particles_.w[n];
 
-		// With u*, v* and w* we can do the interpolation by means of
-		// interp(u*, x_p)
-		// With the new u, v and w we can do the interpolation by means
-		// of interp(u_n1, x_p)
-
-		// TODO: compare performance and the clean up comments
-		// Update the horizontal velocity (trilinear interpolation)
-		//interp_u_star = MACGrid_->get_interp_u(x_particle, y_particle, z_particle, true);
-		//interp_u_n1   = MACGrid_->get_interp_u(x_particle, y_particle, z_particle);
-		//interp_u_star = MACGrid_->grid_interpolate<Mac3d::GRID_U_STAR>(x_particle, y_particle, z_particle);
-		//interp_u_n1 = MACGrid_->grid_interpolate<Mac3d::GRID_U>(x_particle, y_particle, z_particle);
+		// Get updated velocities by interpolation
 		std::tie(interp_u_n1, interp_u_star) = MACGrid_->grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(x_particle, y_particle, z_particle);
-
-		// Update the vertical velocity (trilinear interpolation)
-		//interp_v_star = MACGrid_->get_interp_v(x_particle, y_particle, z_particle, true);
-		//interp_v_n1   = MACGrid_->get_interp_v(x_particle, y_particle, z_particle);
-		//interp_v_star = MACGrid_->grid_interpolate<Mac3d::GRID_V_STAR>(x_particle, y_particle, z_particle);
-		//interp_v_n1 = MACGrid_->grid_interpolate<Mac3d::GRID_V>(x_particle, y_particle, z_particle);
 		std::tie(interp_v_n1, interp_v_star) = MACGrid_->grid_interpolate<Mac3d::GRID_V, Mac3d::INTERPOLATE_BOTH>(x_particle, y_particle, z_particle);
-
-		// Update the outgoing velocity (trilinear interpolation)
-		//interp_w_star = MACGrid_->get_interp_w(x_particle, y_particle, z_particle, true);
-		//interp_w_n1   = MACGrid_->get_interp_w(x_particle, y_particle, z_particle);
-		//interp_w_star = MACGrid_->grid_interpolate<Mac3d::GRID_W_STAR>(x_particle, y_particle, z_particle);
-		//interp_w_n1 = MACGrid_->grid_interpolate<Mac3d::GRID_W>(x_particle, y_particle, z_particle);
 		std::tie(interp_w_n1, interp_w_star) = MACGrid_->grid_interpolate<Mac3d::GRID_W, Mac3d::INTERPOLATE_BOTH>(x_particle, y_particle, z_particle);
 
 		// Get the index of the grid-cell containing the current

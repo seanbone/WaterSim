@@ -115,9 +115,6 @@ void FLIP::advance_particles(const double dt, const unsigned long step) {
 		}
 
 		// RK2
-		//x_next = x_particle + dt*MACGrid_->get_interp_u(x_half, y_half, z_half);
-		//y_next = y_particle + dt*MACGrid_->get_interp_v(x_half, y_half, z_half);
-		//z_next = z_particle + dt*MACGrid_->get_interp_w(x_half, y_half, z_half);
 		x_next = x_particle + dt*MACGrid_->grid_interpolate<Mac3d::GRID_U>(x_half, y_half, z_half);
 		y_next = y_particle + dt*MACGrid_->grid_interpolate<Mac3d::GRID_V>(x_half, y_half, z_half);
 		z_next = z_particle + dt*MACGrid_->grid_interpolate<Mac3d::GRID_W>(x_half, y_half, z_half);

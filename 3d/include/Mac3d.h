@@ -28,18 +28,12 @@ class Mac3d{
 		/**
 		 * Used to tell methods which grid to operate on.
 		 */
-		enum GRID { GRID_P, GRID_U, GRID_V, GRID_W, GRID_U_STAR, GRID_V_STAR, GRID_W_STAR };
+		enum GRID { GRID_U, GRID_V, GRID_W };
 
 		/**
 		 * Used to tell grid_interpolate whether to interpolate just on e.g. U or also U_star
 		 */
 		enum INTERPOLATION_MODE { INTERPOLATE_ONE, INTERPOLATE_BOTH };
-
-		/**
-		 * Offsets of the grids from the origin.
-		 * The first entry of grid GRID will be at spatial coordinates GRID_OFFSETS[GRID].
-		 */
-		double GRID_OFFSETS[7][3];
 
 		//------------------- GRID Properties --------------------------
 		//number of cells respectively in x-direction,
@@ -467,129 +461,18 @@ class Mac3d{
 
 
 
-		/********** WIP INTERPOLATION **********/
+		/********** INTERPOLATION METHODS **********/
 
 
 		/**
-		 * Perform linear interpolation on the normalized [0, 1] domain.
-		 * @param value0 	Value at position x=0
-		 * @param value1 	Value at position x=1
-		 * @param alpha 	Position in the [0, 1] space to interpolate to
+		 * Interpolate a velocity component from the MAC grid.
+		 * Alias for grid_interpolate<grid_name, INTERPOLATE_BOTH>(...)
+		 * @tparam grid_name	The grid to interpolate from.
+		 * @param pos_x 		Position x to interpolate to.
+		 * @param pos_y			Position y to interpolate to
+		 * @param pos_z			Position z to interpolate to
+		 * @return 				Interpolated value.
 		 */
-		static inline double linear_interpolation_normalized(double value0, double value1, double alpha) {
-			return value0 + alpha * (value1 - value0);
-		}
-
-		/**
-		 * Perform bilinear interpolation on the normalized [0,1]x[0,1] domain.
-		 * @param v00 	Value at position (0, 0)
-		 * @param v01 	Value at position (0, 1)
-		 * @param v10 	Value at position (1, 0)
-		 * @param v11 	Value at position (1, 1)
-		 * @param alpha	Position on the x-axis in [0, 1] space to interpolate to
-		 * @param beta 	Position on the y-axis in [0, 1] space to interpolate to
-		 */
-		static inline double bilinear_interpolation_normalized(double v00, double v01,
-		                                                       double v10, double v11,
-		                                                       double alpha, double beta) {
-			double v0 = (v00 + alpha*(v10 - v00));
-			double v1 = (v01 + alpha*(v11 - v01));
-			return v0 + beta*(v1 - v0);
-		}
-
-
-		/**
-		 * Perform trilinear interpolation on the normalized [0,1]x[0,1]x[0,1] domain.
-		 * @param v000	Value at position (0, 0, 0)
-		 * @param v001	Value at position (0, 0, 1)
-		 * @param v010	Value at position (0, 1, 0)
-		 * @param v011	Value at position (0, 1, 1)
-		 * @param v100	Value at position (1, 0, 0)
-		 * @param v101	Value at position (1, 0, 1)
-		 * @param v110	Value at position (1, 1, 0)
-		 * @param v111	Value at position (1, 1, 1)
-		 * @param alpha Position on the x-axis in [0, 1] space to interpolate to
-		 * @param beta 	Position on the y-axis in [0, 1] space to interpolate to
-		 * @param gamma Position on the z-axis in [0, 1] space to interpolate to
-		 */
-		static inline double trilinear_interpolation_normalized(double v000, double v001, double v010, double v011,
-		                                                        double v100, double v101, double v110, double v111,
-		                                                        double alpha, double beta, double gamma) {
-			double v00 = v000 + alpha*(v100 - v000);
-			double v01 = v001 + alpha*(v101 - v001);
-			double v10 = v010 + alpha*(v110 - v010);
-			double v11 = v011 + alpha*(v111 - v011);
-
-			double v0 = v00 + beta*(v10 - v00);
-			double v1 = v01 + beta*(v11 - v01);
-
-			return v0 + gamma*(v1 - v0);
-		}
-
-
-		/**
-		 * Perform linear interpolation on the general [min_pos, min_pos + 1/r_size] domain.
-		 * @param v0 		Value at start of the domain, x = min_pos.
-		 * @param v1 		Value at end of the domain, x = min_pos + 1/r_size.
-		 * @param min_pos 	Start of domain.
-		 * @param r_size	Reciprocal of the size of the domain.
-		 * @param pos 		Position to interpolate to.
-		 */
-		static inline double linear_interpolation(double v0, double v1, double min_pos, double r_size, double pos) {
-			double alpha = (pos - min_pos) * r_size;
-			return linear_interpolation_normalized(v0, v1, alpha);
-		}
-
-		/**
-		 * Perform bilinear interpolation on the general
-		 * [x_min, x_min + 1/r_size_x] x [y_min, y_min + 1/r_size_y] domain.
-		 * @param v00 		Value at position (x_min, y_min)
-		 * @param v01  		Value at position (x_min, y_min + 1/r_size_y)
-		 * @param v10  		Value at position (x_min + 1/r_size_x, y_min)
-		 * @param v11 		Value at position (x_min + 1/r_size_x, y_min + 1/r_size_y)
-		 * @param min_x 	Start of domain in X axis.
-		 * @param min_y 	Start of domain in Y axis.
-		 * @param r_size_x 	Reciprocal of the domain size on the X axis.
-		 * @param r_size_y 	Reciprocal of the domain size on the Y axis.
-		 * @param pos_x 	Position to interpolate to on X axis.
-		 * @param pos_y 	Position to interpolate to on Y axis.
-		 */
-		static inline double bilinear_interpolation(double v00, double v01,
-		                                            double v10, double v11,
-		                                            double min_x, double min_y,
-		                                            double r_size_x, double r_size_y,
-		                                            double pos_x, double pos_y) {
-			double alpha = (pos_x - min_x) * r_size_x;
-			double beta  = (pos_y - min_y) * r_size_y;
-			return bilinear_interpolation_normalized(v00, v01, v10, v11, alpha, beta);
-		}
-
-		/**
-		 * Perform trilinear interpolation on the general domain
-		 * [x_min, x_min + 1/r_size_x] x [y_min, y_min + 1/r_size_y] x [z_min, z_min + 1/r_size_z]
-		 * @param min_x  	Start of domain in X axis.
-		 * @param min_y  	Start of domain in Y axis.
-		 * @param min_z   	Start of domain in Z axis.
-		 * @param r_size_x 	Reciprocal of the domain size on the X axis.
-		 * @param r_size_y 	Reciprocal of the domain size on the Y axis.
-		 * @param r_size_z 	Reciprocal of the domain size on the Z axis.
-		 * @param pos_x 	Position to interpolate to on X axis.
-		 * @param pos_y 	Position to interpolate to on Y axis.
-		 * @param pos_z 	Position to interpolate to on Z axis.
-		 */
-		static inline double trilinear_interpolation(double v000, double v001, double v010, double v011,
-		                                             double v100, double v101, double v110, double v111,
-		                                             double min_x, double min_y, double min_z,
-		                                             double r_size_x, double r_size_y, double r_size_z,
-		                                             double pos_x, double pos_y, double pos_z) {
-			double alpha = (pos_x - min_x) * r_size_x;
-			double beta  = (pos_y - min_y) * r_size_y;
-			double gamma = (pos_z - min_z) * r_size_z;
-			return trilinear_interpolation_normalized(v000, v001, v010, v011,
-											          v100, v101, v110, v111,
-											          alpha, beta, gamma);
-		}
-
 		template<GRID grid_name>
 		inline double grid_interpolate(double pos_x, double pos_y, double pos_z) {
 			double ret;
@@ -597,44 +480,53 @@ class Mac3d{
 			return ret;
 		}
 
+		/**
+		 * Interpolate a velocity component from the MAC grid.
+		 * If interpolation_mode == INTERPOLATE_BOTH, the second component of the return
+		 * value will be the interpolated value on the _star field corresponding to the velocity field
+		 * defined in grid_name.
+		 * @tparam grid_name			The grid to interpolate from.
+		 * @tparam interpolation_mode
+		 * @param pos_x 				Position x to interpolate to.
+		 * @param pos_y					Position y to interpolate to
+		 * @param pos_z					Position z to interpolate to
+		 * @return 						Interpolated values.
+		 */
 		template<GRID grid_name, INTERPOLATION_MODE interpolation_mode>
 		std::pair<double, double> grid_interpolate(double pos_x, double pos_y, double pos_z) {
-			// We are working on the staggered grid - that is, the grid where the pressures
-			// (or velocities) are not the the center of the cells (cell faces), but at the
-			// intersection points of the grid. Therefore we have one fewer cell on each axis.
+			static_assert(grid_name == GRID_U || grid_name == GRID_V || grid_name == GRID_W,
+			              "[Mac3d::grid_interpolate] Invalid template arguments!");
+
+			// We are working on the staggered grid - that is, the grid where the
+			// velocities are not at the center of cell faces, but at the
+			// intersection points of the grid.
+			// This means the grid will have different dimensions and offsets depending
+			// on which one we are working on, given by template parameter grid_name.
 			unsigned nx = N_;
 			unsigned ny = M_;
 			unsigned nz = L_;
 			double* g;
 			double* g_star;
+			double offset_x = 0;
+			double offset_y = 0;
+			double offset_z = 0;
 
-			// The different arrays have different dimensions
 			// `if constexpr` is evaluated at compile time
-			if constexpr(grid_name == GRID_P) { // TODO: remove support for interpolation on P
-				g = ppressure_;
-			} else if constexpr(grid_name == GRID_U) {
+			if constexpr(grid_name == GRID_U) {
 				nx += 1;
 				g = pu_;
-			} else if constexpr(grid_name == GRID_U_STAR) {
-				nx += 1;
-				g = pu_star_;
+				offset_x = -0.5 * cell_sizex_;
 			} else if constexpr(grid_name == GRID_V) {
 				ny += 1;
 				g = pv_;
-			} else if constexpr(grid_name == GRID_V_STAR) {
-				ny += 1;
-				g = pv_star_;
+				offset_y = -0.5 * cell_sizey_;
 			} else if constexpr(grid_name == GRID_W) {
 				nz += 1;
 				g = pw_;
-			} else if constexpr(grid_name == GRID_W_STAR) {
-				nz += 1;
-				g = pw_star_;
+				offset_z = -0.5 * cell_sizez_;
 			}
 
 			if constexpr(interpolation_mode == INTERPOLATE_BOTH) {
-				static_assert(grid_name == GRID_U || grid_name == GRID_V || grid_name == GRID_W,
-						"[Mac3d::grid_interpolate] Invalid template arguments!");
 				if constexpr(grid_name == GRID_U) {
 					g_star = pu_star_;
 				} else if constexpr(grid_name == GRID_V) {
@@ -644,18 +536,13 @@ class Mac3d{
 				}
 			}
 
-			// TODO: do this inside the ifs above instead of the array
-			const double& offset_x = GRID_OFFSETS[grid_name][0];
-			const double& offset_y = GRID_OFFSETS[grid_name][1];
-			const double& offset_z = GRID_OFFSETS[grid_name][2];
-
 			double pos_x_offset = pos_x - offset_x;
 			double pos_y_offset = pos_y - offset_y;
 			double pos_z_offset = pos_z - offset_z;
 
-			int cell_x = pos_x_offset * rcell_sizex_;
-			int cell_y = pos_y_offset * rcell_sizey_;
-			int cell_z = pos_z_offset * rcell_sizez_;
+			auto cell_x = unsigned(pos_x_offset * rcell_sizex_);
+			auto cell_y = unsigned(pos_y_offset * rcell_sizey_);
+			auto cell_z = unsigned(pos_z_offset * rcell_sizez_);
 
 			double min_x = offset_x + cell_sizex_*cell_x;
 			double min_y = offset_y + cell_sizey_*cell_y;
@@ -673,156 +560,93 @@ class Mac3d{
 			bool inside = inside_left && inside_right && inside_bottom && inside_top && inside_front && inside_back;
 			if (inside) {
 				// If we're inside the domain, perform trilinear interpolation
-				int i000 = (cell_x) + nx * (cell_y) + ny * nx * (cell_z);
-				int i001 = (cell_x) + nx * (cell_y) + ny * nx * (cell_z + 1);
-				int i010 = (cell_x) + nx * (cell_y + 1) + ny * nx * (cell_z);
-				int i011 = (cell_x) + nx * (cell_y + 1) + ny * nx * (cell_z + 1);
-				int i100 = (cell_x + 1) + nx * (cell_y) + ny * nx * (cell_z);
-				int i101 = (cell_x + 1) + nx * (cell_y) + ny * nx * (cell_z + 1);
-				int i110 = (cell_x + 1) + nx * (cell_y + 1) + ny * nx * (cell_z);
-				int i111 = (cell_x + 1) + nx * (cell_y + 1) + ny * nx * (cell_z + 1);
+				unsigned i000 = (cell_x) + nx * (cell_y) + ny * nx * (cell_z);
+				unsigned i001 = (cell_x) + nx * (cell_y) + ny * nx * (cell_z + 1);
+				unsigned i010 = (cell_x) + nx * (cell_y + 1) + ny * nx * (cell_z);
+				unsigned i011 = (cell_x) + nx * (cell_y + 1) + ny * nx * (cell_z + 1);
+				unsigned i100 = (cell_x + 1) + nx * (cell_y) + ny * nx * (cell_z);
+				unsigned i101 = (cell_x + 1) + nx * (cell_y) + ny * nx * (cell_z + 1);
+				unsigned i110 = (cell_x + 1) + nx * (cell_y + 1) + ny * nx * (cell_z);
+				unsigned i111 = (cell_x + 1) + nx * (cell_y + 1) + ny * nx * (cell_z + 1);
 
-				//double ret;
-				//ret = trilinear_interpolation(g[i000], g[i001], g[i010], g[i011],
-				//                               g[i100], g[i101], g[i110], g[i111],
-				//                               min_x, min_y, min_z,
-				//                               rcell_sizex_, rcell_sizey_, rcell_sizez_,
-				//                               pos_x, pos_y, pos_z);
-
-				// TODO: precompute alpha, beta, gamma and use just (tri/bi)linear_interpolation_normalized
-				ret = trilinear_interpolation(g[i000], g[i001], g[i010], g[i011],
-				                              g[i100], g[i101], g[i110], g[i111],
-				                              min_x, min_y, min_z,
-				                              rcell_sizex_, rcell_sizey_, rcell_sizez_,
-				                              pos_x, pos_y, pos_z);
+				double alpha = (pos_x - min_x) * rcell_sizex_;
+				double beta  = (pos_y - min_y) * rcell_sizey_;
+				double gamma = (pos_z - min_z) * rcell_sizez_;
+				ret = trilinear_interpolation_normalized(g[i000], g[i001], g[i010], g[i011],
+				                                         g[i100], g[i101], g[i110], g[i111],
+				                                         alpha, beta, gamma);
 				if constexpr(interpolation_mode == INTERPOLATE_BOTH) {
-					ret_star = trilinear_interpolation(g_star[i000], g_star[i001], g_star[i010], g_star[i011],
-					                                   g_star[i100], g_star[i101], g_star[i110], g_star[i111],
-					                                   min_x, min_y, min_z,
-					                                   rcell_sizex_, rcell_sizey_, rcell_sizez_,
-					                                   pos_x, pos_y, pos_z);
+					ret_star = trilinear_interpolation_normalized(g_star[i000], g_star[i001], g_star[i010], g_star[i011],
+												   g_star[i100], g_star[i101], g_star[i110], g_star[i111],
+												   alpha, beta, gamma);
 				}
 				return std::make_pair(ret, ret_star);
 			}
+
 			// On the boundaries of the domain, handle special cases
 			else {
-				// Predeclare variables for linear interpolation case
-				Mac3d::cellIdx_t i0, i1;
-				double lerp_min;
-				double lerp_rcell_size;
-				double lerp_pos;
-
-				// Predeclare variables for bilinear interpolation case
-				Mac3d::cellIdx_t i00, i01, i10, i11;
-				double blerp_min_x, blerp_min_y;
-				double blerp_rcell_x, blerp_rcell_y;
-				double blerp_pos_x, blerp_pos_y;
+				unsigned i0, i1;
+				unsigned i00, i01, i10, i11;
 
 				if (!inside_left) {
 					if (!inside_top) {
 						// linear interpolation on top-left edge
 						i0 = nx*(ny-1) + nx*ny*cell_z;
 						i1 = i0 + nx*ny;
-						lerp_min = min_z;
-						lerp_rcell_size = rcell_sizez_;
-						lerp_pos = pos_z;
-						goto do_lerp;
-						//return linear_interpolation(g[i0], g[i1], min_z, rcell_sizez_, pos_z);
+						return do_lerp<interpolation_mode>(i0, i1, min_z, rcell_sizez_, pos_z, g, g_star);
 					} else if (!inside_bottom) {
 						// linear interpolation on bottom-left edge
 						i0 = nx*ny*cell_z;
 						i1 = i0 + nx*ny;
-						lerp_min = min_z;
-						lerp_rcell_size = rcell_sizez_;
-						lerp_pos = pos_z;
-						goto do_lerp;
-						//return linear_interpolation(g[i0], g[i1], min_z, rcell_sizez_, pos_z);
+						return do_lerp<interpolation_mode>(i0, i1, min_z, rcell_sizez_, pos_z, g, g_star);
 					} else if (!inside_front) {
 						// linear interpolation on front-left edge
 						i0 = nx*cell_y;
 						i1 = i0 + nx;
-						lerp_min = min_y;
-						lerp_rcell_size = rcell_sizey_;
-						lerp_pos = pos_y;
-						goto do_lerp;
-						//return linear_interpolation(g[i0], g[i1], min_y, rcell_sizey_, pos_y);
+						return do_lerp<interpolation_mode>(i0, i1, min_y, rcell_sizey_, pos_y, g, g_star);
 					} else if (!inside_back) {
 						// linear interpolation on back-left edge
 						i0 = nx*cell_y + nx*ny*(nz-1);
 						i1 = i0 + nx;
-						lerp_min = min_y;
-						lerp_rcell_size = rcell_sizey_;
-						lerp_pos = pos_y;
-						goto do_lerp;
-						//return linear_interpolation(g[i0], g[i1], min_y, rcell_sizey_, pos_y);
+						return do_lerp<interpolation_mode>(i0, i1, min_y, rcell_sizey_, pos_y, g, g_star);
 					} else {
 						// Bilinear interpolation on left face
 						i00 = nx*cell_y + nx*ny*cell_z;
 						i01 = i00 + nx*ny;
 						i10 = i00 + nx;
 						i11 = i00 + nx + nx*ny;
-						blerp_min_x = min_y;
-						blerp_min_y = min_z;
-						blerp_rcell_x = rcell_sizey_;
-						blerp_rcell_y = rcell_sizez_;
-						blerp_pos_x = pos_y;
-						blerp_pos_y = pos_z;
-						goto do_blerp;
-						//return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
-						//                              min_y, min_z, rcell_sizey_, rcell_sizez_, pos_y, pos_z);
+						return do_blerp<interpolation_mode>(i00, i01, i10, i11, min_y, min_z,
+										  rcell_sizey_, rcell_sizez_, pos_y, pos_z, g, g_star);
 					}
 				} else if (!inside_right) {
 					if (!inside_top) {
 						// Linear interpolation on right-top edge
 						i0 = nx-1 + nx*(ny-1) + nx*ny*cell_z;
 						i1 = i0 + nx*ny;
-						lerp_min = min_z;
-						lerp_rcell_size = rcell_sizez_;
-						lerp_pos = pos_z;
-						goto do_lerp;
-						//return linear_interpolation(g[i0], g[i1], min_z, rcell_sizez_, pos_z);
+						return do_lerp<interpolation_mode>(i0, i1, min_z, rcell_sizez_, pos_z, g, g_star);
 					} else if (!inside_bottom) {
 						// Linear interpolation on right-bottom edge
 						i0 = nx-1 + nx*ny*cell_z;
 						i1 = i0 + nx*ny;
-						lerp_min = min_z;
-						lerp_rcell_size = rcell_sizez_;
-						lerp_pos = pos_z;
-						goto do_lerp;
-						//return linear_interpolation(g[i0], g[i1], min_z, rcell_sizez_, pos_z);
+						return do_lerp<interpolation_mode>(i0, i1, min_z, rcell_sizez_, pos_z, g, g_star);
 					} else if (!inside_front) {
 						// Linear interpolation on right-front edge
 						i0 = nx-1 + nx*cell_y;
 						i1 = i0 + nx;
-						lerp_min = min_y;
-						lerp_rcell_size = rcell_sizey_;
-						lerp_pos = pos_y;
-						goto do_lerp;
-						//return linear_interpolation(g[i0], g[i1], min_y, rcell_sizey_, pos_y);
+						return do_lerp<interpolation_mode>(i0, i1, min_y, rcell_sizey_, pos_y, g, g_star);
 					} else if (!inside_back) {
 						// Linear interpolation on right-back edge
 						i0 = nx-1 + nx*cell_y + nx*ny*(nz-1);
 						i1 = i0 + nx;
-						lerp_min = min_y;
-						lerp_rcell_size = rcell_sizey_;
-						lerp_pos = pos_y;
-						goto do_lerp;
-						//return linear_interpolation(g[i0], g[i1], min_y, rcell_sizey_, pos_y);
+						return do_lerp<interpolation_mode>(i0, i1, min_y, rcell_sizey_, pos_y, g, g_star);
 					} else {
 						// Bilinear on right face
 						i00 = nx-1 + nx*cell_y + nx*ny*cell_z;
 						i01 = i00 + nx*ny;
 						i10 = i00 + nx;
 						i11 = i00 + nx + nx*ny;
-						blerp_min_x = min_y;
-						blerp_min_y = min_z;
-						blerp_rcell_x = rcell_sizey_;
-						blerp_rcell_y = rcell_sizez_;
-						blerp_pos_x = pos_y;
-						blerp_pos_y = pos_z;
-						goto do_blerp;
-						//return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
-						//                              min_y, min_z, rcell_sizey_, rcell_sizez_, pos_y, pos_z);
+						return do_blerp<interpolation_mode>(i00, i01, i10, i11, min_y, min_z,
+						                                    rcell_sizey_, rcell_sizez_, pos_y, pos_z, g, g_star);
 					}
 				} // we now know that inside_left && inside_right
 				else if (!inside_top) {
@@ -830,70 +654,40 @@ class Mac3d{
 						// Linear interpolation on top-front edge
 						i0 = cell_x + nx*(ny-1);
 						i1 = i0+1;
-						lerp_min = min_x;
-						lerp_rcell_size = rcell_sizex_;
-						lerp_pos = pos_x;
-						goto do_lerp;
-						//return linear_interpolation(g[i0], g[i1], min_x, rcell_sizex_, pos_x);
+						return do_lerp<interpolation_mode>(i0, i1, min_x, rcell_sizex_, pos_x, g, g_star);
 					} else if (!inside_back) {
 						// Linear interpolation on top-back edge
 						i0 = cell_x + nx*(ny-1) + nx*ny*(nz-1);
 						i1 = i0+1;
-						lerp_min = min_x;
-						lerp_rcell_size = rcell_sizex_;
-						lerp_pos = pos_x;
-						goto do_lerp;
-						//return linear_interpolation(g[i0], g[i1], min_x, rcell_sizex_, pos_x);
+						return do_lerp<interpolation_mode>(i0, i1, min_x, rcell_sizex_, pos_x, g, g_star);
 					} else {
 						// bilinear on top face
 						i00 = cell_x + nx * (ny-1) + nx*ny*cell_z;
 						i01 = i00 + 1;
 						i10 = i00 + nx*ny;
 						i11 = i10 + 1;
-						blerp_min_x = min_z;
-						blerp_min_y = min_x;
-						blerp_rcell_x = rcell_sizez_;
-						blerp_rcell_y = rcell_sizex_;
-						blerp_pos_x = pos_z;
-						blerp_pos_y = pos_x;
-						goto do_blerp;
-						//return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
-						//                              min_z, min_x, rcell_sizez_, rcell_sizex_, pos_z, pos_x);
+						return do_blerp<interpolation_mode>(i00, i01, i10, i11, min_z, min_x,
+						                                    rcell_sizez_, rcell_sizex_, pos_z, pos_x, g, g_star);
 					}
 				} else if (!inside_bottom) {
 					if (!inside_front) {
 						// Linear interpolation on bottom-front edge
 						i0 = cell_x;
 						i1 = i0+1;
-						lerp_min = min_x;
-						lerp_rcell_size = rcell_sizex_;
-						lerp_pos = pos_x;
-						goto do_lerp;
-						//return linear_interpolation(g[i0], g[i1], min_x, rcell_sizex_, pos_x);
+						return do_lerp<interpolation_mode>(i0, i1, min_x, rcell_sizex_, pos_x, g, g_star);
 					} else if (!inside_back) {
 						// Linear interpolation on bottom-back
 						i0 = cell_x + nx*ny*(nz-1);
 						i1 = i0+1;
-						lerp_min = min_x;
-						lerp_rcell_size = rcell_sizex_;
-						lerp_pos = pos_x;
-						goto do_lerp;
-						//return linear_interpolation(g[i0], g[i1], min_x, rcell_sizex_, pos_x);
+						return do_lerp<interpolation_mode>(i0, i1, min_x, rcell_sizex_, pos_x, g, g_star);
 					} else {
 						// Bilinear interpolation on bottom face
 						i00 = cell_x + nx*ny*cell_z;
 						i01 = i00 + 1;
 						i10 = i00 + nx*ny;
 						i11 = i10 + 1;
-						blerp_min_x = min_z;
-						blerp_min_y = min_x;
-						blerp_rcell_x = rcell_sizez_;
-						blerp_rcell_y = rcell_sizex_;
-						blerp_pos_x = pos_z;
-						blerp_pos_y = pos_x;
-						goto do_blerp;
-						//return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
-						//                              min_z, min_x, rcell_sizez_, rcell_sizex_, pos_z, pos_x);
+						return do_blerp<interpolation_mode>(i00, i01, i10, i11, min_z, min_x,
+						                                    rcell_sizez_, rcell_sizex_, pos_z, pos_x, g, g_star);
 					}
 				} else if (!inside_front) {
 					// Bilinear interpolation on front face
@@ -901,58 +695,107 @@ class Mac3d{
 					i01 = i00 + nx;
 					i10 = i00 + 1;
 					i11 = i10 + nx;
-					blerp_min_x = min_x;
-					blerp_min_y = min_y;
-					blerp_rcell_x = rcell_sizex_;
-					blerp_rcell_y = rcell_sizey_;
-					blerp_pos_x = pos_x;
-					blerp_pos_y = pos_y;
-					goto do_blerp;
-					//return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
-					//                              min_x, min_y, rcell_sizex_, rcell_sizey_, pos_x, pos_y);
+					return do_blerp<interpolation_mode>(i00, i01, i10, i11, min_x, min_y,
+					                                    rcell_sizex_, rcell_sizey_, pos_x, pos_y, g, g_star);
 				} else {
 					// Bilinear interpolation on back face
 					i00 = cell_x + nx*cell_y + nx*ny*(nz-1);
 					i01 = i00 + nx;
 					i10 = i00 + 1;
 					i11 = i10 + nx;
-					blerp_min_x = min_x;
-					blerp_min_y = min_y;
-					blerp_rcell_x = rcell_sizex_;
-					blerp_rcell_y = rcell_sizey_;
-					blerp_pos_x = pos_x;
-					blerp_pos_y = pos_y;
-					goto do_blerp;
-					//return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
-					//                              min_x, min_y, rcell_sizex_, rcell_sizey_, pos_x, pos_y);
+					return do_blerp<interpolation_mode>(i00, i01, i10, i11, min_x, min_y,
+					                                    rcell_sizex_, rcell_sizey_, pos_x, pos_y, g, g_star);
 				}
-
-
-				// Perform linear interpolation
-				do_lerp:
-				// TODO: precompute alpha, beta, gamma and use just (tri/bi)linear_interpolation_normalized
-				// TODO: move to separate inlined methods instead of using goto
-				ret = linear_interpolation(g[i0], g[i1], lerp_min, lerp_rcell_size, lerp_pos);
-				if constexpr(interpolation_mode == INTERPOLATE_BOTH) {
-					ret_star = linear_interpolation(g_star[i0], g_star[i1], lerp_min, lerp_rcell_size, lerp_pos);
-				}
-				return std::make_pair(ret, ret_star);
-
-
-				// Perform bilinear interpolation
-				do_blerp:
-				// TODO: precompute alpha, beta, gamma and use just (tri/bi)linear_interpolation_normalized
-				// TODO: move to separate inlined methods instead of using goto
-				ret = bilinear_interpolation(g[i00], g[i01], g[i10], g[i11], blerp_min_x, blerp_min_y,
-								 blerp_rcell_x, blerp_rcell_y, blerp_pos_x, blerp_pos_y);
-				if constexpr(interpolation_mode == INTERPOLATE_BOTH) {
-					ret_star = bilinear_interpolation(g_star[i00], g_star[i01], g_star[i10], g_star[i11], blerp_min_x, blerp_min_y,
-									   blerp_rcell_x, blerp_rcell_y, blerp_pos_x, blerp_pos_y);
-				}
-				return std::make_pair(ret, ret_star);
 			}
 
 		}
-	/********** END WIP INTERPOLATION **********/
+
+	/**
+	 * Perform linear interpolation on the normalized [0, 1] domain.
+	 * @param value0 	Value at position x=0
+	 * @param value1 	Value at position x=1
+	 * @param alpha 	Position in the [0, 1] space to interpolate to
+	 */
+	static inline double linear_interpolation_normalized(double value0, double value1, double alpha) {
+		return value0 + alpha * (value1 - value0);
+	}
+
+	/**
+	 * Perform bilinear interpolation on the normalized [0,1]x[0,1] domain.
+	 * @param v00 	Value at position (0, 0)
+	 * @param v01 	Value at position (0, 1)
+	 * @param v10 	Value at position (1, 0)
+	 * @param v11 	Value at position (1, 1)
+	 * @param alpha	Position on the x-axis in [0, 1] space to interpolate to
+	 * @param beta 	Position on the y-axis in [0, 1] space to interpolate to
+	 */
+	static inline double bilinear_interpolation_normalized(double v00, double v01,
+	                                                       double v10, double v11,
+	                                                       double alpha, double beta) {
+		double v0 = (v00 + alpha*(v10 - v00));
+		double v1 = (v01 + alpha*(v11 - v01));
+		return v0 + beta*(v1 - v0);
+	}
+
+
+	/**
+	 * Perform trilinear interpolation on the normalized [0,1]x[0,1]x[0,1] domain.
+	 * @param v000	Value at position (0, 0, 0)
+	 * @param v001	Value at position (0, 0, 1)
+	 * @param v010	Value at position (0, 1, 0)
+	 * @param v011	Value at position (0, 1, 1)
+	 * @param v100	Value at position (1, 0, 0)
+	 * @param v101	Value at position (1, 0, 1)
+	 * @param v110	Value at position (1, 1, 0)
+	 * @param v111	Value at position (1, 1, 1)
+	 * @param alpha Position on the x-axis in [0, 1] space to interpolate to
+	 * @param beta 	Position on the y-axis in [0, 1] space to interpolate to
+	 * @param gamma Position on the z-axis in [0, 1] space to interpolate to
+	 */
+	static inline double trilinear_interpolation_normalized(double v000, double v001, double v010, double v011,
+	                                                        double v100, double v101, double v110, double v111,
+	                                                        double alpha, double beta, double gamma) {
+		double v00 = v000 + alpha*(v100 - v000);
+		double v01 = v001 + alpha*(v101 - v001);
+		double v10 = v010 + alpha*(v110 - v010);
+		double v11 = v011 + alpha*(v111 - v011);
+
+		double v0 = v00 + beta*(v10 - v00);
+		double v1 = v01 + beta*(v11 - v01);
+
+		return v0 + gamma*(v1 - v0);
+	}
+
+
+private:
+
+	template<INTERPOLATION_MODE interpolation_mode>
+	inline std::pair<double, double> do_lerp(const int i0, const int i1, const double min_pos,
+										  const double r_size, const double pos,
+										  const double* g, const double* g_star) const {
+		double alpha = (pos - min_pos) * r_size;
+		double ret = linear_interpolation_normalized(g[i0], g[i1], alpha);
+		double ret_star = 0;
+		if constexpr(interpolation_mode == INTERPOLATE_BOTH) {
+			ret_star = linear_interpolation_normalized(g_star[i0], g_star[i1], alpha);
+		}
+		return std::make_pair(ret, ret_star);
+	}
+
+	template<INTERPOLATION_MODE interpolation_mode>
+	inline std::pair<double, double> do_blerp(const int i00, const int i01, int i10, int i11,
+										   const double min_x, const double min_y,
+										   const double r_size_x, const double r_size_y,
+										   const double pos_x, const double pos_y,
+										   const double* g, const double* g_star) const {
+		double alpha = (pos_x - min_x) * r_size_x;
+		double beta = (pos_y - min_y) * r_size_y;
+		double ret = bilinear_interpolation_normalized(g[i00], g[i01], g[i10], g[i11], alpha, beta);
+		double ret_star = 0;
+		if constexpr(interpolation_mode == INTERPOLATE_BOTH) {
+			ret_star = bilinear_interpolation_normalized(g_star[i00], g_star[i01], g_star[i10], g_star[i11], alpha, beta);
+		}
+		return std::make_pair(ret, ret_star);
+	}
 };
 #endif

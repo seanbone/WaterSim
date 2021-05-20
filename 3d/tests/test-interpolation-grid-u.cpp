@@ -42,11 +42,17 @@ int main() {
 
 		double expected = 4986; // (54**2 + 84**2)/2
 
+		/*
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
 		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
+		 */
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 	{
@@ -114,11 +120,18 @@ int main() {
 
 		double expected = Mac3d::bilinear_interpolation_normalized(
 				g[0], g[30], g[6], g[36], norm_py, norm_pz);
+		/*
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
 		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
+		 */
+
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 	}
 
 
@@ -447,12 +460,17 @@ int main() {
 															        p[i100], p[i101], p[i110], p[i111],
 															        norm_px - cell_x, norm_py - cell_y, norm_pz - cell_z);
 
+		// Check both ways of doing u_star
 		double returned = mac.grid_interpolate<Mac3d::GRID_U>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
 		returned = mac.grid_interpolate<Mac3d::GRID_U_STAR>(px, py, pz);
 		assert(std::abs(expected - returned) < interpolation_tolerance);
 
+		double ret1, ret2;
+		std::tie(ret1, ret2) = mac.grid_interpolate<Mac3d::GRID_U, Mac3d::INTERPOLATE_BOTH>(px, py, pz);
+		assert(std::abs(expected - ret1) < interpolation_tolerance);
+		assert(std::abs(expected - ret2) < interpolation_tolerance);
 		/*
 		std::cout << "***\nexpected: " << expected << std::endl;
 		std::cout << "returned: " << returned << std::endl;

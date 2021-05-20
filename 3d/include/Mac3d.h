@@ -31,6 +31,11 @@ class Mac3d{
 		enum GRID { GRID_P, GRID_U, GRID_V, GRID_W, GRID_U_STAR, GRID_V_STAR, GRID_W_STAR };
 
 		/**
+		 * Used to tell grid_interpolate whether to interpolate just on e.g. U or also U_star
+		 */
+		enum INTERPOLATION_MODE { INTERPOLATE_ONE, INTERPOLATE_BOTH };
+
+		/**
 		 * Offsets of the grids from the origin.
 		 * The first entry of grid GRID will be at spatial coordinates GRID_OFFSETS[GRID].
 		 */
@@ -585,9 +590,15 @@ class Mac3d{
 											          alpha, beta, gamma);
 		}
 
-
 		template<GRID grid_name>
-		double grid_interpolate(double pos_x, double pos_y, double pos_z) {
+		inline double grid_interpolate(double pos_x, double pos_y, double pos_z) {
+			double ret;
+			std::tie(ret, std::ignore) = grid_interpolate<grid_name, INTERPOLATE_ONE>(pos_x, pos_y, pos_z);
+			return ret;
+		}
+
+		template<GRID grid_name, INTERPOLATION_MODE interpolation_mode>
+		std::pair<double, double> grid_interpolate(double pos_x, double pos_y, double pos_z) {
 			// We are working on the staggered grid - that is, the grid where the pressures
 			// (or velocities) are not the the center of the cells (cell faces), but at the
 			// intersection points of the grid. Therefore we have one fewer cell on each axis.
@@ -595,6 +606,7 @@ class Mac3d{
 			unsigned ny = M_;
 			unsigned nz = L_;
 			double* g;
+			double* g_star;
 
 			// The different arrays have different dimensions
 			// `if constexpr` is evaluated at compile time
@@ -620,7 +632,19 @@ class Mac3d{
 				g = pw_star_;
 			}
 
-			// TODO: do this inside the ifs above instead
+			if constexpr(interpolation_mode == INTERPOLATE_BOTH) {
+				static_assert(grid_name == GRID_U || grid_name == GRID_V || grid_name == GRID_W,
+						"[Mac3d::grid_interpolate] Invalid template arguments!");
+				if constexpr(grid_name == GRID_U) {
+					g_star = pu_star_;
+				} else if constexpr(grid_name == GRID_V) {
+					g_star = pv_star_;
+				} else if constexpr(grid_name == GRID_W) {
+					g_star = pw_star_;
+				}
+			}
+
+			// TODO: do this inside the ifs above instead of the array
 			const double& offset_x = GRID_OFFSETS[grid_name][0];
 			const double& offset_y = GRID_OFFSETS[grid_name][1];
 			const double& offset_z = GRID_OFFSETS[grid_name][2];
@@ -637,6 +661,8 @@ class Mac3d{
 			double min_y = offset_y + cell_sizey_*cell_y;
 			double min_z = offset_z + cell_sizez_*cell_z;
 
+			double ret, ret_star = 0;
+
 			bool inside_left = pos_x_offset > 0;
 			bool inside_right = pos_x_offset < (nx-1) * cell_sizex_;
 			bool inside_bottom = pos_y_offset > 0;
@@ -645,143 +671,287 @@ class Mac3d{
 			bool inside_back = pos_z_offset < (nz-1) * cell_sizez_;
 
 			bool inside = inside_left && inside_right && inside_bottom && inside_top && inside_front && inside_back;
-			if (!inside) {
+			if (inside) {
+				// If we're inside the domain, perform trilinear interpolation
+				int i000 = (cell_x) + nx * (cell_y) + ny * nx * (cell_z);
+				int i001 = (cell_x) + nx * (cell_y) + ny * nx * (cell_z + 1);
+				int i010 = (cell_x) + nx * (cell_y + 1) + ny * nx * (cell_z);
+				int i011 = (cell_x) + nx * (cell_y + 1) + ny * nx * (cell_z + 1);
+				int i100 = (cell_x + 1) + nx * (cell_y) + ny * nx * (cell_z);
+				int i101 = (cell_x + 1) + nx * (cell_y) + ny * nx * (cell_z + 1);
+				int i110 = (cell_x + 1) + nx * (cell_y + 1) + ny * nx * (cell_z);
+				int i111 = (cell_x + 1) + nx * (cell_y + 1) + ny * nx * (cell_z + 1);
+
+				//double ret;
+				//ret = trilinear_interpolation(g[i000], g[i001], g[i010], g[i011],
+				//                               g[i100], g[i101], g[i110], g[i111],
+				//                               min_x, min_y, min_z,
+				//                               rcell_sizex_, rcell_sizey_, rcell_sizez_,
+				//                               pos_x, pos_y, pos_z);
+
+				// TODO: precompute alpha, beta, gamma and use just (tri/bi)linear_interpolation_normalized
+				ret = trilinear_interpolation(g[i000], g[i001], g[i010], g[i011],
+				                              g[i100], g[i101], g[i110], g[i111],
+				                              min_x, min_y, min_z,
+				                              rcell_sizex_, rcell_sizey_, rcell_sizez_,
+				                              pos_x, pos_y, pos_z);
+				if constexpr(interpolation_mode == INTERPOLATE_BOTH) {
+					ret_star = trilinear_interpolation(g_star[i000], g_star[i001], g_star[i010], g_star[i011],
+					                                   g_star[i100], g_star[i101], g_star[i110], g_star[i111],
+					                                   min_x, min_y, min_z,
+					                                   rcell_sizex_, rcell_sizey_, rcell_sizez_,
+					                                   pos_x, pos_y, pos_z);
+				}
+				return std::make_pair(ret, ret_star);
+			}
+			// On the boundaries of the domain, handle special cases
+			else {
+				// Predeclare variables for linear interpolation case
+				Mac3d::cellIdx_t i0, i1;
+				double lerp_min;
+				double lerp_rcell_size;
+				double lerp_pos;
+
+				// Predeclare variables for bilinear interpolation case
+				Mac3d::cellIdx_t i00, i01, i10, i11;
+				double blerp_min_x, blerp_min_y;
+				double blerp_rcell_x, blerp_rcell_y;
+				double blerp_pos_x, blerp_pos_y;
+
 				if (!inside_left) {
 					if (!inside_top) {
 						// linear interpolation on top-left edge
-						int i0 = nx*(ny-1) + nx*ny*cell_z;
-						int i1 = i0 + nx*ny;
-						return linear_interpolation(g[i0], g[i1], min_z, rcell_sizez_, pos_z);
+						i0 = nx*(ny-1) + nx*ny*cell_z;
+						i1 = i0 + nx*ny;
+						lerp_min = min_z;
+						lerp_rcell_size = rcell_sizez_;
+						lerp_pos = pos_z;
+						goto do_lerp;
+						//return linear_interpolation(g[i0], g[i1], min_z, rcell_sizez_, pos_z);
 					} else if (!inside_bottom) {
 						// linear interpolation on bottom-left edge
-						int i0 = nx*ny*cell_z;
-						int i1 = i0 + nx*ny;
-						return linear_interpolation(g[i0], g[i1], min_z, rcell_sizez_, pos_z);
+						i0 = nx*ny*cell_z;
+						i1 = i0 + nx*ny;
+						lerp_min = min_z;
+						lerp_rcell_size = rcell_sizez_;
+						lerp_pos = pos_z;
+						goto do_lerp;
+						//return linear_interpolation(g[i0], g[i1], min_z, rcell_sizez_, pos_z);
 					} else if (!inside_front) {
 						// linear interpolation on front-left edge
-						int i0 = nx*cell_y;
-						int i1 = i0 + nx;
-						return linear_interpolation(g[i0], g[i1], min_y, rcell_sizey_, pos_y);
+						i0 = nx*cell_y;
+						i1 = i0 + nx;
+						lerp_min = min_y;
+						lerp_rcell_size = rcell_sizey_;
+						lerp_pos = pos_y;
+						goto do_lerp;
+						//return linear_interpolation(g[i0], g[i1], min_y, rcell_sizey_, pos_y);
 					} else if (!inside_back) {
 						// linear interpolation on back-left edge
-						int i0 = nx*cell_y + nx*ny*(nz-1);
-						int i1 = i0 + nx;
-						return linear_interpolation(g[i0], g[i1], min_y, rcell_sizey_, pos_y);
+						i0 = nx*cell_y + nx*ny*(nz-1);
+						i1 = i0 + nx;
+						lerp_min = min_y;
+						lerp_rcell_size = rcell_sizey_;
+						lerp_pos = pos_y;
+						goto do_lerp;
+						//return linear_interpolation(g[i0], g[i1], min_y, rcell_sizey_, pos_y);
 					} else {
 						// Bilinear interpolation on left face
-						int i00 = nx*cell_y + nx*ny*cell_z;
-						int i01 = i00 + nx*ny;
-						int i10 = i00 + nx;
-						int i11 = i00 + nx + nx*ny;
-						return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
-									min_y, min_z, rcell_sizey_, rcell_sizez_, pos_y, pos_z);
+						i00 = nx*cell_y + nx*ny*cell_z;
+						i01 = i00 + nx*ny;
+						i10 = i00 + nx;
+						i11 = i00 + nx + nx*ny;
+						blerp_min_x = min_y;
+						blerp_min_y = min_z;
+						blerp_rcell_x = rcell_sizey_;
+						blerp_rcell_y = rcell_sizez_;
+						blerp_pos_x = pos_y;
+						blerp_pos_y = pos_z;
+						goto do_blerp;
+						//return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
+						//                              min_y, min_z, rcell_sizey_, rcell_sizez_, pos_y, pos_z);
 					}
 				} else if (!inside_right) {
 					if (!inside_top) {
 						// Linear interpolation on right-top edge
-						int i0 = nx-1 + nx*(ny-1) + nx*ny*cell_z;
-						int i1 = i0 + nx*ny;
-						return linear_interpolation(g[i0], g[i1], min_z, rcell_sizez_, pos_z);
+						i0 = nx-1 + nx*(ny-1) + nx*ny*cell_z;
+						i1 = i0 + nx*ny;
+						lerp_min = min_z;
+						lerp_rcell_size = rcell_sizez_;
+						lerp_pos = pos_z;
+						goto do_lerp;
+						//return linear_interpolation(g[i0], g[i1], min_z, rcell_sizez_, pos_z);
 					} else if (!inside_bottom) {
 						// Linear interpolation on right-bottom edge
-						int i0 = nx-1 + nx*ny*cell_z;
-						int i1 = i0 + nx*ny;
-						return linear_interpolation(g[i0], g[i1], min_z, rcell_sizez_, pos_z);
+						i0 = nx-1 + nx*ny*cell_z;
+						i1 = i0 + nx*ny;
+						lerp_min = min_z;
+						lerp_rcell_size = rcell_sizez_;
+						lerp_pos = pos_z;
+						goto do_lerp;
+						//return linear_interpolation(g[i0], g[i1], min_z, rcell_sizez_, pos_z);
 					} else if (!inside_front) {
 						// Linear interpolation on right-front edge
-						int i0 = nx-1 + nx*cell_y;
-						int i1 = i0 + nx;
-						return linear_interpolation(g[i0], g[i1], min_y, rcell_sizey_, pos_y);
+						i0 = nx-1 + nx*cell_y;
+						i1 = i0 + nx;
+						lerp_min = min_y;
+						lerp_rcell_size = rcell_sizey_;
+						lerp_pos = pos_y;
+						goto do_lerp;
+						//return linear_interpolation(g[i0], g[i1], min_y, rcell_sizey_, pos_y);
 					} else if (!inside_back) {
 						// Linear interpolation on right-back edge
-						int i0 = nx-1 + nx*cell_y + nx*ny*(nz-1);
-						int i1 = i0 + nx;
-						return linear_interpolation(g[i0], g[i1], min_y, rcell_sizey_, pos_y);
+						i0 = nx-1 + nx*cell_y + nx*ny*(nz-1);
+						i1 = i0 + nx;
+						lerp_min = min_y;
+						lerp_rcell_size = rcell_sizey_;
+						lerp_pos = pos_y;
+						goto do_lerp;
+						//return linear_interpolation(g[i0], g[i1], min_y, rcell_sizey_, pos_y);
 					} else {
 						// Bilinear on right face
-						int i00 = nx-1 + nx*cell_y + nx*ny*cell_z;
-						int i01 = i00 + nx*ny;
-						int i10 = i00 + nx;
-						int i11 = i00 + nx + nx*ny;
-						return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
-						                              min_y, min_z, rcell_sizey_, rcell_sizez_, pos_y, pos_z);
+						i00 = nx-1 + nx*cell_y + nx*ny*cell_z;
+						i01 = i00 + nx*ny;
+						i10 = i00 + nx;
+						i11 = i00 + nx + nx*ny;
+						blerp_min_x = min_y;
+						blerp_min_y = min_z;
+						blerp_rcell_x = rcell_sizey_;
+						blerp_rcell_y = rcell_sizez_;
+						blerp_pos_x = pos_y;
+						blerp_pos_y = pos_z;
+						goto do_blerp;
+						//return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
+						//                              min_y, min_z, rcell_sizey_, rcell_sizez_, pos_y, pos_z);
 					}
 				} // we now know that inside_left && inside_right
 				else if (!inside_top) {
 					if (!inside_front) {
 						// Linear interpolation on top-front edge
-						int i0 = cell_x + nx*(ny-1);
-						int i1 = i0+1;
-						return linear_interpolation(g[i0], g[i1], min_x, rcell_sizex_, pos_x);
+						i0 = cell_x + nx*(ny-1);
+						i1 = i0+1;
+						lerp_min = min_x;
+						lerp_rcell_size = rcell_sizex_;
+						lerp_pos = pos_x;
+						goto do_lerp;
+						//return linear_interpolation(g[i0], g[i1], min_x, rcell_sizex_, pos_x);
 					} else if (!inside_back) {
 						// Linear interpolation on top-back edge
-						int i0 = cell_x + nx*(ny-1) + nx*ny*(nz-1);
-						int i1 = i0+1;
-						return linear_interpolation(g[i0], g[i1], min_x, rcell_sizex_, pos_x);
+						i0 = cell_x + nx*(ny-1) + nx*ny*(nz-1);
+						i1 = i0+1;
+						lerp_min = min_x;
+						lerp_rcell_size = rcell_sizex_;
+						lerp_pos = pos_x;
+						goto do_lerp;
+						//return linear_interpolation(g[i0], g[i1], min_x, rcell_sizex_, pos_x);
 					} else {
 						// bilinear on top face
-						int i00 = cell_x + nx * (ny-1) + nx*ny*cell_z;
-						int i01 = i00 + 1;
-						int i10 = i00 + nx*ny;
-						int i11 = i10 + 1;
-						return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
-						                              min_z, min_x, rcell_sizez_, rcell_sizex_, pos_z, pos_x);
+						i00 = cell_x + nx * (ny-1) + nx*ny*cell_z;
+						i01 = i00 + 1;
+						i10 = i00 + nx*ny;
+						i11 = i10 + 1;
+						blerp_min_x = min_z;
+						blerp_min_y = min_x;
+						blerp_rcell_x = rcell_sizez_;
+						blerp_rcell_y = rcell_sizex_;
+						blerp_pos_x = pos_z;
+						blerp_pos_y = pos_x;
+						goto do_blerp;
+						//return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
+						//                              min_z, min_x, rcell_sizez_, rcell_sizex_, pos_z, pos_x);
 					}
 				} else if (!inside_bottom) {
 					if (!inside_front) {
 						// Linear interpolation on bottom-front edge
-						int i0 = cell_x;
-						int i1 = i0+1;
-						return linear_interpolation(g[i0], g[i1], min_x, rcell_sizex_, pos_x);
+						i0 = cell_x;
+						i1 = i0+1;
+						lerp_min = min_x;
+						lerp_rcell_size = rcell_sizex_;
+						lerp_pos = pos_x;
+						goto do_lerp;
+						//return linear_interpolation(g[i0], g[i1], min_x, rcell_sizex_, pos_x);
 					} else if (!inside_back) {
 						// Linear interpolation on bottom-back
-						int i0 = cell_x + nx*ny*(nz-1);
-						int i1 = i0+1;
-						return linear_interpolation(g[i0], g[i1], min_x, rcell_sizex_, pos_x);
+						i0 = cell_x + nx*ny*(nz-1);
+						i1 = i0+1;
+						lerp_min = min_x;
+						lerp_rcell_size = rcell_sizex_;
+						lerp_pos = pos_x;
+						goto do_lerp;
+						//return linear_interpolation(g[i0], g[i1], min_x, rcell_sizex_, pos_x);
 					} else {
 						// Bilinear interpolation on bottom face
-						int i00 = cell_x + nx*ny*cell_z;
-						int i01 = i00 + 1;
-						int i10 = i00 + nx*ny;
-						int i11 = i10 + 1;
-						return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
-						                              min_z, min_x, rcell_sizez_, rcell_sizex_, pos_z, pos_x);
+						i00 = cell_x + nx*ny*cell_z;
+						i01 = i00 + 1;
+						i10 = i00 + nx*ny;
+						i11 = i10 + 1;
+						blerp_min_x = min_z;
+						blerp_min_y = min_x;
+						blerp_rcell_x = rcell_sizez_;
+						blerp_rcell_y = rcell_sizex_;
+						blerp_pos_x = pos_z;
+						blerp_pos_y = pos_x;
+						goto do_blerp;
+						//return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
+						//                              min_z, min_x, rcell_sizez_, rcell_sizex_, pos_z, pos_x);
 					}
 				} else if (!inside_front) {
 					// Bilinear interpolation on front face
-					int i00 = cell_x + nx*cell_y;
-					int i01 = i00 + nx;
-					int i10 = i00 + 1;
-					int i11 = i10 + nx;
-					return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
-					                              min_x, min_y, rcell_sizex_, rcell_sizey_, pos_x, pos_y);
+					i00 = cell_x + nx*cell_y;
+					i01 = i00 + nx;
+					i10 = i00 + 1;
+					i11 = i10 + nx;
+					blerp_min_x = min_x;
+					blerp_min_y = min_y;
+					blerp_rcell_x = rcell_sizex_;
+					blerp_rcell_y = rcell_sizey_;
+					blerp_pos_x = pos_x;
+					blerp_pos_y = pos_y;
+					goto do_blerp;
+					//return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
+					//                              min_x, min_y, rcell_sizex_, rcell_sizey_, pos_x, pos_y);
 				} else {
 					// Bilinear interpolation on back face
-					int i00 = cell_x + nx*cell_y + nx*ny*(nz-1);
-					int i01 = i00 + nx;
-					int i10 = i00 + 1;
-					int i11 = i10 + nx;
-					return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
-					                              min_x, min_y, rcell_sizex_, rcell_sizey_, pos_x, pos_y);
+					i00 = cell_x + nx*cell_y + nx*ny*(nz-1);
+					i01 = i00 + nx;
+					i10 = i00 + 1;
+					i11 = i10 + nx;
+					blerp_min_x = min_x;
+					blerp_min_y = min_y;
+					blerp_rcell_x = rcell_sizex_;
+					blerp_rcell_y = rcell_sizey_;
+					blerp_pos_x = pos_x;
+					blerp_pos_y = pos_y;
+					goto do_blerp;
+					//return bilinear_interpolation(g[i00], g[i01], g[i10], g[i11],
+					//                              min_x, min_y, rcell_sizex_, rcell_sizey_, pos_x, pos_y);
 				}
+
+
+				// Perform linear interpolation
+				do_lerp:
+				// TODO: precompute alpha, beta, gamma and use just (tri/bi)linear_interpolation_normalized
+				// TODO: move to separate inlined methods instead of using goto
+				ret = linear_interpolation(g[i0], g[i1], lerp_min, lerp_rcell_size, lerp_pos);
+				if constexpr(interpolation_mode == INTERPOLATE_BOTH) {
+					ret_star = linear_interpolation(g_star[i0], g_star[i1], lerp_min, lerp_rcell_size, lerp_pos);
+				}
+				return std::make_pair(ret, ret_star);
+
+
+				// Perform bilinear interpolation
+				do_blerp:
+				// TODO: precompute alpha, beta, gamma and use just (tri/bi)linear_interpolation_normalized
+				// TODO: move to separate inlined methods instead of using goto
+				ret = bilinear_interpolation(g[i00], g[i01], g[i10], g[i11], blerp_min_x, blerp_min_y,
+								 blerp_rcell_x, blerp_rcell_y, blerp_pos_x, blerp_pos_y);
+				if constexpr(interpolation_mode == INTERPOLATE_BOTH) {
+					ret_star = bilinear_interpolation(g_star[i00], g_star[i01], g_star[i10], g_star[i11], blerp_min_x, blerp_min_y,
+									   blerp_rcell_x, blerp_rcell_y, blerp_pos_x, blerp_pos_y);
+				}
+				return std::make_pair(ret, ret_star);
 			}
 
-			// If we're inside the domain, trilinear interpolation
-
-			int i000 = (cell_x    ) + nx * (cell_y    ) + ny * nx * (cell_z    );
-			int i001 = (cell_x    ) + nx * (cell_y    ) + ny * nx * (cell_z + 1);
-			int i010 = (cell_x    ) + nx * (cell_y + 1) + ny * nx * (cell_z    );
-			int i011 = (cell_x    ) + nx * (cell_y + 1) + ny * nx * (cell_z + 1);
-			int i100 = (cell_x + 1) + nx * (cell_y    ) + ny * nx * (cell_z    );
-			int i101 = (cell_x + 1) + nx * (cell_y    ) + ny * nx * (cell_z + 1);
-			int i110 = (cell_x + 1) + nx * (cell_y + 1) + ny * nx * (cell_z    );
-			int i111 = (cell_x + 1) + nx * (cell_y + 1) + ny * nx * (cell_z + 1);
-
-			return trilinear_interpolation(g[i000], g[i001], g[i010], g[i011],
-								           g[i100], g[i101], g[i110], g[i111],
-								           min_x, min_y, min_z,
-								           rcell_sizex_, rcell_sizey_, rcell_sizez_,
-								           pos_x, pos_y, pos_z);
 		}
 	/********** END WIP INTERPOLATION **********/
 };

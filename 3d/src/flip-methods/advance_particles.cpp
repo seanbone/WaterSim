@@ -59,16 +59,25 @@ double FLIP::compute_timestep( const double dt ){
 /** PARTICLE ADVECTION */
 void FLIP::advance_particles(const double dt, const unsigned long step) {
 
+	// Grid dimensions
+	const Mac3d::cellIdx_t nx = MACGrid_->N_;
+	const Mac3d::cellIdx_t ny = MACGrid_->M_;
+	const Mac3d::cellIdx_t nz = MACGrid_->L_;
+
 	// Half timestep
-	double dt_half = 0.5 * dt;
+	const double dt_half = 0.5 * dt;
 
 	// Get the lower and upper bounds of the grid (in meters)
-	double x_lower_bound = -0.5 * MACGrid_->cell_sizex_;
-	double y_lower_bound = -0.5 * MACGrid_->cell_sizey_;
-	double z_lower_bound = -0.5 * MACGrid_->cell_sizez_;
-	double x_upper_bound = MACGrid_->sizex_ + x_lower_bound;
-	double y_upper_bound = MACGrid_->sizey_ + y_lower_bound;
-	double z_upper_bound = MACGrid_->sizez_ + z_lower_bound;
+	const double x_lower_bound = -0.5 * MACGrid_->cell_sizex_;
+	const double y_lower_bound = -0.5 * MACGrid_->cell_sizey_;
+	const double z_lower_bound = -0.5 * MACGrid_->cell_sizez_;
+	const double x_upper_bound = MACGrid_->sizex_ + x_lower_bound;
+	const double y_upper_bound = MACGrid_->sizey_ + y_lower_bound;
+	const double z_upper_bound = MACGrid_->sizez_ + z_lower_bound;
+
+	const double x_last_center = MACGrid_->sizex_ - MACGrid_->cell_sizex_;
+	const double y_last_center = MACGrid_->sizey_ - MACGrid_->cell_sizey_;
+	const double z_last_center = MACGrid_->sizez_ - MACGrid_->cell_sizez_;
 
 	// Position and velocity of the current particle
 	double x_particle;
@@ -126,9 +135,9 @@ void FLIP::advance_particles(const double dt, const unsigned long step) {
 		if(x_next <= x_lower_bound) x_next = 0.;
 		if(y_next <= y_lower_bound) y_next = 0.;
 		if(z_next <= z_lower_bound) z_next = 0.;
-		if(x_next >= x_upper_bound) x_next = MACGrid_->sizex_ - MACGrid_->cell_sizex_; 
-		if(y_next >= y_upper_bound) y_next = MACGrid_->sizey_ - MACGrid_->cell_sizey_;
-		if(z_next >= z_upper_bound) z_next = MACGrid_->sizez_ - MACGrid_->cell_sizez_;
+		if(x_next >= x_upper_bound) x_next = x_last_center; 
+		if(y_next >= y_upper_bound) y_next = y_last_center;
+		if(z_next >= z_upper_bound) z_next = z_last_center;
 
 		// Check if the particle enters in a solid
 
@@ -139,7 +148,7 @@ void FLIP::advance_particles(const double dt, const unsigned long step) {
 
 		// Shift a particle if it would exit the system
 		// (should not happen)
-		if( MACGrid_->is_solid(next_cell_idx_x, next_cell_idx_y, next_cell_idx_z) ) {
+		if( MACGrid_->psolid_[next_cell_idx_x + nx*next_cell_idx_y + nx*ny*next_cell_idx_z] ) {
 
 			if     ( curr_cell_idx_x > next_cell_idx_x ) x_next = (curr_cell_idx_x - 0.25) * MACGrid_->cell_sizex_;
 			else if( curr_cell_idx_x < next_cell_idx_x ) x_next = (curr_cell_idx_x + 0.25) * MACGrid_->cell_sizex_;

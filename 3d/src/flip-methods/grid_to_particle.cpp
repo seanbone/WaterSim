@@ -12,14 +12,13 @@ void FLIP::grid_to_particle(){
 	// FLIP grid to particle transfer
 	//  -> See slides Fluids II, FLIP_explained.pdf
 
-	// FLIP: alpha = 0.
-	// PIC: alpha = 1.
-	double alpha = alpha_;
+	const double coeff_internal = 1. - alpha_;
+	const double coeff_boundary = 1. - std::min(1., 2.*alpha_);
 
 	// Get total number of cells on each axis
-	Mac3d::cellIdx_t nx = MACGrid_->get_num_cells_x();
-	Mac3d::cellIdx_t ny = MACGrid_->get_num_cells_y();
-	Mac3d::cellIdx_t nz = MACGrid_->get_num_cells_z();
+	const Mac3d::cellIdx_t nx = MACGrid_->get_num_cells_x();
+	const Mac3d::cellIdx_t ny = MACGrid_->get_num_cells_y();
+	const Mac3d::cellIdx_t nz = MACGrid_->get_num_cells_z();
 
 	// Position and velocity of the current particle
 	double x_particle;
@@ -72,15 +71,15 @@ void FLIP::grid_to_particle(){
 			cell_idx_z == 0 or cell_idx_z == nz-1 )
 		{
 
-			u_update = interp_u_n1 + (u_particle - interp_u_star) * (1. - std::min(1., 2.*alpha));
-			v_update = interp_v_n1 + (v_particle - interp_v_star) * (1. - std::min(1., 2.*alpha));
-			w_update = interp_w_n1 + (w_particle - interp_w_star) * (1. - std::min(1., 2.*alpha));
+			u_update = interp_u_n1 + (u_particle - interp_u_star) * coeff_boundary;
+			v_update = interp_v_n1 + (v_particle - interp_v_star) * coeff_boundary;
+			w_update = interp_w_n1 + (w_particle - interp_w_star) * coeff_boundary;
 
 		} else {
 
-			u_update = interp_u_n1 + (u_particle - interp_u_star) * (1. - alpha);
-			v_update = interp_v_n1 + (v_particle - interp_v_star) * (1. - alpha);
-			w_update = interp_w_n1 + (w_particle - interp_w_star) * (1. - alpha);
+			u_update = interp_u_n1 + (u_particle - interp_u_star) * coeff_internal;
+			v_update = interp_v_n1 + (v_particle - interp_v_star) * coeff_internal;
+			w_update = interp_w_n1 + (w_particle - interp_w_star) * coeff_internal;
 
 		}
 

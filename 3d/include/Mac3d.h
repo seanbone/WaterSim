@@ -233,103 +233,7 @@ class Mac3d{
 		 */
 		const std::vector< Triplet_t >& get_a_diag();
 		
-		/**Return the weights for u in the mathematical point (i-1/2, j, k)
-		 * Params:
-		 * - i, j, k indicate in which position of the grid the velocity 
-		 * 	 is asked.
-		 */
-		double get_weights_u(const unsigned i, const unsigned j, const unsigned k = 0);
-		
-		/**Return the weights for v in the mathematical point (i, j-1/2, k)
-		 * Params:
-		 * - i, j, k indicate in which position of the grid the velocity 
-		 * 	 is asked.
-		 */
-		double get_weights_v(const unsigned i, const unsigned j, const unsigned k = 0);
-		
-		/**Return the weights for v in the mathematical point (i, j, k-1/2)
-		 * Params:
-		 * - i, j, k indicate in which position of the grid the velocity 
-		 * 	 is asked.
-		 */
-		double get_weights_w(const unsigned i, const unsigned j, const unsigned k = 0);
-		
-		/**Assign the right x-indices for the interpolation of the velocities.
-		 * Params:
-		 * - x is the x coordinate of the point in which the interpolation is required
-		 * - indices_x is the index in x-driection which denotes the cell
-		 * 	 in which the point for the interpolation lies
-		 * - ix0 is assigned by the function and refers to the indices in 
-		 *   https://en.wikipedia.org/wiki/Trilinear_interpolation
-		 * - ix1 is assigned by the function and refers to the indices in
-		 *   https://en.wikipedia.org/wiki/Trilinear_interpolation
-		 * - x0 is assigned by the function and is (ix0-0.5)*cell_sizex_
-		 * - x1 is assigned by the function and is (ix1-0.5)*cell_sizex_
-		 */
-		void assign_x(double x, int indices_x, int& ix0, int& ix1, double& x0, double& x1);
-		
-		/**Assign the right y-indices for the interpolation of the velocities.
-		 * Params:
-		 * - y is the y coordinate of the point in which the interpolation is required
-		 * - indices_y is the index in y-driection which denotes the cell
-		 * 	 in which the point for the interpolation lies
-		 * - iy0 is assigned by the function and refers to the indices in 
-		 *   https://en.wikipedia.org/wiki/Trilinear_interpolation
-		 * - iy1 is assigned by the function and refers to the indices in
-		 *   https://en.wikipedia.org/wiki/Trilinear_interpolation
-		 * - y0 is assigned by the function and is (ix0-0.5)*cell_sizex_
-		 * - y1 is assigned by the function and is (ix1-0.5)*cell_sizex_
-		 */
-		void assign_y(double y, int indices_y, int& iy0, int& iy1, double& y0, double& y1);
-		
-		/**Assign the right z-indices for the interpolation of the velocities.
-		 * Params:
-		 * - z is the z coordinate of the point in which the interpolation is required
-		 * - indices_z is the index in z-driection which denotes the cell
-		 * 	 in which the point for the interpolation lies
-		 * - iz0 is assigned by the function and refers to the indices in 
-		 *   https://en.wikipedia.org/wiki/Trilinear_interpolation
-		 * - iz1 is assigned by the function and refers to the indices in
-		 *   https://en.wikipedia.org/wiki/Trilinear_interpolation
-		 * - z0 is assigned by the function and is (ix0-0.5)*cell_sizex_
-		 * - z1 is assigned by the function and is (ix1-0.5)*cell_sizex_
-		 */
-		void assign_z(double z, int indices_z, int& iz0, int& iz1, double& z0, double& z1);
-		
-		/**Assign the values xd, yd, zd explained in https://en.wikipedia.org/wiki/Trilinear_interpolation
-		 * Params:
-		 * - xd, yd, zd are assigned by the function
-		 * - x0, x1, y0, y1, z0, z1 describe the points in which the values 
-		 *   of the velocities are taken in order to interpolate the velocity.
-		 *   For better description see https://en.wikipedia.org/wiki/Trilinear_interpolation
-		 * - x, y, z are the coordinate of the point in which the interpolation has to be done
-		 */
-		void assign_d(double& xd, double& yd, double& zd, double x0, double x1, double y0, double y1, double z0, double z1, double x, double y, double z);
-		
-		/**Return the interpolation of u or u* in the point (x,y,z)
-		 * Params:
-		 * - x, y, z are the coordinate in which the interpolation is made
-		 * - use_u_star indicate if the velocity u (use_u_star == 0) or the 
-		 * 	 velocity u* (use_u_star == 1) is used for the interpolation
-		 */
-		double get_interp_u(double x, double y, double z, const bool use_u_star = false);
-		
-		/**Return the interpolation of v or v* in the point (x,y,z)
-		 * Params:
-		 * - x, y, z are the coordinate in which the interpolation is made
-		 * - use_v_star indicate if the velocity v (use_v_star == 0) or the 
-		 * 	 velocity v* (use_v_star == 1) is used for the interpolation
-		 */
-		double get_interp_v(double x, double y, double z, const bool use_v_star = false);
-		
-		/**Return the interpolation of w or w* in the point (x,y,z)
-		 * Params:
-		 * - x, y, z are the coordinate in which the interpolation is made
-		 * - use_w_star indicate if the velocity w (use_w_star == 0) or the 
-		 * 	 velocity w* (use_w_star == 1) is used for the interpolation
-		 */
-		double get_interp_w(double x, double y, double z, const bool use_w_star = false);
-		
+
 		//------------------------ SETTERS -----------------------------
 		/**Set the x-velocity in the mathematical point (i-1/2, j, k) at value
 		 * Params:
@@ -397,30 +301,6 @@ class Mac3d{
 		 */
 		void set_pressure(const Eigen::VectorXd& p);
 		
-		/**Set the weight for u in the mathematical point (i-1/2, j, k) at value
-		 * Params:
-		 * - i, j, k indicate in which position of the grid the weight_u 
-		 * 	 is set
-		 * - value is the value at which the weight is set
-		 */
-		void set_weights_u(const unsigned i, const unsigned j, const unsigned k, double value);
-		
-		/**Set the weight for v in the mathematical point (i,j-1/2,k) at value
-		 * Params:
-		 * - i, j, k indicate in which position of the grid the weight_v
-		 * 	 is set
-		 * - value is the value at which the weight is set
-		 */
-		void set_weights_v(const unsigned i, const unsigned j, const unsigned k, double value);
-		
-		/**Set the weight for w in the mathematical point (i,j,k-1/2) at value
-		 * Params:
-		 * - i, j, k indicate in which position of the grid the weight_w
-		 * 	 is set
-		 * - value is the value at which the weight is set
-		 */
-		void set_weights_w(const unsigned i, const unsigned j, const unsigned k, double value);
-				
 		/**Set all grid velocities to zero for particle-to-grid transfer
 		 */
 		void set_velocities_to_zero();

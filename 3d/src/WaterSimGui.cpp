@@ -3,7 +3,7 @@
 #include <utility>
 
 WaterSimGui::WaterSimGui(viewer_t &viewer, const SimConfig &cfg)
-		: Simulation(), m_watersim(cfg), p_viewer(&viewer) {
+		: Simulation(), p_viewer(&viewer), m_watersim(cfg) {
 
 	// Index of ViewerData instance dedicated to particles
 	m_particles_data_idx = viewer.append_mesh();

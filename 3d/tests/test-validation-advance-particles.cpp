@@ -15,13 +15,12 @@ int main(){
 
 	FLIP* flip = new FLIP(*(ncReader->particles), ncReader->MACGrid, ncReader->cfg);
 
-	unsigned step = ncReader->timestep;
 	double dt = ncReader->cfg.getTimeStep();
 	double dt_new = flip->compute_timestep(dt);
 	double num_substeps = std::ceil(dt/dt_new);
 	for( int s = 0; s < num_substeps ; ++s ){
 		
-		flip->advance_particles(dt/num_substeps, step);
+		flip->advance_particles(dt/num_substeps);
 	}
 
 	ncReader->readAll(6);

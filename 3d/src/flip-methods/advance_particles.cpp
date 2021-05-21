@@ -57,12 +57,11 @@ double FLIP::compute_timestep( const double dt ){
 
 
 /** PARTICLE ADVECTION */
-void FLIP::advance_particles(const double dt, const unsigned long step) {
+void FLIP::advance_particles(const double dt) {
 
 	// Grid dimensions
 	const Mac3d::cellIdx_t nx = MACGrid_->N_;
 	const Mac3d::cellIdx_t ny = MACGrid_->M_;
-	const Mac3d::cellIdx_t nz = MACGrid_->L_;
 
 	// Half timestep
 	const double dt_half = 0.5 * dt;

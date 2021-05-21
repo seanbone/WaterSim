@@ -12,8 +12,8 @@ NcReader::NcReader( const std::string& filePath, const std::string& cfgPath ):
 	timestep      = readScalar<unsigned>("timestep");
 
 	MACGrid   = new Mac3d(_n, _m, _l, _dx, _dy, _dz);
-	particles = new Particles(num_particles, cfg, *MACGrid);
-	referenceParticles = new Particles(num_particles, cfg, *MACGrid);
+	particles = new Particles(num_particles, *MACGrid);
+	referenceParticles = new Particles(num_particles, *MACGrid);
 
 	unsigned cacheBlockSize = 64;
 	uMAC  = (double*) aligned_alloc(cacheBlockSize, (_n+1) * _m * _l * sizeof(double));
@@ -55,9 +55,9 @@ void NcReader::toFlipStructures(){
 	std::copy(referenceParticles->v, referenceParticles->v + num_particles, particles->v);
 	std::copy(referenceParticles->w, referenceParticles->w + num_particles, particles->w);
 
-	for(unsigned i = 0; i < _n+1; ++i){
-		for(unsigned j = 0; j < _m+1; ++j){
-			for(unsigned k = 0; k < _l+1; ++k){
+	for(int i = 0; i < _n+1; ++i){
+		for(int j = 0; j < _m+1; ++j){
+			for(int k = 0; k < _l+1; ++k){
 
 				if( j < _m && k < _l ){
 					MACGrid->set_u(i, j, k, uMAC[i + (_n+1) * j + (_n+1) *  _m    * k]);
@@ -152,9 +152,9 @@ void NcReader::validate(){
 		maxErrW = std::max(maxErrW, std::abs(rErr(referenceParticles->w[i], particles->w[i])));
 	}
 
-	for(unsigned i = 0; i < _n+1; ++i){
-		for(unsigned j = 0; j < _m+1; ++j){
-			for(unsigned k = 0; k < _l+1; ++k){
+	for(int i = 0; i < _n+1; ++i){
+		for(int j = 0; j < _m+1; ++j){
+			for(int k = 0; k < _l+1; ++k){
 
 				if( j < _m && k < _l ){
 					maxErrUMAC  = std::max(maxErrUMAC,  std::abs(rErr(uMAC [i + (_n+1) * j + (_n+1) *  _m    * k], MACGrid->get_u(i, j, k))));

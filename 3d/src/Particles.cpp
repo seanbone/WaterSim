@@ -2,7 +2,7 @@
 
 #include <cstdlib>
 
-Particles::Particles(Particles::particleIdx_t nParticles, const SimConfig &cfg, const Mac3d &macGrid)
+Particles::Particles(Particles::particleIdx_t nParticles, const Mac3d &macGrid)
 		: rcell_size_x_(1.0 / macGrid.get_cell_sizex()), rcell_size_y_(1.0 / macGrid.get_cell_sizey()),
 		  rcell_size_z_(1.0 / macGrid.get_cell_sizez()), num_particles_(nParticles) {
 

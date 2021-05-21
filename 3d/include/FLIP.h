@@ -3,7 +3,6 @@
 
 #include "Mac3d.h"
 #include "SimConfig.h"
-#include "NcWriter.h"
 #include "Particles.h"
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
@@ -11,6 +10,10 @@
 #include <algorithm> // std::copy
 #include <Eigen/IterativeLinearSolvers> // solve sparse systems
 #include <chrono>
+
+#ifdef WRITE_REFERENCE
+#include "NcWriter.h"
+#endif
 
 class FLIP {
 public:
@@ -93,17 +96,18 @@ public:
 	/** Apply RK2 to update particle positions
 	 * Params:
 	 * - dt is the amount of time to advance the simulation by
-	 * - step is the number of steps performed
 	 */
-	void advance_particles(const double dt, const unsigned long step);
+	void advance_particles(const double dt);
 
 private:
 
 	// The configuration
 	const SimConfig cfg_;
 
+#ifdef WRITE_REFERENCE
 	// NcWriter object to write reference data
 	NcWriter* ncWriter_;
+#endif
 	
 	// FLIP particles
 	Particles& particles_;

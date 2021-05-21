@@ -87,7 +87,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	apply_forces(dt);
 	
 	if (cfg_.getApplyMeteorForce() && step <= 200 ){
-		explode(dt, step, 15, 0, 15, 2, 800);
+		explode(dt, step, 15, 0, 15, 2., 800.);
 	}
 
 	tsctimer.stop_timing("apply_forces", true, "");

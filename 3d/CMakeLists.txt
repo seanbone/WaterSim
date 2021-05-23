@@ -86,6 +86,7 @@ file(GLOB SRC_FILES_CORE
         ${PROJECT_SOURCE_DIR}/src/SimConfig.cpp
         ${PROJECT_SOURCE_DIR}/src/WaterSim.cpp
         ${PROJECT_SOURCE_DIR}/src/flip-methods/*.cpp
+		${PROJECT_SOURCE_DIR}/src/ConjugateGradient.cpp
         )
 
 # Make a library of the "core" FLIP solver

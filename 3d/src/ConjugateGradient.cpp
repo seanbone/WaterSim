@@ -171,3 +171,27 @@ void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
         sca_product(s, beta, z, num_cells, s);
     }
 }
+
+//stuff here can be moved to extra files
+cg::SparseMat::SparseMat(unsigned a, unsigned b): v(a), r(b){
+    values = new double [v];
+    col_idx = new unsigned [v];
+    row_idx = new unsigned [r];
+}
+cg::SparseMat::~SparseMat(){
+    delete [] values;
+    delete [] col_idx;
+    delete [] row_idx;
+}
+
+
+cg::ICConjugateGradientSolver::~ICConjugateGradientSolver() {
+    delete [] p;
+    delete [] q;
+    delete [] r;
+    delete [] z;
+    delete [] s;
+    delete [] precon_diag;
+    delete [] A_diag;
+
+}

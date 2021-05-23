@@ -1,11 +1,16 @@
 /*
  * A test to check the correctness of the pressure solver
  */
+#include <iostream>
+#include <cassert>
 #include <Eigen/Sparse>
 #include <Eigen/IterativeLinearSolvers> // solve sparse systems
 
 #include "includes/watersim-test-common.h"
 #include "Mac3d.h"
+#include "FLIP.h"
+#include "NcReader.h"
+#include "ConjugateGradient.hpp"
 
 
 void compute_pressure_matrix(Mac3d* MACGrid_, Eigen::SparseMatrix<double>& A_) {
@@ -174,15 +179,14 @@ int main(){
 
 	// first step: get the old solver to run on some data
 
-	// initialize the MACGrid
-	unsigned n=40, m=40, l=40;
-	double dx=0.1, dy=0.1, dz=0.1;
-	double fluid_density = 1000.0;
-	Mac3d grid(n, m, l, dx, dy, dz);
-	
+	// initialize the FLIP instance which will also give us the MACGrid
+	std::cout << "Initializing NcReader" << std::endl;
+	NcReader nc_reader("ref-340.nc", "config.json");
 
-	// left to do:
-	//   ensure data for 
+	nc_reader.toFlipStructures();
+
+	// initialize the MACGrid
+	Mac3d& grid = *(nc_reader.MACGrid);
 
 	// initialize the A_ matrix
 	Eigen::SparseMatrix<double> A_;
@@ -190,27 +194,56 @@ int main(){
 	// initialize the d_ vector
 	Eigen::VectorXd d_;
 	
-	// initialize the dt vector
-	double dt = 0.025;
+	// initialize the dt value
+	double dt = nc_reader.cfg.getTimeStep();
+	double fluid_density = nc_reader.cfg.getDensity();
 	
+
+	// ###############  Reference Solver  #################
 	//   void FLIP::apply_pressure_correction(const double dt) {
     // Compute A matrix
+	// note that A_ is only written
     compute_pressure_matrix(&grid, A_);
 
     // Compute rhs d
+	// note that d_ is only written
     compute_pressure_rhs(&grid, d_, fluid_density, dt);
 
     // Solve for p: Ap = d (MICCG(0))
     using namespace Eigen;
     using solver_t = ConjugateGradient< SparseMatrix<double>, Lower|Upper, IncompleteCholesky<double> >;
 
+
+	std::cout << "Solving using the reference solver..." << std::endl;
     solver_t solver;
     solver.setMaxIterations(100);
     solver.compute(A_);
     VectorXd p = solver.solve(d_);
 
-	
+	std::cout << "Vector p after reference solver: ";
+	for(int i = 0; i < p.size() % 40; i++) std::cout << p(i) << " ";
+	std::cout << std::endl;
+
 
 	// second step: get the new solver to run on the same data
+	// ###############  Optimized Solver  #################
+	//
+	
 
+	// get a raw array of the right-hand side
+	double* rhs = d_.data();
+
+	cg::ICConjugateGradientSolver cg_solver(100, grid);
+	unsigned num_cells = cg_solver.num_cells;
+	double* p_array = cg_solver.p;
+
+	// should really be the same size!
+	assert (num_cells == d_.size());
+	
+	std::cout << "Solving using the new solver..." << std::endl;
+	cg_solver.solve(rhs, p_array);
+
+	std::cout << "Vector p after optimized solver: ";
+	for(int i = 0; i < p.size() % 40; i++) std::cout << p_array[i] << " ";
+	std::cout << std::endl;
 }

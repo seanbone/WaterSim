@@ -35,12 +35,14 @@ namespace cg {
 
 		const double tau;
 
+		public:
 	    // number of rows aka. len of rhs aka. len of res, guess vector ect.
         const unsigned num_cells;
 
         // pressure
 	    double *p;
 		
+		protected:
 		// intermediate vector for pressure solution
 	    double *q;
 
@@ -93,17 +95,6 @@ namespace cg {
 	};
 
 }
-//stuff here can be moved to extra files
-cg::SparseMat::SparseMat(unsigned a, unsigned b): v(a), r(b){
-    values = new double [v];
-    col_idx = new unsigned [v];
-    row_idx = new unsigned [r];
-}
-cg::SparseMat::~SparseMat(){
-    delete [] values;
-    delete [] col_idx;
-    delete [] row_idx;
-}
 /*
 cg::SparseMat::SparseMat(SparseMat &M): v(M.v), r(M.r){
     double values[v];
@@ -111,18 +102,6 @@ cg::SparseMat::SparseMat(SparseMat &M): v(M.v), r(M.r){
     int row_idx[r];
 };
 */
-
-cg::ICConjugateGradientSolver::~ICConjugateGradientSolver() {
-    delete [] p;
-    delete [] q;
-    delete [] r;
-    delete [] z;
-    delete [] s;
-    delete [] precon_diag;
-    delete [] A_diag;
-
-}
-
 
 inline double cg::ICConjugateGradientSolver::dot_product(double *a, double *b, const unsigned int n) {
     double tmp = 0;

@@ -1,4 +1,3 @@
-#ifndef __conjugate_gradient_hpp_
 #define __conjugate_gradient_hpp_
 
 // NOTE included new header

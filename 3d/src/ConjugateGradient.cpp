@@ -36,27 +36,26 @@ cg::ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, con
 
 // apply the preconditioner (L L^T)^-1 by solving Lq = d and Lp = q
 void ICConjugateGradientSolver::applyPreconditioner(const double *r, double *z) const {
-	// element 1,1,1
-	for (unsigned k = 1; k < n_cells_z; k++) {
-		for (unsigned j = 1; j < n_cells_y; j++) {
-			for (unsigned i = 1; i < n_cells_x; i++) {
+	for (unsigned k = 0; k < n_cells_z; k++) {
+		for (unsigned j = 0; j < n_cells_y; j++) {
+			for (unsigned i = 0; i < n_cells_x; i++) {
 				const unsigned cellidx = i + j*stride_y + k*stride_z;
-				double t = r[cellidx]
-					- (-1 * precon_diag[cellidx - stride_x] * q[cellidx - stride_x])
-					- (-1 * precon_diag[cellidx - stride_y] * q[cellidx - stride_y])
-					- (-1 * precon_diag[cellidx - stride_z] * q[cellidx - stride_z]);
+				double t = r[cellidx];
+				if (i > 0) t += precon_diag[cellidx - stride_x] * q[cellidx - stride_x];
+				if (j > 0) t += precon_diag[cellidx - stride_y] * q[cellidx - stride_y];
+				if (k > 0) t += precon_diag[cellidx - stride_z] * q[cellidx - stride_z];
 				q[cellidx] = t * precon_diag[cellidx];
 			}
 		}
 	}
-	for (unsigned k = n_cells_z-1; k >= 1; k--) {
-		for (unsigned j = n_cells_y-1; j >= 1; j--) {
-			for (unsigned i = n_cells_x-1; i >= 1; i--) {
+	for (int k = n_cells_z-1; k >= 0; k--) {
+		for (int j = n_cells_y-1; j >= 0; j--) {
+			for (int i = n_cells_x-1; i >= 0; i--) {
 				const unsigned cellidx = i + j*stride_y + k*stride_z;
-				double t = q[cellidx]
-					- (-1 * precon_diag[cellidx] * z[cellidx + stride_x])
-					- (-1 * precon_diag[cellidx] * z[cellidx + stride_y])
-					- (-1 * precon_diag[cellidx] * z[cellidx + stride_z]);
+				double t = q[cellidx];
+				if (i + 1 < (int) n_cells_x) t += precon_diag[cellidx] * z[cellidx + stride_x];
+				if (j + 1 < (int) n_cells_y) t += precon_diag[cellidx] * z[cellidx + stride_y];
+				if (k + 1 < (int) n_cells_z) t += precon_diag[cellidx] * z[cellidx + stride_z];
 				z[cellidx] = t * precon_diag[cellidx];
 			}
 		}
@@ -64,24 +63,14 @@ void ICConjugateGradientSolver::applyPreconditioner(const double *r, double *z) 
 }
 
 void ICConjugateGradientSolver::computePreconDiag() {
-
 	for (unsigned k = 0; k < n_cells_z; k++) {
 		for (unsigned j = 0; j < n_cells_y; j++) {
 			for (unsigned i = 0; i < n_cells_x; i++) {
-				if (i == 0 or j == 0 or k == 0) {
-					const unsigned cellidx = i + j*stride_y + k*stride_z;
-					precon_diag[cellidx] = 0;
-				}
-			}}}
-	// Q: where is precon_diag[i=0|j=0|k=0] initialized?
-	for (unsigned k = 1; k < n_cells_z; k++) {
-		for (unsigned j = 1; j < n_cells_y; j++) {
-			for (unsigned i = 1; i < n_cells_x; i++) {
 				const unsigned cellidx = i + j*stride_y + k*stride_z;
-				const double e = A_diag[cellidx]
-					- std::pow(-1 * precon_diag[cellidx-stride_x], 2)
-					- std::pow(-1 * precon_diag[cellidx-stride_y], 2)
-					- std::pow(-1 * precon_diag[cellidx-stride_z], 2);
+				double e = A_diag[cellidx];
+				if (i > 0) e -= std::pow(-1 * precon_diag[cellidx-stride_x], 2);
+				if (j > 0) e -= std::pow(-1 * precon_diag[cellidx-stride_y], 2);
+				if (k > 0) e -= std::pow(-1 * precon_diag[cellidx-stride_z], 2);
 				precon_diag[cellidx] = 1 / std::sqrt(e + 1e-30);
 			}
 		}
@@ -197,6 +186,7 @@ void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
 			if (max_abs_val < thresh) return;
 		}
 
+		// z = M⁻¹ r
 		applyPreconditioner(r, z);
 		const double rho_new = dot_product(z, r, num_cells);
 		const double beta = rho_new / rho;

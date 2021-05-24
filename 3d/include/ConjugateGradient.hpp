@@ -126,6 +126,7 @@ inline void cg::ICConjugateGradientSolver::Mat_mult(SparseMat *M, const double *
             ++curr_col_idx;
         }
         res[*curr_row_idx] = tmp;
+        ++curr_row_idx;
     }
 }
 

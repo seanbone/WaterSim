@@ -34,9 +34,10 @@ void FLIP::apply_pressure_correction(const double dt) {
 	double* rhs = d_.data();
 	cg::ICConjugateGradientSolver cg_solver(100, *MACGrid_);
 	unsigned num_cells = cg_solver.num_cells;
-	double* p_array = cg_solver.p;
+    VectorXd p(num_cells);
+	double* p_array = p.data();
 	cg_solver.solve(rhs, p_array);
-	Eigen::Map<VectorXd> p(p_array, num_cells, 1);
+
 #endif
     // Copy pressures to MAC Grid
     MACGrid_->set_pressure(p);

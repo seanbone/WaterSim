@@ -1,5 +1,6 @@
 #include "ConjugateGradient.hpp"
 #include <cassert>
+#include <cmath>
 #include <iostream>
 
 
@@ -92,36 +93,32 @@ void ICConjugateGradientSolver::computePreconDiag() {
 
 // apply the matrix A
 // element order: k-j-i
-void ICConjugateGradientSolver::applyA(const double *s, double *z) const{
-
+void ICConjugateGradientSolver::applyA(const double *b, double *y) const{
 	for (unsigned k = 0; k < n_cells_z; k++) {
 		for (unsigned j = 0; j < n_cells_y; j++) {
 			for (unsigned i = 0; i < n_cells_x; i++) {
 				const unsigned cellidx = i + j*stride_y + k*stride_z;
-				if (not grid.is_fluid(i, j, k)) continue;
-                // Copy diagonal entry
-                auto& A_diag = grid.get_a_diag()[i + j*stride_y + k*stride_z];
-                // triplets.push_back(A_diag);
-				z[A_diag.row()] += A_diag.value() * s[A_diag.col()];
+                auto& diag_e = grid.get_a_diag()[cellidx];
+				y[diag_e.row()] += diag_e.value() * b[diag_e.col()];
 
                 // Compute off-diagonal entries
                 if (grid.is_fluid(i, j, k)){
                     // x-adjacent cells
                     if (i+1 < n_cells_x && grid.is_fluid(i+1, j, k)){
-						z[cellidx] += -1 * s[cellidx+stride_x];
-						z[cellidx+stride_x] += -1 * s[cellidx];
+						y[cellidx] 			+= -1 * b[cellidx+stride_x];
+						y[cellidx+stride_x] += -1 * b[cellidx];
                     }
 
                     // y-adjacent cells
                     if (j+1 < n_cells_y && grid.is_fluid(i, j+1, k)){
-						z[cellidx] += -1 * s[cellidx+stride_y];
-						z[cellidx+stride_y] += -1 * s[cellidx];
+						y[cellidx] 			+= -1 * b[cellidx+stride_y];
+						y[cellidx+stride_y] += -1 * b[cellidx];
                     }
 
                     // z-adjacent cells
                     if (k+1 < n_cells_z && grid.is_fluid(i, j, k+1)){
-						z[cellidx] += -1 * s[cellidx+stride_z];
-						z[cellidx+stride_z] += -1 * s[cellidx];
+						y[cellidx] 			+= -1 * b[cellidx+stride_z];
+						y[cellidx+stride_z] += -1 * b[cellidx];
                     }
 				}
 			}
@@ -129,6 +126,18 @@ void ICConjugateGradientSolver::applyA(const double *s, double *z) const{
 	}
 }
 
+void checknan(const double* array, int len, std::string array_name="array") {
+	int count_left = 20;
+	for (int i = 0; i<len; i++) {
+		if(std::isnan(array[i])) {
+			std::cout
+				<< "WARNING: NaN found in " << array_name <<
+				" at position " << i << "!" << std::endl;
+			if (--count_left == 0)
+				std::cout << "[further occurrences ignored]" << std::endl;
+		}
+	}
+}
 
 void print_array_head(const double* array, std::string prefix, unsigned number) {
 	std::cout << prefix;
@@ -138,13 +147,25 @@ void print_array_head(const double* array, std::string prefix, unsigned number) 
 
 void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
     // initialize initial guess and residual
-	std::cout << "Solving..." << std::endl;
 	print_array_head(rhs,  "RHS: ");
 
 	// p = 0
     std::fill(p,p+num_cells,0);
 	// r = d
     std::copy(rhs,rhs+num_cells,r);
+	// catch zero rhs early
+	{
+		double max_abs_val = 0;
+		for (double* el = r; el < r+num_cells; el++) {
+			const double abs_val = std::abs(*el);
+			if (max_abs_val < abs_val) max_abs_val = abs_val;
+		}
+		// std::cout << "Max abs val: " << max_abs_val << std::endl;
+		if (max_abs_val < thresh) {
+			std::cout << "Number of steps: " << step + 1 << std::endl;
+			return;
+		}
+	}
 
 	computePreconDiag();
 	// s = M⁻¹ r
@@ -162,6 +183,7 @@ void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
 		// print_array_head(r,  "r: ");
 		// z = A s
 		applyA(s, z);
+		//checknan(s, num_cells, "s");
 		// print_array_head(z,  "z: ");
 
 		// α = ρ / <s,z>
@@ -179,7 +201,13 @@ void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
 				if (max_abs_val < abs_val) max_abs_val = abs_val;
 			}
 			// std::cout << "Max abs val: " << max_abs_val << std::endl;
-			if (max_abs_val < thresh) return;
+			if (max_abs_val < thresh) {
+				std::cout << "Number of steps: " << step + 1 << std::endl;
+				return;
+			}
+			else if (step + 1 == max_steps) {
+				std::cout << "WARNING: Failed to find a solution in " << step + 1 << " steps (|r|=" << max_abs_val <<")!" << std::endl;
+			}
 		}
 
 		// z = M⁻¹ r

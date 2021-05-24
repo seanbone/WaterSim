@@ -101,10 +101,43 @@ cg::SparseMat::SparseMat(SparseMat &M): v(M.v), r(M.r){
     int row_idx[r];
 };
 */
-
+/*
 inline double cg::ICConjugateGradientSolver::dot_product(const double *a, const double *b, const unsigned int n) {
     double tmp = 0;
     for(unsigned i = 0 ; i < n; ++i ) {
+        tmp += a[i]*b[i];
+    }
+    return tmp;
+}
+ */
+
+// using avx2
+inline double cg::ICConjugateGradientSolver::dot_product(const double *a, const double *b, const unsigned int n) {
+    double tmp = 0;
+    unsigned i = 0;
+    // we want 2 FMAs because of Skylake ports
+    // so we do 8 doubles per step
+    __m256d vec_a1, vec_a2, vec_b1, vec_b2, sol;
+    __m256d vec_por1 = _mm256_setzero_pd();
+    __m256d vec_por2 = _mm256_setzero_pd();
+
+    //__m256d vec_por2 = _mm256_setzero_pd();
+    for(; i < n-8; i +=8 ) {
+        __m256d vec_a1 = _mm256_loadu_pd(a+i);
+        __m256d vec_b1 = _mm256_loadu_pd(b+i);
+        __m256d vec_a2 = _mm256_loadu_pd(a+4+i);
+        __m256d vec_b2 = _mm256_loadu_pd(b+4+i);
+
+        // not sure if we get aliasing issues here
+        vec_por1 = _mm256_fmadd_pd(vec_a1,vec_b1,vec_por1);
+        vec_por2 = _mm256_fmadd_pd(vec_a2,vec_b2,vec_por2);
+    }
+    // reduce all 8 into 1
+    sol = _mm256_hadd_pd(vec_por1,vec_por2);
+    sol = _mm256_hadd_pd(sol,sol);
+    //??? not sure
+    tmp = sol[0] + sol[2];
+    for(; i < n; ++i ) {
         tmp += a[i]*b[i];
     }
     return tmp;
@@ -129,14 +162,69 @@ inline void cg::ICConjugateGradientSolver::Mat_mult(SparseMat *M, const double *
         ++curr_row_idx;
     }
 }
-
+/*
 inline void cg::ICConjugateGradientSolver::sca_add_product(const double *a, const double b, const unsigned int n, double *res) {
-    for(unsigned i = 0 ; i < n; ++i ) {
+    for(unsigned i = 0; i < n; ++i ) {
         res [i] += a[i] * b;
     }
 }
+ */
+
+inline void cg::ICConjugateGradientSolver::sca_add_product(const double *a, const double b, const unsigned int n, double *res) {
+    unsigned i = 0;
+    // we want 2 FMAs because of Skylake ports
+    // so we do 8 doubles per step
+    __m256d vec_a1, vec_a2, vec_res, vec_res1;
+    __m256d vec_b1 = _mm256_set1_pd(b);
+    __m256d vec_b2 = _mm256_set1_pd(b);
+
+    //__m256d vec_por2 = _mm256_setzero_pd();
+    for(; i < n-8; i +=8 ) {
+        __m256d vec_a1 = _mm256_loadu_pd(a+i);
+        __m256d vec_a2 = _mm256_loadu_pd(a+i+4);
+        __m256d vec_res = _mm256_loadu_pd(res+i);
+        __m256d vec_res1 = _mm256_loadu_pd(res+i+4);
+
+        // not sure if we get aliasing issues here
+        vec_res = _mm256_fmadd_pd(vec_a1,vec_b1,vec_res);
+        vec_res1 = _mm256_fmadd_pd(vec_a2,vec_b2,vec_res1);
+        _mm256_storeu_pd(res+i,vec_res);
+        _mm256_storeu_pd(res+i+4,vec_res1);
+    }
+    for(; i < n; ++i ) {
+        res [i] += a[i] * b;
+    }
+}
+/*
 inline void cg::ICConjugateGradientSolver::sca_product(const double *a, double b,double *c, const unsigned int n, double *res) {
     for(unsigned i = 0 ; i < n; ++i ) {
+        res[i] = a[i] * b + c[i];
+    }
+}
+*/
+
+inline void cg::ICConjugateGradientSolver::sca_product(const double *a, double b,double *c, const unsigned int n, double *res) {
+    unsigned i = 0;
+    // we want 2 FMAs because of Skylake ports
+    // so we do 8 doubles per step
+    __m256d vec_a1, vec_a2, vec_c1, vec_c2, vec_res, vec_res1;
+    __m256d vec_b1 = _mm256_set1_pd(b);
+    __m256d vec_b2 = _mm256_set1_pd(b);
+
+    //__m256d vec_por2 = _mm256_setzero_pd();
+    for (; i < n - 8; i += 8) {
+        __m256d vec_a1 = _mm256_loadu_pd(a + i);
+        __m256d vec_a2 = _mm256_loadu_pd(a + i + 4);
+        __m256d vec_c1 = _mm256_loadu_pd(c + i);
+        __m256d vec_c2 = _mm256_loadu_pd(c + i + 4);
+
+        // not sure if we get aliasing issues here
+        vec_res = _mm256_fmadd_pd(vec_a1, vec_b1, vec_c1);
+        vec_res1 = _mm256_fmadd_pd(vec_a2, vec_b2, vec_c2);
+        _mm256_storeu_pd(res + i, vec_res);
+        _mm256_storeu_pd(res + i + 4, vec_res1);
+    }
+    for(; i < n; ++i ) {
         res[i] = a[i] * b + c[i];
     }
 }

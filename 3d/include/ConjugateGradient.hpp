@@ -9,7 +9,6 @@
 namespace cg {
 	// incomplete cholesky conjugate gradient
     struct SparseMat {
-        SparseMat() = default;
         SparseMat(unsigned a, unsigned b);
         ~SparseMat();
 
@@ -65,7 +64,7 @@ namespace cg {
 	    unsigned step, max_steps;
 
 	    // threshhold
-	    const double thresh = 1.e-9;
+	    const double thresh = 1e-9;
 
 	    // unsure where rho comes from
 	    const double rho = 1.;
@@ -77,17 +76,17 @@ namespace cg {
         ICConjugateGradientSolver(unsigned max_steps, const Mac3d& grid);
 
 		void computePreconDiag();
-		void applyPreconditioner(const double *r, double *z);
-		void applyA(const double *z, double *s);
+		void applyPreconditioner(const double *r, double *z) const;
+		void applyA(const double *s, double *z) const;
 
         // not sure where to put this
         //res[i] = a[i] * b + c[i]
-        inline void sca_product(double* a, double b, double* c,  const unsigned n, double *res);
+        inline void sca_product(const double* a, double b, double* c,  const unsigned n, double *res);
 
         // res[] += a[] * b
         inline void sca_add_product(const double * a, const double b, const unsigned n, double *res);
 
-        inline double dot_product(double * a, double * b, const unsigned n);
+        inline double dot_product(const double * a, const double * b, const unsigned n);
 
         static void Mat_mult(SparseMat *M, const double *a, double *res);
 
@@ -103,7 +102,7 @@ cg::SparseMat::SparseMat(SparseMat &M): v(M.v), r(M.r){
 };
 */
 
-inline double cg::ICConjugateGradientSolver::dot_product(double *a, double *b, const unsigned int n) {
+inline double cg::ICConjugateGradientSolver::dot_product(const double *a, const double *b, const unsigned int n) {
     double tmp = 0;
     for(unsigned i = 0 ; i < n; ++i ) {
         tmp += a[i]*b[i];
@@ -113,7 +112,6 @@ inline double cg::ICConjugateGradientSolver::dot_product(double *a, double *b, c
 
 inline void cg::ICConjugateGradientSolver::Mat_mult(SparseMat *M, const double *a, double *res) {
     const unsigned v = M->v;
-    const unsigned r = M->r;
     double tmp = 0;
     // we assume first val of row dx is 0
     // and last val is past the end val by convention
@@ -136,7 +134,7 @@ inline void cg::ICConjugateGradientSolver::sca_add_product(const double *a, cons
         res [i] += a[i] * b;
     }
 }
-inline void cg::ICConjugateGradientSolver::sca_product(double *a, double b,double *c, const unsigned int n, double *res) {
+inline void cg::ICConjugateGradientSolver::sca_product(const double *a, double b,double *c, const unsigned int n, double *res) {
     for(unsigned i = 0 ; i < n; ++i ) {
         res[i] = a[i] * b + c[i];
     }

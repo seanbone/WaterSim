@@ -1,5 +1,6 @@
 #include "FLIP.h"
 #include "tsc_x86.hpp"
+//#define WRITE_REFERENCE 340
 
 
 FLIP::FLIP(Particles& particles, Mac3d* MACGrid, const SimConfig& cfg)

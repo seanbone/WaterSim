@@ -104,7 +104,6 @@ void compute_pressure_rhs(Mac3d* MACGrid_, Eigen::VectorXd& d_, const double flu
     for (unsigned k = 0; k < nz; ++k) {
         for (unsigned j = 0; j < ny; ++j) {
             for (unsigned i = 0; i < nx; ++i, ++cellidx) {
-
                 if (g->is_fluid(i,j,k)) {
 
                     // Apply the formulas of the SIGGRAPH notes
@@ -171,13 +170,6 @@ int main(){
 	 * run solver
 	 */
 
-	/* We need a surrogate MACGrid, which provides the following methods/fields:
-	 *  - get_num_cells_{x|y|z}()
-	 *  - get_a_diag()
-	 *  - is_fluid()
-	 */
-
-	// first step: get the old solver to run on some data
 
 	// initialize the FLIP instance which will also give us the MACGrid
 	std::cout << "Initializing NcReader" << std::endl;
@@ -198,9 +190,8 @@ int main(){
 	double dt = nc_reader.cfg.getTimeStep();
 	double fluid_density = nc_reader.cfg.getDensity();
 	
-
+	// first step: get the old solver to run on some data
 	// ###############  Reference Solver  #################
-	//   void FLIP::apply_pressure_correction(const double dt) {
     // Compute A matrix
 	// note that A_ is only written
     compute_pressure_matrix(&grid, A_);

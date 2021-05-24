@@ -1,5 +1,6 @@
 #include "ConjugateGradient.hpp"
 #include <cassert>
+#include <iostream>
 
 using namespace cg;
 
@@ -34,7 +35,7 @@ cg::ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, con
 }
 
 // apply the preconditioner (L L^T)^-1 by solving Lq = d and Lp = q
-void ICConjugateGradientSolver::applyPreconditioner(const double *r, double *z) {
+void ICConjugateGradientSolver::applyPreconditioner(const double *r, double *z) const {
     unsigned cellidx = stride_x + stride_y + stride_z;
 	// element 1,1,1
 	for (unsigned k = 1; k < n_cells_z; k++, cellidx += stride_z) {
@@ -80,15 +81,16 @@ void ICConjugateGradientSolver::computePreconDiag() {
 
 // apply the matrix A
 // element order: k-j-i
-void ICConjugateGradientSolver::applyA(const double *z, double *s) {
-    unsigned cellidx = 0;
+void ICConjugateGradientSolver::applyA(const double *s, double *z) const{
+
 	for (unsigned k = 0; k < n_cells_z; k++) {
 		for (unsigned j = 0; j < n_cells_y; j++) {
-			for (unsigned i = 0; i < n_cells_x; i++, cellidx++) {
+			for (unsigned i = 0; i < n_cells_x; i++) {
+				const unsigned cellidx = i + j*n_cells_x + n_cells_x*n_cells_y*k;
                 // Copy diagonal entry
                 auto& diag_e = grid.get_a_diag()[i + j*n_cells_x + n_cells_x*n_cells_y*k];
                 // triplets.push_back(diag_e);
-				s[diag_e.row()] += diag_e.value() * z[diag_e.col()];
+				z[diag_e.row()] += diag_e.value() * s[diag_e.col()];
 
                 // Compute off-diagonal entries
                 if (grid.is_fluid(i, j, k)){
@@ -97,11 +99,11 @@ void ICConjugateGradientSolver::applyA(const double *z, double *s) {
 
                         // Compute (i+1,j,k)
                         // triplets.push_back(Mac3d::Triplet_t(cellidx, cellidx+1, -1));
-						s[cellidx] += -1 * z[cellidx+stride_x];
+						z[cellidx] += -1 * s[cellidx+stride_x];
 
                         // Use symmetry to avoid computing (i-1,j,k) separately
                         // triplets.push_back(Mac3d::Triplet_t(cellidx+1, cellidx, -1));
-						s[cellidx+stride_x] += -1 * z[cellidx];
+						z[cellidx+stride_x] += -1 * s[cellidx];
                     }
 
                     // y-adjacent cells
@@ -109,11 +111,11 @@ void ICConjugateGradientSolver::applyA(const double *z, double *s) {
 
                         // Compute (i,j+1,k)
                         // triplets.push_back(Mac3d::Triplet_t(cellidx, cellidx + n_cells_x, -1));
-						s[cellidx] += -1 * z[cellidx+stride_y];
+						z[cellidx] += -1 * s[cellidx+stride_y];
 
                         // Use symmetry to avoid computing (i,j-1,k) separately
                         // triplets.push_back(Mac3d::Triplet_t(cellidx + n_cells_x, cellidx, -1));
-						s[cellidx+stride_y] += -1 * z[cellidx];
+						z[cellidx+stride_y] += -1 * s[cellidx];
                     }
 
                     // z-adjacent cells
@@ -121,11 +123,11 @@ void ICConjugateGradientSolver::applyA(const double *z, double *s) {
 
                         // Compute (i,j,k+1)
                         // triplets.push_back(Mac3d::Triplet_t(cellidx, cellidx + n_cells_x*n_cells_y, -1));
-						s[cellidx] += -1 * z[cellidx+stride_z];
+						z[cellidx] += -1 * s[cellidx+stride_z];
 
                         // Use symmetry to avoid computing (i,j-1) separately
                         // triplets.push_back(Mac3d::Triplet_t(cellidx + n_cells_x*n_cells_y, cellidx, -1));
-						s[cellidx+stride_z] += -1 * z[cellidx];
+						z[cellidx+stride_z] += -1 * s[cellidx];
                     }
 				}
 			}
@@ -133,8 +135,18 @@ void ICConjugateGradientSolver::applyA(const double *z, double *s) {
 	}
 }
 
+
+void print_array_head(const double* array, std::string prefix="", unsigned number=20) {
+	std::cout << prefix;
+	for (unsigned i=0; i < number; i++) std::cout << array[i] << ' ';
+	std::cout << std::endl;
+}
+
 void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
     // initialize initial guess and residual
+	std::cout << "Solving..." << std::endl;
+	print_array_head(rhs,  "RHS: ");
+
     std::fill(p,p+num_cells,0);
     std::copy(rhs,rhs+num_cells,r);
 
@@ -145,9 +157,13 @@ void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
 
 	// precompute the diagonal of the preconditioner
 	computePreconDiag();
+	print_array_head(precon_diag,  "PreconDiag: ");
 
     for(unsigned step = 0; step < max_steps; step++){
-		applyA(z, s);
+		print_array_head(p,  "p: ");
+		print_array_head(r,  "r: ");
+		applyA(s, z);
+		print_array_head(z,  "z: ");
 
         double dots = dot_product(z,s,num_cells);
         double alpha = rho/dots;
@@ -157,11 +173,13 @@ void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
 
         //check if exit cond is met : inf norm < then some thresh
 		{
-			bool thresh_exceeded = false;
+			double max_abs_val = 0;
 			for (double* el = r; el < r+num_cells; el++) {
-				if (std::abs(*el) > thresh) thresh_exceeded = true;
+				const double abs_val = std::abs(*el);
+				if (max_abs_val < abs_val) max_abs_val = abs_val;
 			}
-			if (not thresh_exceeded) return;
+			std::cout << "Max abs val: " << max_abs_val << std::endl;
+			if (max_abs_val < thresh) return;
 		}
 
 		applyPreconditioner(r, z);
@@ -172,7 +190,6 @@ void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
     }
 }
 
-//stuff here can be moved to extra files
 cg::SparseMat::SparseMat(unsigned a, unsigned b): v(a), r(b){
     values = new double [v];
     col_idx = new unsigned [v];
@@ -188,7 +205,7 @@ cg::SparseMat::~SparseMat(){
 cg::ICConjugateGradientSolver::~ICConjugateGradientSolver() {
     delete [] p;
     delete [] q;
-    delete [] r;
+    //delete [] r;
     delete [] z;
     delete [] s;
     delete [] precon_diag;

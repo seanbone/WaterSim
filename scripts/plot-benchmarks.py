@@ -23,6 +23,7 @@ Recommended directory structure:
 import os
 import argparse
 import matplotlib.pyplot as plt
+from cycler import cycler
 import numpy as np
 
 
@@ -39,11 +40,8 @@ def get_directories(path):
     return dirs
 
 
-def get_benchmark_names():
+def get_benchmark_names(num_cases=2, num_per_case=5):
     """ Generates the list of benchmark names. """
-    num_cases = 2
-    num_per_case = 5
-
     names = []
     for i in range(1, num_cases+1):
         for j in range(num_per_case):
@@ -121,6 +119,47 @@ def plot_histogram(benchmark, tags, substeps, all_data, output, show=False, titl
     plt.close(fig)
 
 
+def plot_perf(tag, substeps, all_data, output, show=False, title=None):
+    if title is None:
+        title = f"Runtime plot for optimization stage '{tag}'"
+
+    benchmarks = get_benchmark_names(1)
+    problem_dimensions = [10**3, 20**3, 40**3, 80**3, 160**3]
+
+    my_data = {}
+    for substep in substeps:
+        tmp = []
+        for benchmark in benchmarks:
+            tmp.append(all_data[tag][benchmark][substep]['mean'])
+        my_data[substep] = np.array(tmp)
+
+    fig, ax = plt.subplots()
+
+    my_cycler = (cycler(marker="ovsXD") + (cycler(color=['tab:red', 'tab:cyan', 'tab:blue', 'tab:orange', 'tab:green'])+
+                 cycler(linestyle=['-', '--', ':', '-.', '--'])))
+    ax.set_prop_cycle(my_cycler)
+
+
+    ax.set_ylabel("Average runtime [cycles]")
+    ax.set_xlabel("Number of cells [-]")
+    for substep in substeps:
+        ax.plot(problem_dimensions, my_data[substep], label=substep)
+
+    ax.legend()
+    ax.set_yscale("log", basey=10)
+    ax.set_xscale("log", basex=2)
+    ax.set_title(title)
+    ax.set_facecolor('#cccccc')
+    ax.grid(axis='both', which='major', zorder=-1, color='white')
+    if show:
+        plt.show()
+    else:
+        filename = output.replace("%", f"perf-{tag}")
+        print(f"Writing '{filename}'...")
+        fig.savefig(filename, dpi=300)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     path = "benchmarks/"
     prefix = "benchmarks-full-"
@@ -130,13 +169,14 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Generate plots of the WaterSim benchmarks.")
 
+    parser.add_argument("-a", "--all", action="store_true", help="Generate all possible plots.")
+    parser.add_argument("-b", "--benchmark", nargs=1, action="append", help="Generate a histogram comparing a specific benchmark across each tag. Can be called multiple times for more than one histogram.")
     parser.add_argument("-d", "--dir", nargs=1, default=[path], help=f"Directory to search for benchmarks. Default %(default)s.")
+    parser.add_argument("-o", "--output", nargs=1, default=[output], help=f"Output file name pattern. The character '%%' will be replaced with the file name. Default: %(default)s")
     parser.add_argument("--prefix", nargs=1, default=[prefix], help=f"Prefix of benchmark tag directories. Default %(default)s.")
     parser.add_argument("-s", "--substep", nargs=1, action="append", help="Specify a FLIP substep to include in plots. Can be called multiple times for more than one substep.")
-    parser.add_argument("-b", "--benchmark", nargs=1, action="append", help="Generate a histogram comparing a specific benchmark across each tag. Can be called multiple times for more than one histogram.")
-    parser.add_argument("-o", "--output", nargs=1, default=[output], help=f"Output file name pattern. The character '%%' will be replaced with the file name. Default: %(default)s")
     parser.add_argument("--show", action="store_true", help="Show the plots instead of writing to file(s).")
-    parser.add_argument("-a", "--all", action="store_true", help="Generate all possible plots.")
+    parser.add_argument("-t", "--tag", nargs=1, action="append", help="Generate a performance plot (problem size vs runtime) for the specified tag. Can be called multiple times for more than one plot.")
 
     args = parser.parse_args()
     #print(args)
@@ -146,17 +186,17 @@ if __name__ == "__main__":
     output = args.output[0]
     show = args.show
 
-    if not args.all and args.benchmark is None:
+    if not args.all and args.benchmark is None and args.tag is None:
         exit("Warning: no plots to be generated!\nRun with '-h' for help.")
 
     dirs = get_directories(path)
 
-    benchmark_run_tags = []
+    all_tags = []
     for d in dirs:
         if d.find(prefix) == 0:
-            benchmark_run_tags.append(d.replace(prefix, "", 1))
+            all_tags.append(d.replace(prefix, "", 1))
 
-    all_data = collect_all_timings(path, prefix, benchmark_run_tags, substeps)
+    all_data = collect_all_timings(path, prefix, all_tags, substeps)
 
     benchmarks_hist_plots = None
     if args.all:
@@ -166,4 +206,14 @@ if __name__ == "__main__":
 
     if benchmarks_hist_plots is not None:
         for b in benchmarks_hist_plots:
-            plot_histogram(b, benchmark_run_tags, substeps, all_data, output, show)
+            plot_histogram(b, all_tags, substeps, all_data, output, show)
+
+    benchmark_perf_plots = None
+    if args.all:
+        benchmark_perf_plots = all_tags
+    elif args.tag is not None:
+        benchmark_perf_plots = [t[0] for t in args.tag]
+
+    if benchmark_perf_plots is not None:
+        for tag in benchmark_perf_plots:
+            plot_perf(tag, substeps, all_data, output, show)

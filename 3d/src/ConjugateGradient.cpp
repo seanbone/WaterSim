@@ -2,6 +2,7 @@
 #include <cassert>
 #include <iostream>
 
+
 using namespace cg;
 
 cg::ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, const Mac3d& grid)
@@ -40,10 +41,11 @@ void ICConjugateGradientSolver::applyPreconditioner(const double *r, double *z) 
 		for (unsigned j = 0; j < n_cells_y; j++) {
 			for (unsigned i = 0; i < n_cells_x; i++) {
 				const unsigned cellidx = i + j*stride_y + k*stride_z;
+				if (not grid.is_fluid(i, j, k)) continue;
 				double t = r[cellidx];
-				if (i > 0) t += precon_diag[cellidx - stride_x] * q[cellidx - stride_x];
-				if (j > 0) t += precon_diag[cellidx - stride_y] * q[cellidx - stride_y];
-				if (k > 0) t += precon_diag[cellidx - stride_z] * q[cellidx - stride_z];
+				if (i > 0 && grid.is_fluid(i-1, j, k)) t += precon_diag[cellidx - stride_x] * q[cellidx - stride_x];
+				if (j > 0 && grid.is_fluid(i, j-1, k)) t += precon_diag[cellidx - stride_y] * q[cellidx - stride_y];
+				if (k > 0 && grid.is_fluid(i, j, k-1)) t += precon_diag[cellidx - stride_z] * q[cellidx - stride_z];
 				q[cellidx] = t * precon_diag[cellidx];
 			}
 		}
@@ -52,10 +54,11 @@ void ICConjugateGradientSolver::applyPreconditioner(const double *r, double *z) 
 		for (int j = n_cells_y-1; j >= 0; j--) {
 			for (int i = n_cells_x-1; i >= 0; i--) {
 				const unsigned cellidx = i + j*stride_y + k*stride_z;
+				if (not grid.is_fluid(i, j, k)) continue;
 				double t = q[cellidx];
-				if (i + 1 < (int) n_cells_x) t += precon_diag[cellidx] * z[cellidx + stride_x];
-				if (j + 1 < (int) n_cells_y) t += precon_diag[cellidx] * z[cellidx + stride_y];
-				if (k + 1 < (int) n_cells_z) t += precon_diag[cellidx] * z[cellidx + stride_z];
+				if (i + 1 < (int) n_cells_x && grid.is_fluid(i+1, j, k)) t += precon_diag[cellidx] * z[cellidx + stride_x];
+				if (j + 1 < (int) n_cells_y && grid.is_fluid(i, j+1, k)) t += precon_diag[cellidx] * z[cellidx + stride_y];
+				if (k + 1 < (int) n_cells_z && grid.is_fluid(i, j, k+1)) t += precon_diag[cellidx] * z[cellidx + stride_z];
 				z[cellidx] = t * precon_diag[cellidx];
 			}
 		}
@@ -67,10 +70,11 @@ void ICConjugateGradientSolver::computePreconDiag() {
 		for (unsigned j = 0; j < n_cells_y; j++) {
 			for (unsigned i = 0; i < n_cells_x; i++) {
 				const unsigned cellidx = i + j*stride_y + k*stride_z;
+				if (not grid.is_fluid(i, j, k)) continue;
 				double e = A_diag[cellidx];
-				if (i > 0) e -= std::pow(-1 * precon_diag[cellidx-stride_x], 2);
-				if (j > 0) e -= std::pow(-1 * precon_diag[cellidx-stride_y], 2);
-				if (k > 0) e -= std::pow(-1 * precon_diag[cellidx-stride_z], 2);
+				if (i > 0 && grid.is_fluid(i-1, j, k)) e -= std::pow(-1 * precon_diag[cellidx-stride_x], 2);
+				if (j > 0 && grid.is_fluid(i, j-1, k)) e -= std::pow(-1 * precon_diag[cellidx-stride_y], 2);
+				if (k > 0 && grid.is_fluid(i, j, k-1)) e -= std::pow(-1 * precon_diag[cellidx-stride_z], 2);
 				precon_diag[cellidx] = 1 / std::sqrt(e + 1e-30);
 			}
 		}
@@ -85,10 +89,11 @@ void ICConjugateGradientSolver::applyA(const double *s, double *z) const{
 		for (unsigned j = 0; j < n_cells_y; j++) {
 			for (unsigned i = 0; i < n_cells_x; i++) {
 				const unsigned cellidx = i + j*stride_y + k*stride_z;
+				if (not grid.is_fluid(i, j, k)) continue;
                 // Copy diagonal entry
-                auto& diag_e = grid.get_a_diag()[i + j*stride_y + k*stride_z];
-                // triplets.push_back(diag_e);
-				z[diag_e.row()] += diag_e.value() * s[diag_e.col()];
+                auto& A_diag = grid.get_a_diag()[i + j*stride_y + k*stride_z];
+                // triplets.push_back(A_diag);
+				z[A_diag.row()] += A_diag.value() * s[A_diag.col()];
 
                 // Compute off-diagonal entries
                 if (grid.is_fluid(i, j, k)){
@@ -161,12 +166,12 @@ void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
 	double rho = dot_product(r,s,num_cells);
 
     for(unsigned step = 0; step < max_steps; step++){
-		std::cout << "\nNew Round! (" << step << ")\n";
-		print_array_head(p,  "p: ");
-		print_array_head(r,  "r: ");
+		// std::cout << "\nNew Round! (" << step << ")\n";
+		// print_array_head(p,  "p: ");
+		// print_array_head(r,  "r: ");
 		// z = A s
 		applyA(s, z);
-		print_array_head(z,  "z: ");
+		// print_array_head(z,  "z: ");
 
 		// α = ρ / <s,z>
         const double dots = dot_product(z,s,num_cells);
@@ -182,7 +187,7 @@ void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
 				const double abs_val = std::abs(*el);
 				if (max_abs_val < abs_val) max_abs_val = abs_val;
 			}
-			std::cout << "Max abs val: " << max_abs_val << std::endl;
+			// std::cout << "Max abs val: " << max_abs_val << std::endl;
 			if (max_abs_val < thresh) return;
 		}
 

@@ -3,6 +3,7 @@
  */
 
 #include "FLIP.h"
+#include "ConjugateGradient.hpp"
 #include "tsc_x86.hpp"
 
 
@@ -21,11 +22,22 @@ void FLIP::apply_pressure_correction(const double dt) {
     using namespace Eigen;
     using solver_t = ConjugateGradient< SparseMatrix<double>, Lower|Upper, IncompleteCholesky<double> >;
 
+
+//#define EIGEN_SOLVER
+
+#ifdef EIGEN_SOLVER
     solver_t solver;
     solver.setMaxIterations(100);
     solver.compute(A_);
     VectorXd p = solver.solve(d_);
-
+#else
+	double* rhs = d_.data();
+	cg::ICConjugateGradientSolver cg_solver(100, *MACGrid_);
+	unsigned num_cells = cg_solver.num_cells;
+	double* p_array = cg_solver.p;
+	cg_solver.solve(rhs, p_array);
+	Eigen::Map<VectorXd> p(p_array, num_cells, 1);
+#endif
     // Copy pressures to MAC Grid
     MACGrid_->set_pressure(p);
 

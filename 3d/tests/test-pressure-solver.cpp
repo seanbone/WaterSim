@@ -11,6 +11,7 @@
 #include "FLIP.h"
 #include "NcReader.h"
 #include "ConjugateGradient.hpp"
+#include "tsc_x86.hpp"
 
 
 void compute_pressure_matrix(Mac3d* MACGrid_, Eigen::SparseMatrix<double>& A_) {
@@ -171,6 +172,8 @@ int main(){
 	 */
 
 
+	tsc::TSCTimer& tsctimer = tsc::TSCTimer::get_timer("timings.json");
+
 	// initialize the FLIP instance which will also give us the MACGrid
 	std::cout << "Initializing NcReader" << std::endl;
 	NcReader nc_reader("ref-340.nc", "config.json");
@@ -209,11 +212,16 @@ int main(){
     using solver_t = ConjugateGradient< SparseMatrix<double>, Lower|Upper, IncompleteCholesky<double> >;
 
 
+	tsctimer.start_timing("particle_to_grid");
+	tsctimer.stop_timing("particle_to_grid", true, "");
+
+	tsctimer.start_timing("eigen solver");
 	std::cout << "Solving using the reference solver..." << std::endl;
     solver_t solver;
     solver.setMaxIterations(100);
     solver.compute(A_);
     VectorXd p = solver.solve(d_);
+	tsctimer.stop_timing("eigen solver", true, "");
 
 	std::cout << "Vector p after reference solver: ";
 	for(int i = 0; i < p.size() % 40; i++) std::cout << p(i) << " ";
@@ -235,8 +243,10 @@ int main(){
 	// should really be the same size!
 	assert (num_cells == d_.size());
 	
+	tsctimer.start_timing("own pcg solver");
 	std::cout << "Solving using the new solver..." << std::endl;
 	cg_solver.solve(rhs, p_array);
+	tsctimer.stop_timing("own pcg solver", true, "");
 
 	std::cout << "Vector p after optimized solver: ";
 	for(int i = 0; i < p.size() % 40; i++) std::cout << p_array[i] << " ";

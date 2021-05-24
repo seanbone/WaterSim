@@ -140,4 +140,5 @@ inline void cg::ICConjugateGradientSolver::sca_product(const double *a, double b
     }
 }
 
+void print_array_head(const double* array, std::string prefix="", unsigned number=20);
 #endif

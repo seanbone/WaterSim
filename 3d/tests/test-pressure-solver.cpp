@@ -195,7 +195,11 @@ int main(){
     // Compute A matrix
 	// note that A_ is only written
     compute_pressure_matrix(&grid, A_);
-
+	std::vector<Eigen::Triplet<double>> a_diag = grid.get_a_diag();
+	for (int i = 0; i < 20; i++) {
+		auto triplet = a_diag[i];
+		std::cout << "(" << triplet.row() << ", " << triplet.col() << ", " << triplet.value() << ")\n";
+	}
     // Compute rhs d
 	// note that d_ is only written
     compute_pressure_rhs(&grid, d_, fluid_density, dt);

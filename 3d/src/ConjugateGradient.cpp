@@ -26,7 +26,7 @@ cg::ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, con
 	for (unsigned k = 0; k < n_cells_z; k++) {
 		for (unsigned j = 0; j < n_cells_y; j++) {
 			for (unsigned i = 0; i < n_cells_x; i++, cellidx++) {
-                auto& diag_e = grid.get_a_diag()[i + j*n_cells_x + n_cells_x*n_cells_y*k];
+                auto& diag_e = grid.get_a_diag()[i + j*stride_y + k*stride_z];
 				A_diag[cellidx] = diag_e.value();
 			}
 		}
@@ -36,11 +36,11 @@ cg::ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, con
 
 // apply the preconditioner (L L^T)^-1 by solving Lq = d and Lp = q
 void ICConjugateGradientSolver::applyPreconditioner(const double *r, double *z) const {
-    unsigned cellidx = stride_x + stride_y + stride_z;
 	// element 1,1,1
-	for (unsigned k = 1; k < n_cells_z; k++, cellidx += stride_z) {
-		for (unsigned j = 1; j < n_cells_y; j++, cellidx += stride_y) {
-			for (unsigned i = 1; i < n_cells_x; i++, cellidx++) {
+	for (unsigned k = 1; k < n_cells_z; k++) {
+		for (unsigned j = 1; j < n_cells_y; j++) {
+			for (unsigned i = 1; i < n_cells_x; i++) {
+				const unsigned cellidx = i + j*stride_y + k*stride_z;
 				double t = r[cellidx]
 					- (-1 * precon_diag[cellidx - stride_x] * q[cellidx - stride_x])
 					- (-1 * precon_diag[cellidx - stride_y] * q[cellidx - stride_y])
@@ -49,9 +49,10 @@ void ICConjugateGradientSolver::applyPreconditioner(const double *r, double *z) 
 			}
 		}
 	}
-	for (unsigned k = n_cells_z-1; k >= 1; k--, cellidx -= stride_z) {
-		for (unsigned j = n_cells_y-1; j >= 1; j--, cellidx -= stride_y) {
-			for (unsigned i = n_cells_x-1; i >= 1; i--, cellidx--) {
+	for (unsigned k = n_cells_z-1; k >= 1; k--) {
+		for (unsigned j = n_cells_y-1; j >= 1; j--) {
+			for (unsigned i = n_cells_x-1; i >= 1; i--) {
+				const unsigned cellidx = i + j*stride_y + k*stride_z;
 				double t = q[cellidx]
 					- (-1 * precon_diag[cellidx] * z[cellidx + stride_x])
 					- (-1 * precon_diag[cellidx] * z[cellidx + stride_y])
@@ -60,15 +61,23 @@ void ICConjugateGradientSolver::applyPreconditioner(const double *r, double *z) 
 			}
 		}
 	}
-    assert (cellidx == stride_x + stride_y + stride_z);
 }
 
 void ICConjugateGradientSolver::computePreconDiag() {
-    unsigned cellidx = stride_x + stride_y + stride_z;
+
+	for (unsigned k = 0; k < n_cells_z; k++) {
+		for (unsigned j = 0; j < n_cells_y; j++) {
+			for (unsigned i = 0; i < n_cells_x; i++) {
+				if (i == 0 or j == 0 or k == 0) {
+					const unsigned cellidx = i + j*stride_y + k*stride_z;
+					precon_diag[cellidx] = 0;
+				}
+			}}}
 	// Q: where is precon_diag[i=0|j=0|k=0] initialized?
-	for (unsigned k = 1; k < n_cells_z; k++, cellidx += stride_z) {
-		for (unsigned j = 1; j < n_cells_y; j++, cellidx += stride_y) {
-			for (unsigned i = 1; i < n_cells_x; i++, cellidx++) {
+	for (unsigned k = 1; k < n_cells_z; k++) {
+		for (unsigned j = 1; j < n_cells_y; j++) {
+			for (unsigned i = 1; i < n_cells_x; i++) {
+				const unsigned cellidx = i + j*stride_y + k*stride_z;
 				const double e = A_diag[cellidx]
 					- std::pow(-1 * precon_diag[cellidx-stride_x], 2)
 					- std::pow(-1 * precon_diag[cellidx-stride_y], 2)
@@ -86,9 +95,9 @@ void ICConjugateGradientSolver::applyA(const double *s, double *z) const{
 	for (unsigned k = 0; k < n_cells_z; k++) {
 		for (unsigned j = 0; j < n_cells_y; j++) {
 			for (unsigned i = 0; i < n_cells_x; i++) {
-				const unsigned cellidx = i + j*n_cells_x + n_cells_x*n_cells_y*k;
+				const unsigned cellidx = i + j*stride_y + k*stride_z;
                 // Copy diagonal entry
-                auto& diag_e = grid.get_a_diag()[i + j*n_cells_x + n_cells_x*n_cells_y*k];
+                auto& diag_e = grid.get_a_diag()[i + j*stride_y + k*stride_z];
                 // triplets.push_back(diag_e);
 				z[diag_e.row()] += diag_e.value() * s[diag_e.col()];
 
@@ -136,7 +145,7 @@ void ICConjugateGradientSolver::applyA(const double *s, double *z) const{
 }
 
 
-void print_array_head(const double* array, std::string prefix="", unsigned number=20) {
+void print_array_head(const double* array, std::string prefix, unsigned number) {
 	std::cout << prefix;
 	for (unsigned i=0; i < number; i++) std::cout << array[i] << ' ';
 	std::cout << std::endl;
@@ -147,26 +156,32 @@ void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
 	std::cout << "Solving..." << std::endl;
 	print_array_head(rhs,  "RHS: ");
 
+	// p = 0
     std::fill(p,p+num_cells,0);
+	// r = d
     std::copy(rhs,rhs+num_cells,r);
 
-	applyPreconditioner(r, z);
-    std::copy(z,z+num_cells,s);
-
-	// double sigma = dot_product(z, r, num_cells);
+	computePreconDiag();
+	// s = M⁻¹ r
+	applyPreconditioner(r, s);
 
 	// precompute the diagonal of the preconditioner
-	computePreconDiag();
 	print_array_head(precon_diag,  "PreconDiag: ");
 
+	// ρ = <r,s>
+	double rho = dot_product(r,s,num_cells);
+
     for(unsigned step = 0; step < max_steps; step++){
+		std::cout << "\nNew Round! (" << step << ")\n";
 		print_array_head(p,  "p: ");
 		print_array_head(r,  "r: ");
+		// z = A s
 		applyA(s, z);
 		print_array_head(z,  "z: ");
 
-        double dots = dot_product(z,s,num_cells);
-        double alpha = rho/dots;
+		// α = ρ / <s,z>
+        const double dots = dot_product(z,s,num_cells);
+		const double alpha = rho / dots;
 
         sca_add_product(s,alpha,num_cells,p);
         sca_add_product(z,-alpha,num_cells,r);
@@ -183,8 +198,9 @@ void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
 		}
 
 		applyPreconditioner(r, z);
-		double sigma = dot_product(z, r, num_cells);
-        double beta = sigma * rho_inv;
+		const double rho_new = dot_product(z, r, num_cells);
+		const double beta = rho_new / rho;
+		rho = rho_new;
         //Bug potential: aliasing
         sca_product(s, beta, z, num_cells, s);
     }

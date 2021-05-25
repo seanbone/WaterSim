@@ -232,7 +232,7 @@ int main(){
 	// get a raw array of the right-hand side
 	double* rhs = d_.data();
 
-	cg::ICConjugateGradientSolver cg_solver(100, grid);
+	ICConjugateGradientSolver cg_solver(100, grid);
 	unsigned num_cells = cg_solver.num_cells;
 	std::vector<double> p_vec(num_cells);
 

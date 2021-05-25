@@ -3,10 +3,29 @@
 #include <cmath>
 #include <iostream>
 
+// ********* Kernels **********
+double dot_product(const double *a, const double *b, const unsigned int n) {
+	double tmp = 0;
+	for(unsigned i = 0 ; i < n; ++i ) {
+		tmp += a[i]*b[i];
+	}
+	return tmp;
+}
 
-using namespace cg;
+// res[] += a[] * b
+void sca_add_product(const double *a, const double b, const unsigned int n, double *res) {
+	for(unsigned i = 0 ; i < n; ++i ) {
+		res [i] += a[i] * b;
+	}
+}
+//res[i] = a[i] * b + c[i]
+void sca_product(const double *a, double b, const double *c, const unsigned int n, double *res) {
+	for(unsigned i = 0 ; i < n; ++i ) {
+		res[i] = a[i] * b + c[i];
+	}
+}
 
-cg::ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, const Mac3d& grid)
+ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, const Mac3d& grid)
 	:
 		grid{grid},
 		n_cells_x{grid.get_num_cells_x()}, n_cells_y{grid.get_num_cells_y()}, n_cells_z{grid.get_num_cells_z()},
@@ -14,20 +33,20 @@ cg::ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, con
 		num_cells{n_cells_x * n_cells_y * n_cells_z},
 		max_steps(max_steps)
 {
-    step = 0;
-    q = new double [num_cells];
-    r = new double [num_cells];
-    z = new double [num_cells];
-    s = new double [num_cells];
-    precon_diag = new double [num_cells];
-    A_diag = new double [num_cells];
+	step = 0;
+	q = new double [num_cells];
+	r = new double [num_cells];
+	z = new double [num_cells];
+	s = new double [num_cells];
+	precon_diag = new double [num_cells];
+	A_diag = new double [num_cells];
 
 	// load A_diag
-    unsigned cellidx = 0;
+	unsigned cellidx = 0;
 	for (unsigned k = 0; k < n_cells_z; k++) {
 		for (unsigned j = 0; j < n_cells_y; j++) {
 			for (unsigned i = 0; i < n_cells_x; i++, cellidx++) {
-                auto& diag_e = grid.A_diag_[i + j*stride_y + k*stride_z];
+				auto& diag_e = grid.A_diag_[i + j*stride_y + k*stride_z];
 				A_diag[cellidx] = diag_e.value();
 			}
 		}
@@ -96,7 +115,7 @@ void ICConjugateGradientSolver::applyA(const double *b, double *y) const{
 		for (unsigned j = 0; j < n_cells_y; j++) {
 			for (unsigned i = 0; i < n_cells_x; i++) {
 				const unsigned cellidx = i + j*stride_y + k*stride_z;
-                double diag_val = grid.A_diag_val[cellidx];
+				double diag_val = grid.A_diag_val[cellidx];
 
 				if (i == 0 && j == 0 && k == 0) y[cellidx] = 0;
 				y[cellidx] += diag_val * b[cellidx];
@@ -105,25 +124,25 @@ void ICConjugateGradientSolver::applyA(const double *b, double *y) const{
 				if (j == 0 && k == 0 && i+1 < n_cells_x)  y[cellidx+stride_x] = 0;
 				if (k == 0 && j+1 < n_cells_y)  y[cellidx+stride_y] = 0;
 				if (k+1 < n_cells_z) y[cellidx+stride_z] = 0;
-                // Compute off-diagonal entries
-                if (grid.pfluid_[cellidx]){
-                    // x-adjacent cells
-                    if (i+1 < n_cells_x && grid.pfluid_[cellidx+stride_x]){
+				// Compute off-diagonal entries
+				if (grid.pfluid_[cellidx]){
+					// x-adjacent cells
+					if (i+1 < n_cells_x && grid.pfluid_[cellidx+stride_x]){
 						y[cellidx] 			-= b[cellidx+stride_x];
 						y[cellidx+stride_x] -= b[cellidx];
-                    }
+					}
 
-                    // y-adjacent cells
-                    if (j+1 < n_cells_y && grid.pfluid_[cellidx+stride_y]){
+					// y-adjacent cells
+					if (j+1 < n_cells_y && grid.pfluid_[cellidx+stride_y]){
 						y[cellidx] 			-= b[cellidx+stride_y];
 						y[cellidx+stride_y] -= b[cellidx];
-                    }
+					}
 
-                    // z-adjacent cells
-                    if (k+1 < n_cells_z && grid.pfluid_[cellidx+stride_z]){
+					// z-adjacent cells
+					if (k+1 < n_cells_z && grid.pfluid_[cellidx+stride_z]){
 						y[cellidx] 			-= b[cellidx+stride_z];
 						y[cellidx+stride_z] -= b[cellidx];
-                    }
+					}
 				}
 			}
 		}
@@ -143,7 +162,7 @@ void checknan(const double* array, int len, std::string array_name="array") {
 	}
 }
 
-void print_array_head(const double* array, std::string prefix, unsigned number) {
+void print_array_head(const double* array, std::string prefix="", unsigned number=20) {
 	std::cout << prefix;
 	for (unsigned i=0; i < number; i++) std::cout << array[i] << ' ';
 	std::cout << std::endl;
@@ -151,16 +170,16 @@ void print_array_head(const double* array, std::string prefix, unsigned number) 
 
 // returns max |a[i]| for i in 0:n-1
 double get_max_modulus(const double* a, const int n) {
-		double max_abs_val = 0;
-		for (int i = 0; i < n; i++) {
-			const double abs_val = std::abs(a[i]);
-			if (max_abs_val < abs_val) max_abs_val = abs_val;
-		}
-		return max_abs_val;
+	double max_abs_val = 0;
+	for (int i = 0; i < n; i++) {
+		const double abs_val = std::abs(a[i]);
+		if (max_abs_val < abs_val) max_abs_val = abs_val;
+	}
+	return max_abs_val;
 }
 
-void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
-    // initialize initial guess and residual
+void ICConjugateGradientSolver::solve(const double* rhs, double* p) {
+	// initialize initial guess and residual
 	// catch zero rhs early
 	double max_residual_modulus = get_max_modulus(rhs, num_cells);
 	if (max_residual_modulus < thresh) {
@@ -175,9 +194,9 @@ void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
 	// ρ = <r,s>
 	double rho = dot_product(rhs,s,num_cells);
 
-    for(unsigned step = 0; step < max_steps; step++){
+	for(unsigned step = 0; step < max_steps; step++){
 		applyA(s, z);
-        const double dots = dot_product(z,s,num_cells);
+		const double dots = dot_product(z,s,num_cells);
 		const double alpha = rho / dots;
 
 		if (step == 0) {
@@ -220,28 +239,30 @@ void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
 		const double rho_new = dot_product(z, r, num_cells);
 		const double beta = rho_new / rho;
 		rho = rho_new;
-        //Bug potential: aliasing
-        sca_product(s, beta, z, num_cells, s);
-    }
+		//Bug potential: aliasing
+		sca_product(s, beta, z, num_cells, s);
+	}
 }
 
-cg::SparseMat::SparseMat(unsigned a, unsigned b): v(a), r(b){
-    values = new double [v];
-    col_idx = new unsigned [v];
-    row_idx = new unsigned [r];
+SparseMat::SparseMat(unsigned a, unsigned b): v(a), r(b){
+	values = new double [v];
+	col_idx = new unsigned [v];
+	row_idx = new unsigned [r];
 }
-cg::SparseMat::~SparseMat(){
-    delete [] values;
-    delete [] col_idx;
-    delete [] row_idx;
+SparseMat::~SparseMat(){
+	delete [] values;
+	delete [] col_idx;
+	delete [] row_idx;
 }
 
 
-cg::ICConjugateGradientSolver::~ICConjugateGradientSolver() {
-    delete [] q;
-    delete [] z;
-    delete [] s;
-    delete [] precon_diag;
-    delete [] A_diag;
+ICConjugateGradientSolver::~ICConjugateGradientSolver() {
+	delete [] q;
+	delete [] z;
+	delete [] s;
+	delete [] precon_diag;
+	delete [] A_diag;
 
 }
+
+

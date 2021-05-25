@@ -41,14 +41,14 @@ void ICConjugateGradientSolver::applyPreconditioner(const double *r, double *z) 
 		for (unsigned j = 0; j < n_cells_y; j++) {
 			for (unsigned i = 0; i < n_cells_x; i++) {
 				const unsigned cellidx = i + j*stride_y + k*stride_z;
-				if (not grid.is_fluid(i, j, k)) {
+				if (not grid.pfluid_[i + j * stride_y + k * stride_z]) {
 					q[cellidx] = 0;
 					continue;
 				}
 				double t = r[cellidx];
-				if (i > 0 && grid.is_fluid(i-1, j, k)) t += precon_diag[cellidx - stride_x] * q[cellidx - stride_x];
-				if (j > 0 && grid.is_fluid(i, j-1, k)) t += precon_diag[cellidx - stride_y] * q[cellidx - stride_y];
-				if (k > 0 && grid.is_fluid(i, j, k-1)) t += precon_diag[cellidx - stride_z] * q[cellidx - stride_z];
+				if (i > 0 && grid.pfluid_[(i-1) + j * stride_y + k * stride_z]) t += precon_diag[cellidx - stride_x] * q[cellidx - stride_x];
+				if (j > 0 && grid.pfluid_[i + (j-1) * stride_y + k * stride_z]) t += precon_diag[cellidx - stride_y] * q[cellidx - stride_y];
+				if (k > 0 && grid.pfluid_[i + j * stride_y + (k-1) * stride_z]) t += precon_diag[cellidx - stride_z] * q[cellidx - stride_z];
 				q[cellidx] = t * precon_diag[cellidx];
 			}
 		}
@@ -57,14 +57,14 @@ void ICConjugateGradientSolver::applyPreconditioner(const double *r, double *z) 
 		for (int j = n_cells_y-1; j >= 0; j--) {
 			for (int i = n_cells_x-1; i >= 0; i--) {
 				const unsigned cellidx = i + j*stride_y + k*stride_z;
-				if (not grid.is_fluid(i, j, k)) {
+				if (not grid.pfluid_[i + j * stride_y + k * stride_z]) {
 					z[cellidx] = 0;
 					continue;
 				}
 				double t = q[cellidx];
-				if (i + 1 < (int) n_cells_x && grid.is_fluid(i+1, j, k)) t += precon_diag[cellidx] * z[cellidx + stride_x];
-				if (j + 1 < (int) n_cells_y && grid.is_fluid(i, j+1, k)) t += precon_diag[cellidx] * z[cellidx + stride_y];
-				if (k + 1 < (int) n_cells_z && grid.is_fluid(i, j, k+1)) t += precon_diag[cellidx] * z[cellidx + stride_z];
+				if (i + 1 < (int) n_cells_x && grid.pfluid_[(i+1) + j * stride_y + k * stride_z]) t += precon_diag[cellidx] * z[cellidx + stride_x];
+				if (j + 1 < (int) n_cells_y && grid.pfluid_[i + (j+1) * stride_y + k * stride_z]) t += precon_diag[cellidx] * z[cellidx + stride_y];
+				if (k + 1 < (int) n_cells_z && grid.pfluid_[i + j * stride_y + (k+1) * stride_z]) t += precon_diag[cellidx] * z[cellidx + stride_z];
 				z[cellidx] = t * precon_diag[cellidx];
 			}
 		}
@@ -76,14 +76,14 @@ void ICConjugateGradientSolver::computePreconDiag() {
 		for (unsigned j = 0; j < n_cells_y; j++) {
 			for (unsigned i = 0; i < n_cells_x; i++) {
 				const unsigned cellidx = i + j*stride_y + k*stride_z;
-				if (not grid.is_fluid(i, j, k)) {
+				if (not grid.pfluid_[i + j * stride_y + k * stride_z]) {
 					precon_diag[cellidx] = 0;
 					continue;
 				}
 				double e = A_diag[cellidx];
-				if (i > 0 && grid.is_fluid(i-1, j, k)) e -= std::pow(precon_diag[cellidx-stride_x], 2);
-				if (j > 0 && grid.is_fluid(i, j-1, k)) e -= std::pow(precon_diag[cellidx-stride_y], 2);
-				if (k > 0 && grid.is_fluid(i, j, k-1)) e -= std::pow(precon_diag[cellidx-stride_z], 2);
+				if (i > 0 && grid.pfluid_[(i-1) + j * stride_y + k * stride_z]) e -= std::pow(precon_diag[cellidx-stride_x], 2);
+				if (j > 0 && grid.pfluid_[i + (j-1) * stride_y + k * stride_z]) e -= std::pow(precon_diag[cellidx-stride_y], 2);
+				if (k > 0 && grid.pfluid_[i + j * stride_y + (k-1) * stride_z]) e -= std::pow(precon_diag[cellidx-stride_z], 2);
 				precon_diag[cellidx] = 1 / std::sqrt(e + 1e-30);
 			}
 		}
@@ -109,21 +109,21 @@ void ICConjugateGradientSolver::applyA(const double *b, double *y) const{
 				y[diag_e.row()] += diag_e.value() * b[diag_e.col()];
 
                 // Compute off-diagonal entries
-                if (grid.is_fluid(i, j, k)){
+                if (grid.pfluid_[i + j * stride_y + k * stride_z]){
                     // x-adjacent cells
-                    if (i+1 < n_cells_x && grid.is_fluid(i+1, j, k)){
+                    if (i+1 < n_cells_x && grid.pfluid_[(i+1) + j * stride_y + k * stride_z]){
 						y[cellidx] 			-= b[cellidx+stride_x];
 						y[cellidx+stride_x] -= b[cellidx];
                     }
 
                     // y-adjacent cells
-                    if (j+1 < n_cells_y && grid.is_fluid(i, j+1, k)){
+                    if (j+1 < n_cells_y && grid.pfluid_[i + (j+1) * stride_y + k * stride_z]){
 						y[cellidx] 			-= b[cellidx+stride_y];
 						y[cellidx+stride_y] -= b[cellidx];
                     }
 
                     // z-adjacent cells
-                    if (k+1 < n_cells_z && grid.is_fluid(i, j, k+1)){
+                    if (k+1 < n_cells_z && grid.pfluid_[i + j * stride_y + (k+1) * stride_z]){
 						y[cellidx] 			-= b[cellidx+stride_z];
 						y[cellidx+stride_z] -= b[cellidx];
                     }

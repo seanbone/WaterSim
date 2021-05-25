@@ -3,7 +3,6 @@
 
 #include "Mac3d.h"
 #include "SimConfig.h"
-#include "NcWriter.h"
 #include "Particles.h"
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
@@ -13,6 +12,10 @@
 #include <chrono>
 #include <vector>
 #include "ConjugateGradient.hpp"
+
+#ifdef WRITE_REFERENCE
+#include "NcWriter.h"
+#endif
 
 class FLIP {
 public:
@@ -65,11 +68,11 @@ public:
 	 * - step is the number of steps performed
 	 * - x, y and z are the indices of the grid-cell on which the impact
 	 *	 will take place
-	 * - r is the radius (in number of cells) of the meteorite
-	 * - value is the amount of force applied by the meteorite on the 
+	 * - radius is the radius (in number of cells) of the meteorite
+	 * - force is the amount of force applied by the meteorite on the 
 	 * 	 grid-cells
 	 */
-	void explode(const double dt, const unsigned long step, const int x, const int y, const int z, const double r, const double value);
+	void explode(const double dt, const unsigned long step, const int x, const int y, const int z, const double radius, const double force);
 
 	/** Enforce boundary conditions for grid & solid boundaries
 	 */
@@ -95,17 +98,18 @@ public:
 	/** Apply RK2 to update particle positions
 	 * Params:
 	 * - dt is the amount of time to advance the simulation by
-	 * - step is the number of steps performed
 	 */
-	void advance_particles(const double dt, const unsigned long step);
+	void advance_particles(const double dt);
 
 private:
 
 	// The configuration
 	const SimConfig cfg_;
 
+#ifdef WRITE_REFERENCE
 	// NcWriter object to write reference data
 	NcWriter* ncWriter_;
+#endif
 	
 	// FLIP particles
 	Particles& particles_;

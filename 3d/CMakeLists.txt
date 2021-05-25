@@ -46,8 +46,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -std=c++17 -Wall -Wext
 # Ignore some warnings
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-reorder -Wno-unknown-pragmas -Wno-unused-parameter -Wno-misleading-indentation")
 # Ignore some less warnings
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas -Wno-misleading-indentation")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopt-info-missed=report.txt") 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas -Wno-misleading-indentation -Wno-unused-variable -Wno-deprecated-copy")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopt-info-missed=report.txt")
 
 # Export compilation commands for VIM editor
 set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
@@ -80,19 +80,27 @@ file(GLOB SRC_FILES_CORE
         ${PROJECT_SOURCE_DIR}/src/FLIP.cpp
         ${PROJECT_SOURCE_DIR}/src/Mac3d.cpp
         ${PROJECT_SOURCE_DIR}/src/MeshExporter.cpp
-        ${PROJECT_SOURCE_DIR}/src/NcReader.cpp
-        ${PROJECT_SOURCE_DIR}/src/NcWriter.cpp
         ${PROJECT_SOURCE_DIR}/src/Particles.cpp
         ${PROJECT_SOURCE_DIR}/src/SimConfig.cpp
         ${PROJECT_SOURCE_DIR}/src/WaterSim.cpp
         ${PROJECT_SOURCE_DIR}/src/flip-methods/*.cpp
 		${PROJECT_SOURCE_DIR}/src/ConjugateGradient.cpp
         )
+file(GLOB SRC_FILES_NC
+        ${PROJECT_SOURCE_DIR}/src/NcReader.cpp
+        ${PROJECT_SOURCE_DIR}/src/NcWriter.cpp
+        )
+if (WRITE_REFERENCE)
+    list(APPEND SRC_FILES_CORE ${SRC_FILES_NC})
+endif()
 
 # Make a library of the "core" FLIP solver
 add_library(watersim-core STATIC ${SRC_FILES_CORE})
 target_include_directories(watersim-core PUBLIC include)
-target_link_libraries(watersim-core igl::core nlohmann_json::nlohmann_json netcdf-cxx4)
+target_link_libraries(watersim-core igl::core nlohmann_json::nlohmann_json)
+if (WRITE_REFERENCE)
+    target_link_libraries(watersim-core netcdf-cxx4)
+endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(../lib/eigen3)

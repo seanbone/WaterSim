@@ -22,9 +22,6 @@ namespace cg {
         unsigned *row_idx;
     };
 	class ICConjugateGradientSolver {
-
-	    // preconditioner Matrix
-
 		const Mac3d& grid;
 		const unsigned n_cells_x, n_cells_y, n_cells_z;
 
@@ -33,7 +30,6 @@ namespace cg {
 		const unsigned stride_z = n_cells_x * n_cells_y;
 
 		const double tau;
-
 		public:
 	    // number of rows aka. len of rhs aka. len of res, guess vector ect.
         const unsigned num_cells;
@@ -89,13 +85,7 @@ namespace cg {
 	};
 
 }
-/*
-cg::SparseMat::SparseMat(SparseMat &M): v(M.v), r(M.r){
-    double values[v];
-    int col_idx[v];
-    int row_idx[r];
-};
-*/
+
 
 inline double cg::ICConjugateGradientSolver::dot_product(const double *a, const double *b, const unsigned int n) {
     double tmp = 0;

@@ -3,6 +3,7 @@
  */
 #include <iostream>
 #include <cassert>
+#include <vector>
 #include <Eigen/Sparse>
 #include <Eigen/IterativeLinearSolvers> // solve sparse systems
 
@@ -227,23 +228,23 @@ int main(){
 	// second step: get the new solver to run on the same data
 	// ###############  Optimized Solver  #################
 	//
-	
 
 	// get a raw array of the right-hand side
 	double* rhs = d_.data();
 
 	cg::ICConjugateGradientSolver cg_solver(100, grid);
 	unsigned num_cells = cg_solver.num_cells;
-	double* p_array = cg_solver.p;
+	std::vector<double> p_vec(num_cells);
 
 	// should really be the same size!
 	assert (num_cells == d_.size());
 	
 	tsctimer.start_timing("own pcg solver");
 	std::cout << "Solving using the new solver..." << std::endl;
-	cg_solver.solve(rhs, p_array);
+	cg_solver.solve(rhs, p_vec.data());
 	tsctimer.stop_timing("own pcg solver", true, "");
 
 	std::cout << "Vector p after optimized solver: ";
-	for(int i = 0; i < p.size() % 40; i++) std::cout << p_array[i] << " ";
+	for(int i = 0; i < p.size() % 40; i++) std::cout << p_vec[i] << " ";
+	std::cout << std::endl;
 }

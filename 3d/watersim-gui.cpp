@@ -248,9 +248,9 @@ public:
 		p_waterSim->m_watersim.m_cfg.getGridResolution(nx, ny, nz);
 
 		// Iterate over all grid-cells
-		for (unsigned k = 0; k < nz; k++) {
-			for (unsigned j = 0; j < ny; j++) {
-				for (unsigned i = 0; i < nx; i++) {
+		for (int k = 0; k < nz; k++) {
+			for (int j = 0; j < ny; j++) {
+				for (int i = 0; i < nx; i++) {
 
 					// Find the maximal/minimal pressure
 					double temp = p_waterSim->m_watersim.p_mac_grid->get_pressure(i, j, k);

@@ -24,7 +24,7 @@ struct Particles {
 	double *v = nullptr;
 	double *w = nullptr;
 
-	Particles(Particles::particleIdx_t nParticles, const SimConfig &cfg, const Mac3d &macGrid);
+	Particles(Particles::particleIdx_t nParticles, const Mac3d &macGrid);
 
 	~Particles();
 

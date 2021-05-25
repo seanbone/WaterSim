@@ -4,10 +4,14 @@
 
 
 FLIP::FLIP(Particles& particles, Mac3d* MACGrid, const SimConfig& cfg)
-	: num_particles_(particles.get_num_particles()), MACGrid_(MACGrid), cfg_(cfg),
+	: cfg_(cfg), particles_(particles), num_particles_(particles.get_num_particles()),
 	  fluid_density_(cfg.getDensity()), gravity_mag_(cfg.getGravity()), alpha_(cfg.getAlpha()),
-	  particles_(particles) {
+	  MACGrid_(MACGrid), cg_solver(100, *MACGrid_) {
 	
+    unsigned nx = MACGrid_->get_num_cells_x();
+    unsigned ny = MACGrid_->get_num_cells_y();
+    unsigned nz = MACGrid_->get_num_cells_z();
+    d_.resize(nx*ny*nz);
 #ifdef WRITE_REFERENCE
 	ncWriter_ = new NcWriter( "./ref.nc", 
 							  7, 
@@ -88,7 +92,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	apply_forces(dt);
 	
 	if (cfg_.getApplyMeteorForce() && step <= 200 ){
-		explode(dt, step, 15, 0, 15, 2, 800);
+		explode(dt, step, 15, 0, 15, 2., 800.);
 	}
 
 	tsctimer.stop_timing("apply_forces", true, "");
@@ -131,7 +135,7 @@ void FLIP::step_FLIP(double dt, unsigned long step) {
 	for( int s = 0; s < num_substeps ; ++s ){
 		
 		// 7.
-		advance_particles(dt/num_substeps, step);
+		advance_particles(dt/num_substeps);
 	}
 	tsctimer.stop_timing("advance_particles", true, "");
 

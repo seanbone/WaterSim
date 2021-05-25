@@ -182,7 +182,7 @@ void WaterSim::initParticles() {
         }
     }
 
-	flip_particles = new Particles(m_num_particles, m_cfg, *p_mac_grid);
+	flip_particles = new Particles(m_num_particles, *p_mac_grid);
 	std::move(particles_x.begin(), particles_x.end(), flip_particles->x);
 	std::move(particles_y.begin(), particles_y.end(), flip_particles->y);
 	std::move(particles_z.begin(), particles_z.end(), flip_particles->z);

@@ -8,6 +8,8 @@
 #include <cassert>
 #include <string>
 
+const double interpolation_tolerance = std::numeric_limits<double>::epsilon();
+
 std::string validation_data_dir = "/validation_data/";
 #ifdef CMAKE_SOURCE_DIR
 	// Macros to convert preprocessor variable to string, see

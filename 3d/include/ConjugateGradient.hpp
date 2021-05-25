@@ -22,9 +22,6 @@ namespace cg {
         unsigned *row_idx;
     };
 	class ICConjugateGradientSolver {
-
-	    // preconditioner Matrix
-
 		const Mac3d& grid;
 		const unsigned n_cells_x, n_cells_y, n_cells_z;
 
@@ -33,14 +30,10 @@ namespace cg {
 		const unsigned stride_z = n_cells_x * n_cells_y;
 
 		const double tau;
-
 		public:
 	    // number of rows aka. len of rhs aka. len of res, guess vector ect.
         const unsigned num_cells;
 
-        // pressure
-	    double *p;
-		
 		protected:
 		// intermediate vector for pressure solution
 	    double *q;
@@ -67,8 +60,6 @@ namespace cg {
 	    const double thresh = 1e-9;
 
 	    // unsure where rho comes from
-	    const double rho = 1.;
-	    const double rho_inv = 1.;
 
         public:
         ICConjugateGradientSolver();
@@ -102,15 +93,14 @@ cg::SparseMat::SparseMat(SparseMat &M): v(M.v), r(M.r){
 };
 */
 /*
+
+
 inline double cg::ICConjugateGradientSolver::dot_product(const double *a, const double *b, const unsigned int n) {
     double tmp = 0;
     for(unsigned i = 0 ; i < n; ++i ) {
         tmp += a[i]*b[i];
     }
     return tmp;
-}
- */
-
 // using avx2
 inline double cg::ICConjugateGradientSolver::dot_product(const double *a, const double *b, const unsigned int n) {
     double tmp = 0;

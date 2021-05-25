@@ -152,49 +152,56 @@ void print_array_head(const double* array, std::string prefix, unsigned number) 
 	std::cout << std::endl;
 }
 
-void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
-    // initialize initial guess and residual
-    std::copy(rhs,rhs+num_cells,r);
-	// catch zero rhs early
-	{
+// returns max |a[i]| for i in 0:n-1
+double get_max_modulus(const double* a, const int n) {
 		double max_abs_val = 0;
-		for (double* el = r; el < r+num_cells; el++) {
-			const double abs_val = std::abs(*el);
+		for (int i = 0; i < n; i++) {
+			const double abs_val = std::abs(a[i]);
 			if (max_abs_val < abs_val) max_abs_val = abs_val;
 		}
-		// std::cout << "Max abs val: " << max_abs_val << std::endl;
-		if (max_abs_val < thresh) {
-			std::cout << "Number of steps: " << step + 1 << std::endl;
-			return;
-		}
+		return max_abs_val;
+}
+
+void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
+    // initialize initial guess and residual
+	// catch zero rhs early
+	double max_residual_modulus = get_max_modulus(rhs, num_cells);
+	if (max_residual_modulus < thresh) {
+		std::fill(p,p+num_cells,0);
+		return;
 	}
-	// p = 0
-    std::fill(p,p+num_cells,0);
 
 	computePreconDiag();
 	// s = M⁻¹ r
-	applyPreconditioner(r, s);
+	applyPreconditioner(rhs, s);
 
 	// ρ = <r,s>
-	double rho = dot_product(r,s,num_cells);
+	double rho = dot_product(rhs,s,num_cells);
 
     for(unsigned step = 0; step < max_steps; step++){
-		// std::cout << "\nNew Round! (" << step << ")\n";
-		// print_array_head(p,  "p: ");
-		// print_array_head(r,  "r: ");
-		// z = A s
 		applyA(s, z);
-		//checknan(s, num_cells, "s");
-		// print_array_head(z,  "z: ");
-
-		// α = ρ / <s,z>
         const double dots = dot_product(z,s,num_cells);
 		const double alpha = rho / dots;
 
-        sca_add_product(s,alpha,num_cells,p);
-        sca_add_product(z,-alpha,num_cells,r);
+		if (step == 0) {
+			// on the first step initialize p
+			// TODO: use scalar product here to save one loop over p and over r
+			std::fill(p, p+num_cells, 0);
 
-        //check if exit cond is met : inf norm < then some thresh
+			// p <- α s
+			sca_add_product(s, alpha, num_cells, p);
+
+			// r <- (-α z + rhs)
+			sca_product(z, -alpha, rhs, num_cells, r);
+		}
+		else {
+			// p <- α s
+			sca_add_product(s,  alpha, num_cells, p);
+
+			// r <- (-α z + r)
+			sca_add_product(z, -alpha, num_cells, r);
+		}
+
 		{
 			double max_abs_val = 0;
 			for (double* el = r; el < r+num_cells; el++) {

@@ -72,7 +72,7 @@ namespace cg {
 
         // not sure where to put this
         //res[i] = a[i] * b + c[i]
-        inline void sca_product(const double* a, double b, double* c,  const unsigned n, double *res);
+        inline void sca_product(const double* a, double b, const double* c,  const unsigned n, double *res);
 
         // res[] += a[] * b
         inline void sca_add_product(const double * a, const double b, const unsigned n, double *res);
@@ -120,7 +120,7 @@ inline void cg::ICConjugateGradientSolver::sca_add_product(const double *a, cons
         res [i] += a[i] * b;
     }
 }
-inline void cg::ICConjugateGradientSolver::sca_product(const double *a, double b,double *c, const unsigned int n, double *res) {
+inline void cg::ICConjugateGradientSolver::sca_product(const double *a, double b, const double *c, const unsigned int n, double *res) {
     for(unsigned i = 0 ; i < n; ++i ) {
         res[i] = a[i] * b + c[i];
     }

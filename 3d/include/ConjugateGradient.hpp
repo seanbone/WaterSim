@@ -162,14 +162,14 @@ inline void cg::ICConjugateGradientSolver::Mat_mult(SparseMat *M, const double *
         ++curr_row_idx;
     }
 }
-/*
+
 inline void cg::ICConjugateGradientSolver::sca_add_product(const double *a, const double b, const unsigned int n, double *res) {
     for(unsigned i = 0; i < n; ++i ) {
         res [i] += a[i] * b;
     }
 }
- */
 
+/*
 inline void cg::ICConjugateGradientSolver::sca_add_product(const double *a, const double b, const unsigned int n, double *res) {
     unsigned i = 0;
     // we want 2 FMAs because of Skylake ports
@@ -195,14 +195,15 @@ inline void cg::ICConjugateGradientSolver::sca_add_product(const double *a, cons
         res [i] += a[i] * b;
     }
 }
-/*
+ */
+
 inline void cg::ICConjugateGradientSolver::sca_product(const double *a, double b,double *c, const unsigned int n, double *res) {
     for(unsigned i = 0 ; i < n; ++i ) {
         res[i] = a[i] * b + c[i];
     }
 }
-*/
 
+/*
 inline void cg::ICConjugateGradientSolver::sca_product(const double *a, double b,double *c, const unsigned int n, double *res) {
     unsigned i = 0;
     // we want 2 FMAs because of Skylake ports
@@ -228,6 +229,7 @@ inline void cg::ICConjugateGradientSolver::sca_product(const double *a, double b
         res[i] = a[i] * b + c[i];
     }
 }
+ */
 
 void print_array_head(const double* array, std::string prefix="", unsigned number=20);
 #endif

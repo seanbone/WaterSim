@@ -96,17 +96,15 @@ void ICConjugateGradientSolver::applyA(const double *b, double *y) const{
 		for (unsigned j = 0; j < n_cells_y; j++) {
 			for (unsigned i = 0; i < n_cells_x; i++) {
 				const unsigned cellidx = i + j*stride_y + k*stride_z;
-				y[cellidx] = 0;
-			}
-		}
-	}
-	for (unsigned k = 0; k < n_cells_z; k++) {
-		for (unsigned j = 0; j < n_cells_y; j++) {
-			for (unsigned i = 0; i < n_cells_x; i++) {
-				const unsigned cellidx = i + j*stride_y + k*stride_z;
-                auto& diag_e = grid.A_diag_[cellidx];
-				y[diag_e.row()] += diag_e.value() * b[diag_e.col()];
+                double diag_val = grid.A_diag_val[cellidx];
 
+				if (i == 0 && j == 0 && k == 0) y[cellidx] = 0;
+				y[cellidx] += diag_val * b[cellidx];
+
+				// avoid filling y with zeroes beforehand
+				if (j == 0 && k == 0 && i+1 < n_cells_x)  y[cellidx+stride_x] = 0;
+				if (k == 0 && j+1 < n_cells_y)  y[cellidx+stride_y] = 0;
+				if (k+1 < n_cells_z) y[cellidx+stride_z] = 0;
                 // Compute off-diagonal entries
                 if (grid.pfluid_[cellidx]){
                     // x-adjacent cells

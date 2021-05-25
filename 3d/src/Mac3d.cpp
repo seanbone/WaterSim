@@ -201,9 +201,11 @@ void Mac3d::initAdiag() {
 					}
 				}
 				A_diag_.push_back(Triplet_t(index, index, count));
+				A_diag_val.push_back(count);
 			}
 		}
 	}
+	// Notice that the elements are sorted by index
 }
 
 /************************************************************************************

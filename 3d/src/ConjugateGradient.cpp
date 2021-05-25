@@ -91,9 +91,17 @@ void ICConjugateGradientSolver::computePreconDiag() {
 	}
 }
 
-// apply the matrix A
+// apply the matrix A: y <- A b
 // element order: k-j-i
 void ICConjugateGradientSolver::applyA(const double *b, double *y) const{
+	for (unsigned k = 0; k < n_cells_z; k++) {
+		for (unsigned j = 0; j < n_cells_y; j++) {
+			for (unsigned i = 0; i < n_cells_x; i++) {
+				const unsigned cellidx = i + j*stride_y + k*stride_z;
+				y[cellidx] = 0;
+			}
+		}
+	}
 	for (unsigned k = 0; k < n_cells_z; k++) {
 		for (unsigned j = 0; j < n_cells_y; j++) {
 			for (unsigned i = 0; i < n_cells_x; i++) {

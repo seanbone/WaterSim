@@ -246,5 +246,4 @@ int main(){
 
 	std::cout << "Vector p after optimized solver: ";
 	for(int i = 0; i < p.size() % 40; i++) std::cout << p_array[i] << " ";
-	std::cout << std::endl;
 }

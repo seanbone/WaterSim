@@ -67,8 +67,6 @@ namespace cg {
 	    const double thresh = 1e-7;
 
 	    // unsure where rho comes from
-	    const double rho = 1.;
-	    const double rho_inv = 1.;
 
         public:
         ICConjugateGradientSolver();

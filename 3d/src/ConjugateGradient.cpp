@@ -15,7 +15,6 @@ cg::ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, con
 		max_steps(max_steps)
 {
     step = 0;
-    p = new double [num_cells];
     q = new double [num_cells];
     r = new double [num_cells];
     z = new double [num_cells];
@@ -82,9 +81,9 @@ void ICConjugateGradientSolver::computePreconDiag() {
 					continue;
 				}
 				double e = A_diag[cellidx];
-				if (i > 0 && grid.is_fluid(i-1, j, k)) e -= std::pow(-1 * precon_diag[cellidx-stride_x], 2);
-				if (j > 0 && grid.is_fluid(i, j-1, k)) e -= std::pow(-1 * precon_diag[cellidx-stride_y], 2);
-				if (k > 0 && grid.is_fluid(i, j, k-1)) e -= std::pow(-1 * precon_diag[cellidx-stride_z], 2);
+				if (i > 0 && grid.is_fluid(i-1, j, k)) e -= std::pow(precon_diag[cellidx-stride_x], 2);
+				if (j > 0 && grid.is_fluid(i, j-1, k)) e -= std::pow(precon_diag[cellidx-stride_y], 2);
+				if (k > 0 && grid.is_fluid(i, j, k-1)) e -= std::pow(precon_diag[cellidx-stride_z], 2);
 				precon_diag[cellidx] = 1 / std::sqrt(e + 1e-30);
 			}
 		}
@@ -113,20 +112,20 @@ void ICConjugateGradientSolver::applyA(const double *b, double *y) const{
                 if (grid.is_fluid(i, j, k)){
                     // x-adjacent cells
                     if (i+1 < n_cells_x && grid.is_fluid(i+1, j, k)){
-						y[cellidx] 			+= -1 * b[cellidx+stride_x];
-						y[cellidx+stride_x] += -1 * b[cellidx];
+						y[cellidx] 			-= b[cellidx+stride_x];
+						y[cellidx+stride_x] -= b[cellidx];
                     }
 
                     // y-adjacent cells
                     if (j+1 < n_cells_y && grid.is_fluid(i, j+1, k)){
-						y[cellidx] 			+= -1 * b[cellidx+stride_y];
-						y[cellidx+stride_y] += -1 * b[cellidx];
+						y[cellidx] 			-= b[cellidx+stride_y];
+						y[cellidx+stride_y] -= b[cellidx];
                     }
 
                     // z-adjacent cells
                     if (k+1 < n_cells_z && grid.is_fluid(i, j, k+1)){
-						y[cellidx] 			+= -1 * b[cellidx+stride_z];
-						y[cellidx+stride_z] += -1 * b[cellidx];
+						y[cellidx] 			-= b[cellidx+stride_z];
+						y[cellidx+stride_z] -= b[cellidx];
                     }
 				}
 			}
@@ -155,11 +154,6 @@ void print_array_head(const double* array, std::string prefix, unsigned number) 
 
 void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
     // initialize initial guess and residual
-	print_array_head(rhs,  "RHS: ");
-
-	// p = 0
-    std::fill(p,p+num_cells,0);
-	// r = d
     std::copy(rhs,rhs+num_cells,r);
 	// catch zero rhs early
 	{
@@ -174,13 +168,12 @@ void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
 			return;
 		}
 	}
+	// p = 0
+    std::fill(p,p+num_cells,0);
 
 	computePreconDiag();
 	// s = M⁻¹ r
 	applyPreconditioner(r, s);
-
-	// precompute the diagonal of the preconditioner
-	print_array_head(precon_diag,  "PreconDiag: ");
 
 	// ρ = <r,s>
 	double rho = dot_product(r,s,num_cells);
@@ -210,7 +203,7 @@ void cg::ICConjugateGradientSolver::solve(const double* rhs, double* p) {
 			}
 			// std::cout << "Max abs val: " << max_abs_val << std::endl;
 			if (max_abs_val < thresh) {
-				std::cout << "Number of steps: " << step + 1 << std::endl;
+				// std::cout << "Number of steps: " << step + 1 << std::endl;
 				return;
 			}
 			else if (step + 1 == max_steps) {
@@ -241,9 +234,7 @@ cg::SparseMat::~SparseMat(){
 
 
 cg::ICConjugateGradientSolver::~ICConjugateGradientSolver() {
-    delete [] p;
     delete [] q;
-    //delete [] r;
     delete [] z;
     delete [] s;
     delete [] precon_diag;

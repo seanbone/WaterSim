@@ -38,9 +38,6 @@ namespace cg {
 	    // number of rows aka. len of rhs aka. len of res, guess vector ect.
         const unsigned num_cells;
 
-        // pressure
-	    double *p;
-		
 		protected:
 		// intermediate vector for pressure solution
 	    double *q;

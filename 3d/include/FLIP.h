@@ -11,6 +11,8 @@
 #include <algorithm> // std::copy
 #include <Eigen/IterativeLinearSolvers> // solve sparse systems
 #include <chrono>
+#include <vector>
+#include "ConjugateGradient.hpp"
 
 class FLIP {
 public:
@@ -128,7 +130,13 @@ private:
 	SparseMat_t A_;
 	
 	// RHS of pressure LSE
-	Eigen::VectorXd d_;
+	std::vector<double> d_;
+
+	// Pressure vector
+	std::vector<double> p;
+
+	// Conjugate Gradient Solver
+	cg::ICConjugateGradientSolver cg_solver;
 	
 	/** Compute the weight using the SPH Kernels multiplied by the norm 
 	 * 	||x_p - x_uij||

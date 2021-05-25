@@ -20,27 +20,13 @@ void FLIP::apply_pressure_correction(const double dt) {
 
     // Solve for p: Ap = d (MICCG(0))
     using namespace Eigen;
-    using solver_t = ConjugateGradient< SparseMatrix<double>, Lower|Upper, IncompleteCholesky<double> >;
 
 
 //#define EIGEN_SOLVER
 
-#ifdef EIGEN_SOLVER
-    solver_t solver;
-    solver.setMaxIterations(100);
-    solver.compute(A_);
-    VectorXd p = solver.solve(d_);
-#else
 	double* rhs = d_.data();
-	cg::ICConjugateGradientSolver cg_solver(100, *MACGrid_);
-	unsigned num_cells = cg_solver.num_cells;
-    VectorXd p(num_cells);
-	double* p_array = p.data();
-	cg_solver.solve(rhs, p_array);
-
-#endif
-    // Copy pressures to MAC Grid
-    MACGrid_->set_pressure(p);
+	// work directly on grid array
+	cg_solver.solve(rhs, MACGrid_->ppressure_);
 
     // Apply pressure gradients to velocity field
     //     -> see SIGGRAPH §4
@@ -130,9 +116,8 @@ void FLIP::compute_pressure_rhs(const double dt) {
     // Alias for MAC Grid
     auto& g = MACGrid_;
 
-    // Set d_ to zero. d_ could be resized only at the start of the sim
-    d_.resize(nx*ny*nz);
-    d_.setZero();
+    // Set d_ to zero
+	std::fill(d_.data(), d_.data()+nx*ny*nz, 0);
 
     // Index of the current grid-cell [0, nx*ny*nz[ (in the matrix)
     unsigned cellidx = 0;
@@ -184,13 +169,13 @@ void FLIP::compute_pressure_rhs(const double dt) {
                         d_ij += g->get_w(i,j,k);
                     }
 
-                    d_(cellidx) = fluid_density_ * g->get_cell_sizex() * d_ij / dt;
+                    d_[cellidx] = fluid_density_ * g->get_cell_sizex() * d_ij / dt;
 
                 } else { // if is_fluid(i,j,k)
 
                     // Set the entry to zero if the current cell is a
                     // fluid-cell
-                    d_(cellidx) = 0;
+                    d_[cellidx] = 0;
                 }
             }
         }
@@ -220,9 +205,7 @@ void FLIP::apply_pressure_gradients(const double dt) {
 
                 // Update grid-velocities with new velocities induced by
                 // pressures
-
                 if (i != 0) {
-
                     // get_u(i,j,k) = u_{ (i-1/2, j, k) }
                     // See SIGGRAPH eq. (4.6)
                     double du = (g->get_pressure(i,j,k) - g->get_pressure(i-1,j,k));

@@ -64,7 +64,7 @@ namespace cg {
 	    unsigned step, max_steps;
 
 	    // threshhold
-	    const double thresh = 1e-7;
+	    const double thresh = 1e-9;
 
 	    // unsure where rho comes from
 

@@ -82,6 +82,8 @@ class Mac3d{
 		//pointer to a std::vector which contians the triplets for
 		//the diagonal of the matrix A, used to solve the pressures
 		std::vector<Triplet_t> A_diag_;
+		// the same information stored in three vectors
+		std::vector<double> A_diag_val;
 		
 		//pointer to the weights for particle-to-grid respectively for u, v, w
 		double* pweights_u_;

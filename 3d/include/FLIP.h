@@ -140,7 +140,7 @@ private:
 	std::vector<double> p;
 
 	// Conjugate Gradient Solver
-	cg::ICConjugateGradientSolver cg_solver;
+	ICConjugateGradientSolver cg_solver;
 	
 	/** Compute the weight using the SPH Kernels multiplied by the norm 
 	 * 	||x_p - x_uij||

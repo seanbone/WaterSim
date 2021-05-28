@@ -5,88 +5,107 @@
 #include<algorithm>
 #include<cmath>
 #include "Mac3d.h"
+// incomplete cholesky conjugate gradient
+struct SparseMat {
+	SparseMat(unsigned a, unsigned b);
+	~SparseMat();
 
-namespace cg {
-	// incomplete cholesky conjugate gradient
-    struct SparseMat {
-        SparseMat(unsigned a, unsigned b);
-        ~SparseMat();
+	// copy constructor
+	// SparseMat(const SparseMat A);
 
-        // copy constructor
-        // SparseMat(const cg::SparseMat A);
+	// values, rows
+	const unsigned v,r;
+	double *values;
+	unsigned *col_idx;
+	unsigned *row_idx;
+};
 
-        // values, rows
-        const unsigned v,r;
-        double *values;
-        unsigned *col_idx;
-        unsigned *row_idx;
-    };
-	class ICConjugateGradientSolver {
-		const Mac3d& grid;
-		const unsigned n_cells_x, n_cells_y, n_cells_z;
+class ICConjugateGradientSolver {
+	const Mac3d& grid;
+	const unsigned n_cells_x, n_cells_y, n_cells_z;
 
-		const unsigned stride_x = 1;
-		const unsigned stride_y = n_cells_x;
-		const unsigned stride_z = n_cells_x * n_cells_y;
+	const unsigned stride_x = 1;
+	const unsigned stride_y = n_cells_x;
+	const unsigned stride_z = n_cells_x * n_cells_y;
 
-		const double tau;
-		public:
-	    // number of rows aka. len of rhs aka. len of res, guess vector ect.
-        const unsigned num_cells;
+	const double tau;
+	public:
+	// number of rows aka. len of rhs aka. len of res, guess vector ect.
+	const unsigned num_cells;
 
-		protected:
-		// intermediate vector for pressure solution
-	    double *q;
+	protected:
+	// intermediate vector for pressure solution
+	double *q;
 
-	    // residual vector
-	    double *r;
+	// residual vector
+	double *r;
 
-	    // auxiliary vector
-	    double *z;
+	// auxiliary vector
+	double *z;
 
-	    // search vector
-	    double *s;
-		
-		// diagonal of preconditioner matrix
-	    double *precon_diag;
+	// search vector
+	double *s;
 
-		// diagonal of matrix A
-		double* A_diag;
+	// diagonal of preconditioner matrix
+	double *precon_diag;
 
-        // current step and max steps
-	    unsigned step, max_steps;
+	// diagonal of matrix A
+	double* A_diag;
 
-	    // threshhold
-	    const double thresh = 1e-9;
+	// current step and max steps
+	unsigned step, max_steps;
 
-	    // variables for optimisation
-	    const double d_size_inv = 1/sizeof(double);
+	// threshhold
+	const double thresh = 1e-9;
 
-        public:
-        ICConjugateGradientSolver();
-        ~ICConjugateGradientSolver();
-        ICConjugateGradientSolver(unsigned max_steps, const Mac3d& grid);
+	// variables for optimisation
+	const double d_size_inv = 1/sizeof(double);
 
-		void computePreconDiag();
-		void applyPreconditioner(const double *r, double *z) const;
-		void applyA(const double *s, double *z) const;
+	public:
+	ICConjugateGradientSolver();
+	~ICConjugateGradientSolver();
+	ICConjugateGradientSolver(unsigned max_steps, const Mac3d& grid);
 
-        // not sure where to put this
-        //res[i] = a[i] * b + c[i]
-        inline void sca_product(const double* a, double b, const double* c,  const unsigned n, double *res);
+	void computePreconDiag();
+	void applyPreconditioner(const double *r, double *z) const;
+	void applyA(const double *s, double *z) const;
 
-        // res[] += a[] * b
-        inline void sca_add_product(const double * a, const double b, const unsigned n, double *res);
 
-        inline double dot_product(const double * a, const double * b, const unsigned n);
+    // not sure where to put this
+    //res[i] = a[i] * b + c[i]
+    inline void sca_product(const double* a, double b, const double* c,  const unsigned n, double *res);
 
-        static void Mat_mult(SparseMat *M, const double *a, double *res);
+    // res[] += a[] * b
+    inline void sca_add_product(const double * a, const double b, const unsigned n, double *res);
 
-        void solve(const double* rhs, double* p);
-	};
+    inline double dot_product(const double * a, const double * b, const unsigned n);
+
+    static void Mat_mult(SparseMat *M, const double *a, double *res);
+
+    void solve(const double* rhs, double* p);
+};
+
+
+inline void ICConjugateGradientSolver::Mat_mult(SparseMat *M, const double *a, double *res) {
+	const unsigned v = M->v;
+	double tmp = 0;
+	// we assume first val of row dx is 0
+	// and last val is past the end val by convention
+	unsigned *curr_row_idx = M->row_idx;
+	unsigned *curr_col_idx = M->col_idx;
+
+	for(unsigned j = 0; j < v;){
+		tmp = 0;
+		while(j < *(curr_row_idx+1)){
+			tmp += M->values[j] * a[*curr_col_idx];
+			++j;
+			++curr_col_idx;
+		}
+		res[*curr_row_idx] = tmp;
+		++curr_row_idx;
+	}
 }
-
-inline double cg::ICConjugateGradientSolver::dot_product(const double *a, const double *b, const unsigned int n) {
+inline double ICConjugateGradientSolver::dot_product(const double *a, const double *b, const unsigned int n) {
     double tmp = 0;
     unsigned i = 0;
     // we want 2 FMAs because of Skylake ports
@@ -125,35 +144,16 @@ inline double cg::ICConjugateGradientSolver::dot_product(const double *a, const 
     }
     return tmp;
 }
+
 /*
-inline void cg::ICConjugateGradientSolver::Mat_mult(SparseMat *M, const double *a, double *res) {
-    const unsigned v = M->v;
-    double tmp = 0;
-    // we assume first val of row dx is 0
-    // and last val is past the end val by convention
-    unsigned *curr_row_idx = M->row_idx;
-    unsigned *curr_col_idx = M->col_idx;
-
-    for(unsigned j = 0; j < v;){
-        tmp = 0;
-        while(j < *(curr_row_idx+1)){
-            tmp += M->values[j] * a[*curr_col_idx];
-            ++j;
-            ++curr_col_idx;
-        }
-        res[*curr_row_idx] = tmp;
-        ++curr_row_idx;
-    }
-}
-
-inline void cg::ICConjugateGradientSolver::sca_add_product(const double *a, const double b, const unsigned int n, double *res) {
+inline void ICConjugateGradientSolver::sca_add_product(const double *a, const double b, const unsigned int n, double *res) {
     for(unsigned i = 0; i < n; ++i ) {
         res [i] += a[i] * b;
     }
 }
 
 */
-inline void cg::ICConjugateGradientSolver::sca_add_product(const double *a, const double b, const unsigned int n, double *res) {
+inline void ICConjugateGradientSolver::sca_add_product(const double *a, const double b, const unsigned int n, double *res) {
     unsigned i = 0;
     // we want 2 FMAs because of Skylake ports
     // so we do 8 doubles per step
@@ -186,7 +186,7 @@ inline void cg::ICConjugateGradientSolver::sca_add_product(const double *a, cons
     }
 }
 
-inline void cg::ICConjugateGradientSolver::sca_product(const double *a, double b, const double *c, const unsigned int n, double *res) {
+inline void ICConjugateGradientSolver::sca_product(const double *a, double b, const double *c, const unsigned int n, double *res) {
     unsigned i = 0;
     // we want 2 FMAs because of Skylake ports
     // so we do 8 doubles per step
@@ -220,7 +220,4 @@ inline void cg::ICConjugateGradientSolver::sca_product(const double *a, double b
     }
 }
 
-
-
-void print_array_head(const double* array, std::string prefix="", unsigned number=20);
 #endif

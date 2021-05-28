@@ -4,25 +4,66 @@
 #include <iostream>
 
 // ********* Kernels **********
-double dot_product(const double *a, const double *b, const unsigned int n) {
+// returns x.T * y
+double dot(const double *x, const double *y, const unsigned int n) {
 	double tmp = 0;
 	for(unsigned i = 0 ; i < n; ++i ) {
-		tmp += a[i]*b[i];
+		tmp += x[i]*y[i];
 	}
 	return tmp;
 }
 
-// res[] += a[] * b
-void sca_add_product(const double *a, const double b, const unsigned int n, double *res) {
+// y <- a * x
+void axy(const unsigned int n, const double a, const double *x, double *y) {
 	for(unsigned i = 0 ; i < n; ++i ) {
-		res [i] += a[i] * b;
+		y [i] = x[i] * a;
 	}
 }
-//res[i] = a[i] * b + c[i]
-void sca_product(const double *a, double b, const double *c, const unsigned int n, double *res) {
+
+// y <- a * x + y
+void axpy(const unsigned int n, const double a, const double *x, double *y) {
 	for(unsigned i = 0 ; i < n; ++i ) {
-		res[i] = a[i] * b + c[i];
+		y [i] += x[i] * a;
 	}
+}
+
+// y <- a * x + y; returns max |y[i]|
+double axpymax(const unsigned int n, const double a, const double *x, double *y) {
+	double max_abs_val = 0;
+	for(unsigned i = 0 ; i < n; ++i ) {
+		y [i] += x[i] * a;
+		const double abs_val = std::abs(y[i]);
+		if (max_abs_val < abs_val) max_abs_val = abs_val;
+	}
+	return max_abs_val;
+}
+
+// y <- a * x + y; returns max |z[i]|
+double axpyzmax(const unsigned int n, const double a, const double *x, const double *y, double *z) {
+	double max_abs_val = 0;
+	for(unsigned i = 0 ; i < n; ++i ) {
+		z[i] = x[i] * a + y[i];
+		const double abs_val = std::abs(z[i]);
+		if (max_abs_val < abs_val) max_abs_val = abs_val;
+	}
+	return max_abs_val;
+}
+
+//z <- a * x + y
+void axpyz(const unsigned int n, const double a, const double *x, const double *y, double *z) {
+	for(unsigned i = 0 ; i < n; ++i ) {
+		z[i] = x[i] * a + y[i];
+	}
+}
+
+// returns max |x[i]| for i in 0:n-1
+double xmax(const int n, const double* x) {
+	double max_abs_val = 0;
+	for (int i = 0; i < n; i++) {
+		const double abs_val = std::abs(x[i]);
+		if (max_abs_val < abs_val) max_abs_val = abs_val;
+	}
+	return max_abs_val;
 }
 
 ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, const Mac3d& grid)
@@ -168,20 +209,11 @@ void print_array_head(const double* array, std::string prefix="", unsigned numbe
 	std::cout << std::endl;
 }
 
-// returns max |a[i]| for i in 0:n-1
-double get_max_modulus(const double* a, const int n) {
-	double max_abs_val = 0;
-	for (int i = 0; i < n; i++) {
-		const double abs_val = std::abs(a[i]);
-		if (max_abs_val < abs_val) max_abs_val = abs_val;
-	}
-	return max_abs_val;
-}
 
 void ICConjugateGradientSolver::solve(const double* rhs, double* p) {
 	// initialize initial guess and residual
 	// catch zero rhs early
-	double max_residual_modulus = get_max_modulus(rhs, num_cells);
+	double max_residual_modulus = xmax(num_cells, rhs);
 	if (max_residual_modulus < thresh) {
 		std::fill(p,p+num_cells,0);
 		return;
@@ -192,55 +224,46 @@ void ICConjugateGradientSolver::solve(const double* rhs, double* p) {
 	applyPreconditioner(rhs, s);
 
 	// ρ = <r,s>
-	double rho = dot_product(rhs,s,num_cells);
+	double rho = dot(rhs,s,num_cells);
 
 	for(unsigned step = 0; step < max_steps; step++){
 		applyA(s, z);
-		const double dots = dot_product(z,s,num_cells);
+		const double dots = dot(z,s,num_cells);
 		const double alpha = rho / dots;
 
+		double max_abs_val;
 		if (step == 0) {
 			// on the first step initialize p
-			// TODO: use scalar product here to save one loop over p and over r
-			std::fill(p, p+num_cells, 0);
-
 			// p <- α s
-			sca_add_product(s, alpha, num_cells, p);
+			axy(num_cells, alpha, s, p);
 
 			// r <- (-α z + rhs)
-			sca_product(z, -alpha, rhs, num_cells, r);
+			max_abs_val = axpyzmax(num_cells, -alpha, z, rhs, r);
 		}
 		else {
 			// p <- α s
-			sca_add_product(s,  alpha, num_cells, p);
+			axpy(num_cells, alpha, s, p);
 
 			// r <- (-α z + r)
-			sca_add_product(z, -alpha, num_cells, r);
+			max_abs_val = axpymax(num_cells, -alpha, z, r);
 		}
 
-		{
-			double max_abs_val = 0;
-			for (double* el = r; el < r+num_cells; el++) {
-				const double abs_val = std::abs(*el);
-				if (max_abs_val < abs_val) max_abs_val = abs_val;
-			}
-			// std::cout << "Max abs val: " << max_abs_val << std::endl;
-			if (max_abs_val < thresh) {
-				// std::cout << "Number of steps: " << step + 1 << std::endl;
-				return;
-			}
-			else if (step + 1 == max_steps) {
-				std::cout << "WARNING: Failed to find a solution in " << step + 1 << " steps (|r|=" << max_abs_val <<")!" << std::endl;
-			}
+		// std::cout << "Max abs val: " << max_abs_val << std::endl;
+		if (max_abs_val < thresh) {
+			// std::cout << "Number of steps: " << step + 1 << std::endl;
+			return;
+		}
+		else if (step + 1 == max_steps) {
+			std::cout << "WARNING: Failed to find a solution in " << step + 1 << " steps (|r|=" << max_abs_val <<")!" << std::endl;
 		}
 
 		// z = M⁻¹ r
 		applyPreconditioner(r, z);
-		const double rho_new = dot_product(z, r, num_cells);
+		const double rho_new = dot(z, r, num_cells);
 		const double beta = rho_new / rho;
 		rho = rho_new;
 		//Bug potential: aliasing
-		sca_product(s, beta, z, num_cells, s);
+		axpyz(num_cells, beta, s, z, s);
 	}
 }
 

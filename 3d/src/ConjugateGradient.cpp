@@ -4,7 +4,12 @@
 #include <iostream>
 
 // ********* Kernels **********
+
+// variables for optimisation
+const double d_size_inv = 1/sizeof(double);
+
 // returns x.T * y
+/*
 double dot(const double *x, const double *y, const unsigned int n) {
 	double tmp = 0;
 	for(unsigned i = 0 ; i < n; ++i ) {
@@ -12,20 +17,167 @@ double dot(const double *x, const double *y, const unsigned int n) {
 	}
 	return tmp;
 }
+ */
+double dot(const double *x, const double *y, const unsigned int n) {
+    double tmp = 0;
+    unsigned i = 0;
+    // we want 2 FMAs because of Skylake ports
+    // so we do 8 doubles per step
+    __m256d vec_a1, vec_a2, vec_b1, vec_b2, sol;
+    __m256d vec_por1 = _mm256_setzero_pd();
+    __m256d vec_por2 = _mm256_setzero_pd();
+
+    // peel loop for alligned loads for a ! b should be handled too.
+    auto peel = (unsigned long) x & 0x1f;
+    if (peel != 0){
+        peel = ( 32-peel)*d_size_inv;
+        for(; i < peel ;++i){
+            tmp += x[i]*y[i];
+        }
+    }
+    //! b should be unalligned loads?
+    for(; i < n-8; i +=8 ) {
+        vec_a1 = _mm256_loadu_pd(x+i);
+        vec_b1 = _mm256_loadu_pd(y+i);
+        vec_a2 = _mm256_loadu_pd(x+4+i);
+        vec_b2 = _mm256_loadu_pd(y+4+i);
+
+        // not sure if we get aliasing issues here
+        vec_por1 = _mm256_fmadd_pd(vec_a1,vec_b1,vec_por1);
+        vec_por2 = _mm256_fmadd_pd(vec_a2,vec_b2,vec_por2);
+    }
+    // reduce all 8 into 1
+    sol = _mm256_hadd_pd(vec_por1,vec_por2);
+    sol = _mm256_hadd_pd(sol,sol);
+    //??? not sure
+    tmp += sol[0] + sol[2];
+    for(; i < n; ++i ) {
+        tmp += x[i]*y[i];
+    }
+    return tmp;
+}
 
 // y <- a * x
+/*
 void axy(const unsigned int n, const double a, const double *x, double *y) {
 	for(unsigned i = 0 ; i < n; ++i ) {
 		y [i] = x[i] * a;
 	}
 }
+ */
+void axy(const unsigned int n, const double a, const double *x, double *y) {
+    unsigned i = 0;
+    // we want 2 FMAs because of Skylake ports
+    // so we do 8 doubles per step
+    __m256d vec_a1, vec_a2, vec_res2, vec_res3;
+    __m256d vec_b1 = _mm256_set1_pd(a);
+    __m256d vec_b2 = _mm256_set1_pd(a);
+
+    // peel loop for alligned loads for a ! b should be handled too.
+    auto peel = (unsigned long) a & 0x1f;
+    if (peel != 0){
+        peel = ( 32-peel) * d_size_inv;
+        for(; i < peel ;++i){
+            y [i] = x[i] * a;
+        }
+    }
+    for(; i < n-8; i +=8 ) {
+        vec_a1      = _mm256_loadu_pd(x+i);
+        vec_a2      = _mm256_loadu_pd(x+i+4);
+
+        vec_res2 =  _mm256_mul_pd(vec_a1,vec_b1);
+        vec_res3 =  _mm256_mul_pd(vec_a2,vec_b2);
+        _mm256_storeu_pd(y+i,vec_res2);
+        _mm256_storeu_pd(y+i+4,vec_res3);
+    }
+    for(; i < n; ++i ) {
+        y [i] = x[i] * a;
+    }
+}
 
 // y <- a * x + y
+/*
 void axpy(const unsigned int n, const double a, const double *x, double *y) {
 	for(unsigned i = 0 ; i < n; ++i ) {
 		y [i] += x[i] * a;
 	}
 }
+*/
+
+void axpy(const unsigned int n, const double a, const double *x, double *y) {
+    unsigned i = 0;
+    // we want 2 FMAs because of Skylake ports
+    // so we do 8 doubles per step
+    __m256d vec_a1, vec_a2, vec_res, vec_res1, vec_res2, vec_res3;
+    __m256d vec_b1 = _mm256_set1_pd(a);
+    __m256d vec_b2 = _mm256_set1_pd(a);
+
+    // peel loop for alligned loads for a ! b should be handled too.
+    auto peel = (unsigned long) a & 0x1f;
+    if (peel != 0){
+        peel = ( 32-peel) *d_size_inv;
+        for(; i < peel ;++i){
+            y [i] += x[i] * a;
+        }
+    }
+    for(; i < n-8; i +=8 ) {
+        vec_a1      = _mm256_loadu_pd(x+i);
+        vec_a2      = _mm256_loadu_pd(x+i+4);
+        vec_res     = _mm256_loadu_pd(y+i);
+        vec_res1    = _mm256_loadu_pd(y+i+4);
+
+        // not sure if we get aliasing issues here
+        vec_res2 = _mm256_fmadd_pd(vec_a1,vec_b1,vec_res);
+        vec_res3 = _mm256_fmadd_pd(vec_a2,vec_b2,vec_res1);
+        _mm256_storeu_pd(y+i,vec_res2);
+        _mm256_storeu_pd(y+i+4,vec_res3);
+    }
+    for(; i < n; ++i ) {
+        y [i] += x[i] * a;
+    }
+}
+//z <- a * x + y
+/*
+void axpyz(const unsigned int n, const double a, const double *x, const double *y, double *z) {
+    for(unsigned i = 0 ; i < n; ++i ) {
+        z[i] = x[i] * a + y[i];
+    }
+}
+ */
+void axpyz(const unsigned int n, const double a, const double *x, const double *y, double *z) {
+    unsigned i = 0;
+    // we want 2 FMAs because of Skylake ports
+    // so we do 8 doubles per step
+    __m256d vec_a1, vec_a2, vec_c1, vec_c2, vec_res, vec_res1;
+    __m256d vec_b1 = _mm256_set1_pd(a);
+    __m256d vec_b2 = _mm256_set1_pd(a);
+
+    // peel loop for alligned loads for a ! b should be handled too.
+    auto peel = (unsigned long) a & 0x1f;
+    if (peel != 0){
+        peel = ( 32-peel)/sizeof(double);
+        for(; i < peel ;++i){
+            z[i] = x[i] * a + y[i];
+        }
+    }
+
+    for (; i < n - 8; i += 8) {
+        vec_a1 = _mm256_loadu_pd(x + i);
+        vec_a2 = _mm256_loadu_pd(x + i + 4);
+        vec_c1 = _mm256_loadu_pd(y + i);
+        vec_c2 = _mm256_loadu_pd(y + i + 4);
+
+        // not sure if we get aliasing issues here
+        vec_res = _mm256_fmadd_pd(vec_a1, vec_b1, vec_c1);
+        vec_res1 = _mm256_fmadd_pd(vec_a2, vec_b2, vec_c2);
+        _mm256_storeu_pd(z + i, vec_res);
+        _mm256_storeu_pd(z + i + 4, vec_res1);
+    }
+    for(; i < n; ++i ) {
+        z[i] = x[i] * a + y[i];
+    }
+}
+
 
 // y <- a * x + y; returns max |y[i]|
 double axpymax(const unsigned int n, const double a, const double *x, double *y) {
@@ -49,12 +201,7 @@ double axpyzmax(const unsigned int n, const double a, const double *x, const dou
 	return max_abs_val;
 }
 
-//z <- a * x + y
-void axpyz(const unsigned int n, const double a, const double *x, const double *y, double *z) {
-	for(unsigned i = 0 ; i < n; ++i ) {
-		z[i] = x[i] * a + y[i];
-	}
-}
+
 
 // returns max |x[i]| for i in 0:n-1
 double xmax(const int n, const double* x) {

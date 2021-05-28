@@ -37,10 +37,10 @@ double dot(const double *x, const double *y, const unsigned int n) {
     }
     //! b should be unalligned loads?
     for(; i < n-8; i +=8 ) {
-        vec_a1 = _mm256_loadu_pd(x+i);
-        vec_b1 = _mm256_loadu_pd(y+i);
-        vec_a2 = _mm256_loadu_pd(x+4+i);
-        vec_b2 = _mm256_loadu_pd(y+4+i);
+        vec_a1 = _mm256_load_pd(x+i);
+        vec_a2 = _mm256_load_pd(x+4+i);
+        vec_b1 = _mm256_load_pd(y+i);
+        vec_b2 = _mm256_load_pd(y+4+i);
 
         // not sure if we get aliasing issues here
         vec_por1 = _mm256_fmadd_pd(vec_a1,vec_b1,vec_por1);
@@ -74,7 +74,7 @@ void axy(const unsigned int n, const double a, const double *x, double *y) {
     __m256d vec_b2 = _mm256_set1_pd(a);
 
     // peel loop for alligned loads for a ! b should be handled too.
-    auto peel = (unsigned long) a & 0x1f;
+    auto peel = (unsigned long) x & 0x1f;
     if (peel != 0){
         peel = ( 32-peel) * d_size_inv;
         for(; i < peel ;++i){
@@ -82,8 +82,8 @@ void axy(const unsigned int n, const double a, const double *x, double *y) {
         }
     }
     for(; i < n-8; i +=8 ) {
-        vec_a1      = _mm256_loadu_pd(x+i);
-        vec_a2      = _mm256_loadu_pd(x+i+4);
+        vec_a1      = _mm256_load_pd(x+i);
+        vec_a2      = _mm256_load_pd(x+i+4);
 
         vec_res2 =  _mm256_mul_pd(vec_a1,vec_b1);
         vec_res3 =  _mm256_mul_pd(vec_a2,vec_b2);
@@ -113,7 +113,7 @@ void axpy(const unsigned int n, const double a, const double *x, double *y) {
     __m256d vec_b2 = _mm256_set1_pd(a);
 
     // peel loop for alligned loads for a ! b should be handled too.
-    auto peel = (unsigned long) a & 0x1f;
+    auto peel = (unsigned long) x & 0x1f;
     if (peel != 0){
         peel = ( 32-peel) *d_size_inv;
         for(; i < peel ;++i){
@@ -121,10 +121,10 @@ void axpy(const unsigned int n, const double a, const double *x, double *y) {
         }
     }
     for(; i < n-8; i +=8 ) {
-        vec_a1      = _mm256_loadu_pd(x+i);
-        vec_a2      = _mm256_loadu_pd(x+i+4);
-        vec_res     = _mm256_loadu_pd(y+i);
-        vec_res1    = _mm256_loadu_pd(y+i+4);
+        vec_a1      = _mm256_load_pd(x+i);
+        vec_a2      = _mm256_load_pd(x+i+4);
+        vec_res     = _mm256_load_pd(y+i);
+        vec_res1    = _mm256_load_pd(y+i+4);
 
         // not sure if we get aliasing issues here
         vec_res2 = _mm256_fmadd_pd(vec_a1,vec_b1,vec_res);
@@ -153,19 +153,19 @@ void axpyz(const unsigned int n, const double a, const double *x, const double *
     __m256d vec_b2 = _mm256_set1_pd(a);
 
     // peel loop for alligned loads for a ! b should be handled too.
-    auto peel = (unsigned long) a & 0x1f;
+    auto peel = (unsigned long) x & 0x1f;
     if (peel != 0){
-        peel = ( 32-peel)/sizeof(double);
+        peel = ( 32-peel)*d_size_inv;
         for(; i < peel ;++i){
             z[i] = x[i] * a + y[i];
         }
     }
 
     for (; i < n - 8; i += 8) {
-        vec_a1 = _mm256_loadu_pd(x + i);
-        vec_a2 = _mm256_loadu_pd(x + i + 4);
-        vec_c1 = _mm256_loadu_pd(y + i);
-        vec_c2 = _mm256_loadu_pd(y + i + 4);
+        vec_a1 = _mm256_load_pd(x + i);
+        vec_a2 = _mm256_load_pd(x + i + 4);
+        vec_c1 = _mm256_load_pd(y + i);
+        vec_c2 = _mm256_load_pd(y + i + 4);
 
         // not sure if we get aliasing issues here
         vec_res = _mm256_fmadd_pd(vec_a1, vec_b1, vec_c1);
@@ -222,10 +222,11 @@ ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, const M
 		max_steps(max_steps)
 {
 	step = 0;
-	q = new double [num_cells];
-	r = new double [num_cells];
-	z = new double [num_cells];
-	s = new double [num_cells];
+	unsigned chunk_size = 32;
+	q = new (std::align_val_t(chunk_size)) double [num_cells];
+	r = new (std::align_val_t(chunk_size)) double [num_cells];
+	z = new (std::align_val_t(chunk_size)) double [num_cells];
+	s = new (std::align_val_t(chunk_size)) double [num_cells];
 	precon_diag = new double [num_cells];
 	A_diag = new double [num_cells];
 

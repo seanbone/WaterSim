@@ -66,7 +66,7 @@ class ICConjugateGradientSolver {
 	void computePreconDiag();
 	void applyPreconditioner(const double *r, double *z) const;
 	void applyA(const double *s, double *z) const;
-	
+
     void solve(const double* rhs, double* p);
 };
 

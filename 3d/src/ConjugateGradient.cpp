@@ -27,7 +27,7 @@ double dot(const double *x, const double *y, const unsigned int n) {
     __m256d vec_por1 = _mm256_setzero_pd();
     __m256d vec_por2 = _mm256_setzero_pd();
 
-    // peel loop for alligned loads for a ! b should be handled too.
+    // peel loop for alligned loadus for a ! b should be handled too.
     auto peel = (unsigned long) x & 0x1f;
     if (peel != 0){
         peel = ( 32-peel)*d_size_inv;
@@ -35,12 +35,12 @@ double dot(const double *x, const double *y, const unsigned int n) {
             tmp += x[i]*y[i];
         }
     }
-    //! b should be unalligned loads?
+    //! b should be unalligned loadus?
     for(; i < n-8; i +=8 ) {
-        vec_a1 = _mm256_load_pd(x+i);
-        vec_a2 = _mm256_load_pd(x+4+i);
-        vec_b1 = _mm256_load_pd(y+i);
-        vec_b2 = _mm256_load_pd(y+4+i);
+        vec_a1 = _mm256_loadu_pd(x+i);
+        vec_a2 = _mm256_loadu_pd(x+4+i);
+        vec_b1 = _mm256_loadu_pd(y+i);
+        vec_b2 = _mm256_loadu_pd(y+4+i);
 
         // not sure if we get aliasing issues here
         vec_por1 = _mm256_fmadd_pd(vec_a1,vec_b1,vec_por1);
@@ -49,8 +49,10 @@ double dot(const double *x, const double *y, const unsigned int n) {
     // reduce all 8 into 1
     sol = _mm256_hadd_pd(vec_por1,vec_por2);
     sol = _mm256_hadd_pd(sol,sol);
-    //??? not sure
-    tmp += sol[0] + sol[2];
+    double sol0 [4];
+    _mm256_storeu_pd(sol0,sol);
+
+    tmp += sol0[0] + sol0[2];
     for(; i < n; ++i ) {
         tmp += x[i]*y[i];
     }
@@ -73,7 +75,7 @@ void axy(const unsigned int n, const double a, const double *x, double *y) {
     __m256d vec_b1 = _mm256_set1_pd(a);
     __m256d vec_b2 = _mm256_set1_pd(a);
 
-    // peel loop for alligned loads for a ! b should be handled too.
+    // peel loop for alligned loadus for a ! b should be handled too.
     auto peel = (unsigned long) x & 0x1f;
     if (peel != 0){
         peel = ( 32-peel) * d_size_inv;
@@ -82,8 +84,8 @@ void axy(const unsigned int n, const double a, const double *x, double *y) {
         }
     }
     for(; i < n-8; i +=8 ) {
-        vec_a1      = _mm256_load_pd(x+i);
-        vec_a2      = _mm256_load_pd(x+i+4);
+        vec_a1      = _mm256_loadu_pd(x+i);
+        vec_a2      = _mm256_loadu_pd(x+i+4);
 
         vec_res2 =  _mm256_mul_pd(vec_a1,vec_b1);
         vec_res3 =  _mm256_mul_pd(vec_a2,vec_b2);
@@ -112,7 +114,7 @@ void axpy(const unsigned int n, const double a, const double *x, double *y) {
     __m256d vec_b1 = _mm256_set1_pd(a);
     __m256d vec_b2 = _mm256_set1_pd(a);
 
-    // peel loop for alligned loads for a ! b should be handled too.
+    // peel loop for alligned loadus for a ! b should be handled too.
     auto peel = (unsigned long) x & 0x1f;
     if (peel != 0){
         peel = ( 32-peel) *d_size_inv;
@@ -121,10 +123,10 @@ void axpy(const unsigned int n, const double a, const double *x, double *y) {
         }
     }
     for(; i < n-8; i +=8 ) {
-        vec_a1      = _mm256_load_pd(x+i);
-        vec_a2      = _mm256_load_pd(x+i+4);
-        vec_res     = _mm256_load_pd(y+i);
-        vec_res1    = _mm256_load_pd(y+i+4);
+        vec_a1      = _mm256_loadu_pd(x+i);
+        vec_a2      = _mm256_loadu_pd(x+i+4);
+        vec_res     = _mm256_loadu_pd(y+i);
+        vec_res1    = _mm256_loadu_pd(y+i+4);
 
         // not sure if we get aliasing issues here
         vec_res2 = _mm256_fmadd_pd(vec_a1,vec_b1,vec_res);
@@ -149,10 +151,9 @@ void axpyz(const unsigned int n, const double a, const double *x, const double *
     // we want 2 FMAs because of Skylake ports
     // so we do 8 doubles per step
     __m256d vec_a1, vec_a2, vec_c1, vec_c2, vec_res, vec_res1;
-    __m256d vec_b1 = _mm256_set1_pd(a);
-    __m256d vec_b2 = _mm256_set1_pd(a);
+    const __m256d vec_b1 = _mm256_set1_pd(a);
 
-    // peel loop for alligned loads for a ! b should be handled too.
+    // peel loop for alligned loadus for a ! b should be handled too.
     auto peel = (unsigned long) x & 0x1f;
     if (peel != 0){
         peel = ( 32-peel)*d_size_inv;
@@ -162,14 +163,14 @@ void axpyz(const unsigned int n, const double a, const double *x, const double *
     }
 
     for (; i < n - 8; i += 8) {
-        vec_a1 = _mm256_load_pd(x + i);
-        vec_a2 = _mm256_load_pd(x + i + 4);
-        vec_c1 = _mm256_load_pd(y + i);
-        vec_c2 = _mm256_load_pd(y + i + 4);
+        vec_a1 = _mm256_loadu_pd(x + i);
+        vec_a2 = _mm256_loadu_pd(x + i + 4);
+        vec_c1 = _mm256_loadu_pd(y + i);
+        vec_c2 = _mm256_loadu_pd(y + i + 4);
 
         // not sure if we get aliasing issues here
         vec_res = _mm256_fmadd_pd(vec_a1, vec_b1, vec_c1);
-        vec_res1 = _mm256_fmadd_pd(vec_a2, vec_b2, vec_c2);
+        vec_res1 = _mm256_fmadd_pd(vec_a2, vec_b1, vec_c2);
         _mm256_storeu_pd(z + i, vec_res);
         _mm256_storeu_pd(z + i + 4, vec_res1);
     }
@@ -201,26 +202,22 @@ double axpymax(const unsigned int n, const double a, const double *x, double *y)
    __m256d vec_b2 = _mm256_set1_pd(a);
    __m256d vec_max1 = _mm256_setzero_pd();
    __m256d vec_max2 = _mm256_setzero_pd();
-   // for the abs val
-   __m256d vec_two1  = _mm256_set1_pd(-2);
-   __m256d vec_two2  = _mm256_set1_pd(-2);
-   __m256d vec_zero1 = _mm256_setzero_pd();
-   __m256d vec_zero2 = _mm256_setzero_pd();
-   __m256d mask_neg1, mask_neg2;
 
-   // peel loop for alligned loads for a ! b should be handled too.
+   // peel loop for alligned loadus for x
    auto peel = (unsigned long) x & 0x1f;
    if (peel != 0){
        peel = ( 32-peel) *d_size_inv;
        for(; i < peel ;++i){
            y [i] += x[i] * a;
+           const double square_val = y[i]* y[i];
+           if (max_abs_val < square_val) max_abs_val = square_val;
    }
    }
    for(; i < n-8; i +=8 ) {
-       vec_a1      = _mm256_load_pd(x+i);
-       vec_a2      = _mm256_load_pd(x+i+4);
-       vec_res     = _mm256_load_pd(y+i);
-       vec_res1    = _mm256_load_pd(y+i+4);
+       vec_a1      = _mm256_loadu_pd(x+i);
+       vec_a2      = _mm256_loadu_pd(x+i+4);
+       vec_res     = _mm256_loadu_pd(y+i);
+       vec_res1    = _mm256_loadu_pd(y+i+4);
 
        // not sure if we get aliasing issues here therefore we use vecres_2 and 3
        vec_res2 = _mm256_fmadd_pd(vec_a1,vec_b1,vec_res);
@@ -229,37 +226,32 @@ double axpymax(const unsigned int n, const double a, const double *x, double *y)
        _mm256_storeu_pd(y+i+4,vec_res3);
 
        // finding the max
-       // !Approach 1 !
        vec_res2 = _mm256_mul_pd(vec_res2,vec_res2);
        vec_res3 = _mm256_mul_pd(vec_res3,vec_res3);
-
-       // !Approach 2 !
-       // Pro: avoids square roots
-       // Con: 2 FMS + 2 Comps per loop instead of 2 mults
-       //mask_neg1 = _mm256_cmp_pd(vec_res2,vec_zero1,_CMP_LT_OQ);
-       //mask_neg2 = _mm256_cmp_pd(vec_res3,vec_zero2,_CMP_LT_OQ);
-       //vec_res2 = _mm256_fmadd_pd(_mm256_and_pd(mask_neg1,vec_res2),vec_two1,vec_res2);
-       //vec_res3 = _mm256_fmadd_pd(_mm256_and_pd(mask_neg2,vec_res3),vec_two2,vec_res3);
-
 
        vec_max1 = _mm256_max_pd(vec_res2,vec_max1);
        vec_max2 = _mm256_max_pd(vec_res3,vec_max2);
    }
    for(; i < n; ++i ) {
        y [i] += x[i] * a;
-       const double abs_val = std::abs(y[i]);
-       if (max_abs_val < abs_val) max_abs_val = abs_val;
+       const double square_val = y[i]*y[i];
+       if (max_abs_val < square_val) max_abs_val = square_val;
    }
    // now find the largest value
    vec_max1 = _mm256_max_pd(vec_max2,vec_max1);
    vec_max2 = _mm256_permute_pd(vec_max1,0xb1);
    vec_max1 = _mm256_max_pd(vec_max2,vec_max1);
 
-    // Approach 2
-    //return std::max(std::max(vec_max1[0],vec_max1[2]),max_abs_val);
-    // Approach 1
-    return std::max(std::sqrt(std::max(vec_max1[0],vec_max1[2])),max_abs_val);
-   //return max_abs_val;
+    // maybe add allignement
+    double sol0 [4];
+    _mm256_storeu_pd(sol0,vec_max1);
+
+    //potential optimisation :
+    //const __m256i mask = {1,0,1,0}; // maybe 256
+    //_mm256_maskstore_pd(sol0,0xff00ff00,vec_max1);
+
+    return std::sqrt(std::max(std::max(sol0[0],sol0[2]),max_abs_val));
+
 }
 
 // z <- a * x + y; returns max |z[i]|
@@ -285,19 +277,21 @@ double axpyzmax(const unsigned int n, const double a, const double *x, const dou
     __m256d vec_max1 = _mm256_setzero_pd();
     __m256d vec_max2 = _mm256_setzero_pd();
 
-    // peel loop for alligned loads for a ! b should be handled too.
+    // peel loop for alligned loadus for a ! b should be handled too.
     auto peel = (unsigned long) x & 0x1f;
     if (peel != 0) {
         peel = (32 - peel) * d_size_inv;
         for (; i < peel; ++i) {
             z[i] = y[i] + x[i] * a;
+            const double square_val = z[i]*z[i];
+            if (max_abs_val < square_val) max_abs_val = square_val;
         }
     }
     for (; i < n - 8; i += 8) {
-        vec_a1 = _mm256_load_pd(x + i);
-        vec_a2 = _mm256_load_pd(x + i + 4);
-        vec_res = _mm256_load_pd(y + i);
-        vec_res1 = _mm256_load_pd(y + i + 4);
+        vec_a1 = _mm256_loadu_pd(x + i);
+        vec_a2 = _mm256_loadu_pd(x + i + 4);
+        vec_res = _mm256_loadu_pd(y + i);
+        vec_res1 = _mm256_loadu_pd(y + i + 4);
 
         // not sure if we get aliasing issues here therefore we use vecres_2 and 3
         vec_res2 = _mm256_fmadd_pd(vec_a1, vec_b1, vec_res);
@@ -315,18 +309,19 @@ double axpyzmax(const unsigned int n, const double a, const double *x, const dou
     }
     for (; i < n; ++i) {
         z[i] = y[i] + x[i] * a;
-        const double abs_val = std::abs(z[i]);
-        if (max_abs_val < abs_val) max_abs_val = abs_val;
+        const double square_val = z[i]*z[i];
+        if (max_abs_val < square_val) max_abs_val = square_val;
     }
     // now find the largest value
     vec_max1 = _mm256_max_pd(vec_max2, vec_max1);
     vec_max2 = _mm256_permute_pd(vec_max1, 0xb1);
     vec_max1 = _mm256_max_pd(vec_max2, vec_max1);
 
-    return std::max(std::sqrt(std::max(vec_max1[0], vec_max1[2])), max_abs_val);
-    //return max_abs_val;
-}
+    double sol0 [4];
+    _mm256_storeu_pd(sol0,vec_max1);
 
+    return std::sqrt(std::max(std::max(sol0[0], sol0[2]), max_abs_val));
+}
 
 
 // returns max |x[i]| for i in 0:n-1
@@ -349,18 +344,18 @@ double xmax(const int n, const double* x) {
     __m256d vec_max1 = _mm256_setzero_pd();
     __m256d vec_max2 = _mm256_setzero_pd();
 
-    // peel loop for alligned loads for x
+    // peel loop for alligned loadus for x
     unsigned peel = (unsigned long) x & 0x1f;
     if (peel != 0) {
         peel = (32 - peel) * d_size_inv;
         for (; i < peel; ++i) {
-            const double abs_val = std::abs(x[i]);
-            if (max_abs_val < abs_val) max_abs_val = abs_val;
+            const double square_val = x[i]*x[i];
+            if (max_abs_val < square_val) max_abs_val = square_val;
         }
     }
     for (; i < n - 8; i += 8) {
-        vec_x1 = _mm256_load_pd(x + i);
-        vec_x2 = _mm256_load_pd(x + i + 4);
+        vec_x1 = _mm256_loadu_pd(x + i);
+        vec_x2 = _mm256_loadu_pd(x + i + 4);
 
         // !Approach 1 !
         vec_x1 = _mm256_mul_pd(vec_x1, vec_x1);
@@ -370,15 +365,17 @@ double xmax(const int n, const double* x) {
         vec_max2 = _mm256_max_pd(vec_x2, vec_max2);
     }
     for (; i < n; ++i) {
-        const double abs_val = std::abs(x[i]);
-        if (max_abs_val < abs_val) max_abs_val = abs_val;
+        const double square_val = x[i]*x[i];
+        if (max_abs_val < square_val) max_abs_val = square_val;
     }
     // now find the largest value
     vec_max1 = _mm256_max_pd(vec_max2, vec_max1);
     vec_max2 = _mm256_permute_pd(vec_max1, 0xb1);
     vec_max1 = _mm256_max_pd(vec_max2, vec_max1);
 
-    return std::max(std::sqrt(std::max(vec_max1[0], vec_max1[2])), max_abs_val);
+    double sol0 [4];
+    _mm256_storeu_pd(sol0,vec_max1);
+    return std::sqrt(std::max(std::max(sol0[0], sol0[2]), max_abs_val));
 }
 
 ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, const Mac3d& grid)
@@ -398,7 +395,7 @@ ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, const M
    precon_diag = new (std::align_val_t(chunk_size)) double [num_cells];
    A_diag = new (std::align_val_t(chunk_size)) double [num_cells];
 
-   // load A_diag
+   // loadu A_diag
    unsigned cellidx = 0;
    for (unsigned k = 0; k < n_cells_z; k++) {
        for (unsigned j = 0; j < n_cells_y; j++) {
@@ -456,9 +453,9 @@ void ICConjugateGradientSolver::computePreconDiag() {
                    continue;
                }
                double e = A_diag[cellidx];
-               if (i > 0 && grid.pfluid_[cellidx - stride_x]) e -= std::pow(precon_diag[cellidx - stride_x], 2);
-               if (j > 0 && grid.pfluid_[cellidx - stride_y]) e -= std::pow(precon_diag[cellidx - stride_y], 2);
-               if (k > 0 && grid.pfluid_[cellidx - stride_z]) e -= std::pow(precon_diag[cellidx - stride_z], 2);
+               if (i > 0 && grid.pfluid_[cellidx - stride_x]) e -= (precon_diag[cellidx - stride_x] * precon_diag[cellidx - stride_x]);
+               if (j > 0 && grid.pfluid_[cellidx - stride_y]) e -= (precon_diag[cellidx - stride_y] * precon_diag[cellidx - stride_y]);
+               if (k > 0 && grid.pfluid_[cellidx - stride_z]) e -= (precon_diag[cellidx - stride_z] * precon_diag[cellidx - stride_z]);
                precon_diag[cellidx] = 1 / std::sqrt(e + 1e-30);
            }
        }
@@ -585,9 +582,9 @@ void ICConjugateGradientSolver::solve(const double* rhs, double* p) {
 }
 
 SparseMat::SparseMat(unsigned a, unsigned b): v(a), r(b){
-   values = new double [v];
-   col_idx = new unsigned [v];
-   row_idx = new unsigned [r];
+   values = new (std::align_val_t(32)) double [v];
+   col_idx = new (std::align_val_t(32)) unsigned [v];
+   row_idx = new (std::align_val_t(32)) unsigned [r];
 }
 SparseMat::~SparseMat(){
    delete [] values;

@@ -3,6 +3,8 @@
 #include <cmath>
 #include <iostream>
 
+#define square(X)	((X) * (X))
+
 // ********* Kernels **********
 // returns x.T * y
 double dot(const double *x, const double *y, const unsigned int n) {
@@ -140,9 +142,9 @@ void ICConjugateGradientSolver::computePreconDiag() {
 					continue;
 				}
 				double e = A_diag[cellidx];
-				if (i > 0 && grid.pfluid_[cellidx - stride_x]) e -= std::pow(precon_diag[cellidx - stride_x], 2);
-				if (j > 0 && grid.pfluid_[cellidx - stride_y]) e -= std::pow(precon_diag[cellidx - stride_y], 2);
-				if (k > 0 && grid.pfluid_[cellidx - stride_z]) e -= std::pow(precon_diag[cellidx - stride_z], 2);
+				if (i > 0 && grid.pfluid_[cellidx - stride_x]) e -= square(precon_diag[cellidx - stride_x]);
+				if (j > 0 && grid.pfluid_[cellidx - stride_y]) e -= square(precon_diag[cellidx - stride_y]);
+				if (k > 0 && grid.pfluid_[cellidx - stride_z]) e -= square(precon_diag[cellidx - stride_z]);
 				precon_diag[cellidx] = 1 / std::sqrt(e + 1e-30);
 			}
 		}

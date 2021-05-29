@@ -16,40 +16,41 @@ Mac3d::Mac3d(const unsigned n, const unsigned m, const unsigned l,
 }
 
 void Mac3d::initArrays() {
-	ppressure_ = new double[N_*M_*L_];
+    const unsigned chunk_size = 32;
+	ppressure_ = new (std::align_val_t(chunk_size)) double[N_*M_*L_];
 	std::fill(ppressure_, ppressure_+N_*M_*L_, 0.);
 
-	pu_ = new double[(N_+1)*M_*L_];
+	pu_ = new (std::align_val_t(chunk_size)) double[(N_+1)*M_*L_];
 	std::fill(pu_, pu_+(N_+1)*M_*L_, 0.);
 
-	pu_star_ = new double[(N_+1)*M_*L_];
+	pu_star_ = new (std::align_val_t(chunk_size)) double[(N_+1)*M_*L_];
 	std::fill(pu_star_, pu_star_+(N_+1)*M_*L_, 0.);
 
-	pv_ = new double[N_*(M_+1)*L_];
+	pv_ = new (std::align_val_t(chunk_size))double[N_*(M_+1)*L_];
 	std::fill(pv_, pv_+N_*(M_+1)*L_, 0.);
 
-	pv_star_ = new double[N_*(M_+1)*L_];
+	pv_star_ = new (std::align_val_t(chunk_size))double[N_*(M_+1)*L_];
 	std::fill(pv_star_, pv_star_+N_*(M_+1)*L_, 0.);
 	
-	pw_ = new double[N_*M_*(L_+1)];
+	pw_ = new (std::align_val_t(chunk_size))double[N_*M_*(L_+1)];
 	std::fill(pw_, pw_+N_*M_*(L_+1), 0.);
 
-	pw_star_ = new double[N_*M_*(L_+1)];
+	pw_star_ = new (std::align_val_t(chunk_size))double[N_*M_*(L_+1)];
 	std::fill(pw_star_, pw_star_+N_*M_*(L_+1), 0.);
 
-	psolid_ = new bool[N_*M_*L_];
+	psolid_ = new (std::align_val_t(chunk_size))bool[N_*M_*L_];
 	std::fill(psolid_, psolid_+N_*M_*L_, 0.);
 
-	pfluid_ = new bool[N_*M_*L_];
+	pfluid_ = new (std::align_val_t(chunk_size))bool[N_*M_*L_];
 	std::fill(pfluid_, pfluid_+N_*M_*L_, 0.);
 
-	pweights_u_ = new double[(N_+1)*M_*L_];
+	pweights_u_ = new (std::align_val_t(chunk_size))double[(N_+1)*M_*L_];
 	std::fill(pweights_u_, pweights_u_+(N_+1)*M_*L_, 0.);
 
-	pweights_v_ = new double[N_*(M_+1)*L_];
+	pweights_v_ = new (std::align_val_t(chunk_size))double[N_*(M_+1)*L_];
 	std::fill(pweights_v_, pweights_v_+N_*(M_+1)*L_, 0.);
 	
-	pweights_w_ = new double[N_*M_*(L_+1)];
+	pweights_w_ = new(std::align_val_t(chunk_size)) double[N_*M_*(L_+1)];
 	std::fill(pweights_w_, pweights_w_+N_*M_*(L_+1), 0.);
 }
 

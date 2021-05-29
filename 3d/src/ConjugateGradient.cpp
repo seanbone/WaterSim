@@ -21,11 +21,21 @@ double dot(const double *x, const double *y, const unsigned int n) {
 double dot(const double *x, const double *y, const unsigned int n) {
     double tmp = 0;
     unsigned i = 0;
-    // we want 2 FMAs because of Skylake ports
+    // we want 8 FMAs because of Skylake ports lat 4, 2 per cycle
     // so we do 8 doubles per step
-    __m256d vec_a1, vec_a2, vec_b1, vec_b2, sol;
+    __m256d sol1, sol2, sol3, sol4;
+    __m256d vec_x1, vec_x2, vec_y1, vec_y2;
+    __m256d vec_x3, vec_x4, vec_y3, vec_y4;
+    __m256d vec_x5, vec_x6, vec_y5, vec_y6;
+    __m256d vec_x7, vec_x8, vec_y7, vec_y8;
     __m256d vec_por1 = _mm256_setzero_pd();
     __m256d vec_por2 = _mm256_setzero_pd();
+    __m256d vec_por3 = _mm256_setzero_pd();
+    __m256d vec_por4 = _mm256_setzero_pd();
+    __m256d vec_por5 = _mm256_setzero_pd();
+    __m256d vec_por6 = _mm256_setzero_pd();
+    __m256d vec_por7 = _mm256_setzero_pd();
+    __m256d vec_por8 = _mm256_setzero_pd();
 
     // peel loop for alligned loads for a ! b should be handled too.
     auto peel = (unsigned long) x & 0x1f;
@@ -36,21 +46,47 @@ double dot(const double *x, const double *y, const unsigned int n) {
         }
     }
     //! b should be unalligned loads?
-    for(; i < n-8; i +=8 ) {
-        vec_a1 = _mm256_load_pd(x+i);
-        vec_a2 = _mm256_load_pd(x+4+i);
-        vec_b1 = _mm256_load_pd(y+i);
-        vec_b2 = _mm256_load_pd(y+4+i);
+    for(; i < n-32; i +=32 ) {
+        vec_x1 = _mm256_load_pd(x+i);
+        vec_x2 = _mm256_load_pd(x+i+4);
+        vec_x3 = _mm256_load_pd(x+i+8);
+        vec_x4 = _mm256_load_pd(x+i+12);
+        vec_x5 = _mm256_load_pd(x+i+16);
+        vec_x6 = _mm256_load_pd(x+i+20);
+        vec_x7 = _mm256_load_pd(x+i+24);
+        vec_x8 = _mm256_load_pd(x+i+28);
+
+        vec_y1 = _mm256_load_pd(y+i);
+        vec_y2 = _mm256_load_pd(y+i+4);
+        vec_y3 = _mm256_load_pd(y+i+8);
+        vec_y4 = _mm256_load_pd(y+i+12);
+        vec_y5 = _mm256_load_pd(y+i+16);
+        vec_y6 = _mm256_load_pd(y+i+20);
+        vec_y7 = _mm256_load_pd(y+i+24);
+        vec_y8 = _mm256_load_pd(y+i+28);
 
         // not sure if we get aliasing issues here
-        vec_por1 = _mm256_fmadd_pd(vec_a1,vec_b1,vec_por1);
-        vec_por2 = _mm256_fmadd_pd(vec_a2,vec_b2,vec_por2);
+        vec_por1 = _mm256_fmadd_pd(vec_x1,vec_y1,vec_por1);
+        vec_por2 = _mm256_fmadd_pd(vec_x2,vec_y2,vec_por2);
+        vec_por3 = _mm256_fmadd_pd(vec_x3,vec_y3,vec_por3);
+        vec_por4 = _mm256_fmadd_pd(vec_x4,vec_y4,vec_por4);
+        vec_por5 = _mm256_fmadd_pd(vec_x5,vec_y5,vec_por5);
+        vec_por6 = _mm256_fmadd_pd(vec_x6,vec_y6,vec_por6);
+        vec_por7 = _mm256_fmadd_pd(vec_x7,vec_y7,vec_por7);
+        vec_por8 = _mm256_fmadd_pd(vec_x8,vec_y8,vec_por8);
     }
-    // reduce all 8 into 1
-    sol = _mm256_hadd_pd(vec_por1,vec_por2);
-    sol = _mm256_hadd_pd(sol,sol);
-    double sol0 [4];
-    _mm256_storeu_pd(sol0,sol);
+    // reduce all 32 into 1
+    sol1 = _mm256_hadd_pd(vec_por1,vec_por2);
+    sol2 = _mm256_hadd_pd(vec_por3,vec_por4);
+    sol3 = _mm256_hadd_pd(vec_por5,vec_por6);
+    sol4 = _mm256_hadd_pd(vec_por7,vec_por8);
+
+    sol1 = _mm256_hadd_pd(sol1,sol3);
+    sol2 = _mm256_hadd_pd(sol2,sol4);
+    sol1 = _mm256_hadd_pd(sol1,sol2);
+    sol1 = _mm256_hadd_pd(sol1,sol1);
+    double sol0[4];
+    _mm256_storeu_pd(sol0,sol1);
 
     tmp += sol0[0] + sol0[2];
     for(; i < n; ++i ) {
@@ -69,11 +105,26 @@ void axy(const unsigned int n, const double a, const double *x, double *y) {
  */
 void axy(const unsigned int n, const double a, const double *x, double *y) {
     unsigned i = 0;
-    // we want 2 FMAs because of Skylake ports
+    // we want Mul has lat 4 and 2 ports on skylake
+    // https://www.agner.org/optimize/instruction_tables.pdf p 275.
     // so we do 8 doubles per step
-    __m256d vec_a1, vec_a2, vec_res2, vec_res3;
-    __m256d vec_b1 = _mm256_set1_pd(a);
-    __m256d vec_b2 = _mm256_set1_pd(a);
+    __m256d vec_x1, vec_x2;
+    __m256d vec_x3, vec_x4;
+    __m256d vec_x5, vec_x6;
+    __m256d vec_x7, vec_x8;
+    __m256d vec_res1, vec_res2;
+    __m256d vec_res3, vec_res4;
+    __m256d vec_res5, vec_res6;
+    __m256d vec_res7, vec_res8;
+    const __m256d  vec_a1 = _mm256_set1_pd(a);
+    const __m256d  vec_a2 = _mm256_set1_pd(a);
+    const __m256d  vec_a3 = _mm256_set1_pd(a);
+    const __m256d  vec_a4 = _mm256_set1_pd(a);
+    const __m256d  vec_a5 = _mm256_set1_pd(a);
+    const __m256d  vec_a6 = _mm256_set1_pd(a);
+    const __m256d  vec_a7 = _mm256_set1_pd(a);
+    const __m256d  vec_a8 = _mm256_set1_pd(a);
+
 
     // peel loop for alligned loads for a ! b should be handled too.
     auto peel = (unsigned long) x & 0x1f;
@@ -83,14 +134,32 @@ void axy(const unsigned int n, const double a, const double *x, double *y) {
             y [i] = x[i] * a;
         }
     }
-    for(; i < n-8; i +=8 ) {
-        vec_a1      = _mm256_load_pd(x+i);
-        vec_a2      = _mm256_load_pd(x+i+4);
+    for(; i < n-32; i +=32 ) {
+        vec_x1      = _mm256_load_pd(x+i);
+        vec_x2      = _mm256_load_pd(x+i+4);
+        vec_x3      = _mm256_load_pd(x+i+8);
+        vec_x4      = _mm256_load_pd(x+i+12);
+        vec_x5      = _mm256_load_pd(x+i+16);
+        vec_x6      = _mm256_load_pd(x+i+20);
+        vec_x7      = _mm256_load_pd(x+i+24);
+        vec_x8      = _mm256_load_pd(x+i+28);
 
-        vec_res2 =  _mm256_mul_pd(vec_a1,vec_b1);
-        vec_res3 =  _mm256_mul_pd(vec_a2,vec_b2);
-        _mm256_storeu_pd(y+i,vec_res2);
-        _mm256_storeu_pd(y+i+4,vec_res3);
+        vec_res1 =  _mm256_mul_pd(vec_x1,vec_a1);
+        vec_res2 =  _mm256_mul_pd(vec_x2,vec_a2);
+        vec_res3 =  _mm256_mul_pd(vec_x3,vec_a3);
+        vec_res4 =  _mm256_mul_pd(vec_x4,vec_a4);
+        vec_res5 =  _mm256_mul_pd(vec_x5,vec_a5);
+        vec_res6 =  _mm256_mul_pd(vec_x6,vec_a6);
+        vec_res7 =  _mm256_mul_pd(vec_x7,vec_a7);
+        vec_res8 =  _mm256_mul_pd(vec_x8,vec_a8);
+        _mm256_storeu_pd(y+i,vec_res1);
+        _mm256_storeu_pd(y+i+4,vec_res2);
+        _mm256_storeu_pd(y+i+8,vec_res3);
+        _mm256_storeu_pd(y+i+12,vec_res4);
+        _mm256_storeu_pd(y+i+16,vec_res5);
+        _mm256_storeu_pd(y+i+20,vec_res6);
+        _mm256_storeu_pd(y+i+24,vec_res7);
+        _mm256_storeu_pd(y+i+28,vec_res8);
     }
     for(; i < n; ++i ) {
         y [i] = x[i] * a;
@@ -108,11 +177,28 @@ void axpy(const unsigned int n, const double a, const double *x, double *y) {
 
 void axpy(const unsigned int n, const double a, const double *x, double *y) {
     unsigned i = 0;
-    // we want 2 FMAs because of Skylake ports
+    // we want 8 FMAs because of Skylake ports
     // so we do 8 doubles per step
-    __m256d vec_a1, vec_a2, vec_res, vec_res1, vec_res2, vec_res3;
-    __m256d vec_b1 = _mm256_set1_pd(a);
-    __m256d vec_b2 = _mm256_set1_pd(a);
+    __m256d vec_x1, vec_x2;
+    __m256d vec_x3, vec_x4;
+    __m256d vec_x5, vec_x6;
+    __m256d vec_x7, vec_x8;
+    __m256d vec_y1, vec_y2;
+    __m256d vec_y3, vec_y4;
+    __m256d vec_y5, vec_y6;
+    __m256d vec_y7, vec_y8;
+    __m256d vec_res1, vec_res2;
+    __m256d vec_res3, vec_res4;
+    __m256d vec_res5, vec_res6;
+    __m256d vec_res7, vec_res8;
+    const __m256d  vec_a1 = _mm256_set1_pd(a);
+    const __m256d  vec_a2 = _mm256_set1_pd(a);
+    const __m256d  vec_a3 = _mm256_set1_pd(a);
+    const __m256d  vec_a4 = _mm256_set1_pd(a);
+    const __m256d  vec_a5 = _mm256_set1_pd(a);
+    const __m256d  vec_a6 = _mm256_set1_pd(a);
+    const __m256d  vec_a7 = _mm256_set1_pd(a);
+    const __m256d  vec_a8 = _mm256_set1_pd(a);
 
     // peel loop for alligned loads for a ! b should be handled too.
     auto peel = (unsigned long) x & 0x1f;
@@ -122,17 +208,43 @@ void axpy(const unsigned int n, const double a, const double *x, double *y) {
             y [i] += x[i] * a;
         }
     }
-    for(; i < n-8; i +=8 ) {
-        vec_a1      = _mm256_load_pd(x+i);
-        vec_a2      = _mm256_load_pd(x+i+4);
-        vec_res     = _mm256_load_pd(y+i);
-        vec_res1    = _mm256_load_pd(y+i+4);
+    for(; i < n-32; i +=32 ) {
+        vec_x1      = _mm256_load_pd(x+i);
+        vec_x2      = _mm256_load_pd(x+i+4);
+        vec_x3      = _mm256_load_pd(x+i+8);
+        vec_x4      = _mm256_load_pd(x+i+12);
+        vec_x5      = _mm256_load_pd(x+i+16);
+        vec_x6      = _mm256_load_pd(x+i+20);
+        vec_x7      = _mm256_load_pd(x+i+24);
+        vec_x8      = _mm256_load_pd(x+i+28);
+        vec_y1      = _mm256_load_pd(y+i);
+        vec_y2      = _mm256_load_pd(y+i+4);
+        vec_y3      = _mm256_load_pd(y+i+8);
+        vec_y4      = _mm256_load_pd(y+i+12);
+        vec_y5      = _mm256_load_pd(y+i+16);
+        vec_y6      = _mm256_load_pd(y+i+20);
+        vec_y7      = _mm256_load_pd(y+i+24);
+        vec_y8      = _mm256_load_pd(y+i+28);
 
         // not sure if we get aliasing issues here
-        vec_res2 = _mm256_fmadd_pd(vec_a1,vec_b1,vec_res);
-        vec_res3 = _mm256_fmadd_pd(vec_a2,vec_b2,vec_res1);
-        _mm256_storeu_pd(y+i,vec_res2);
-        _mm256_storeu_pd(y+i+4,vec_res3);
+        vec_res1 = _mm256_fmadd_pd(vec_a1,vec_x1,vec_y1);
+        vec_res2 = _mm256_fmadd_pd(vec_a2,vec_x2,vec_y2);
+        vec_res3 = _mm256_fmadd_pd(vec_a3,vec_x3,vec_y3);
+        vec_res4 = _mm256_fmadd_pd(vec_a4,vec_x4,vec_y4);
+        vec_res5 = _mm256_fmadd_pd(vec_a5,vec_x5,vec_y5);
+        vec_res6 = _mm256_fmadd_pd(vec_a6,vec_x6,vec_y6);
+        vec_res7 = _mm256_fmadd_pd(vec_a7,vec_x7,vec_y7);
+        vec_res8 = _mm256_fmadd_pd(vec_a8,vec_x8,vec_y8);
+
+
+        _mm256_storeu_pd(y+i   ,vec_res1);
+        _mm256_storeu_pd(y+i+4 ,vec_res2);
+        _mm256_storeu_pd(y+i+8 ,vec_res3);
+        _mm256_storeu_pd(y+i+12,vec_res4);
+        _mm256_storeu_pd(y+i+16,vec_res5);
+        _mm256_storeu_pd(y+i+20,vec_res6);
+        _mm256_storeu_pd(y+i+24,vec_res7);
+        _mm256_storeu_pd(y+i+28,vec_res8);
     }
     for(; i < n; ++i ) {
         y [i] += x[i] * a;
@@ -148,31 +260,74 @@ void axpyz(const unsigned int n, const double a, const double *x, const double *
  */
 void axpyz(const unsigned int n, const double a, const double *x, const double *y, double *z) {
     unsigned i = 0;
-    // we want 2 FMAs because of Skylake ports
-    // so we do 8 doubles per step
-    __m256d vec_a1, vec_a2, vec_c1, vec_c2, vec_res, vec_res1;
-    const __m256d vec_b1 = _mm256_set1_pd(a);
+    // we want 8 FMAs because of Skylake ports
+
+    __m256d vec_x1, vec_x2;
+    __m256d vec_x3, vec_x4;
+    __m256d vec_x5, vec_x6;
+    __m256d vec_x7, vec_x8;
+    __m256d vec_y1, vec_y2;
+    __m256d vec_y3, vec_y4;
+    __m256d vec_y5, vec_y6;
+    __m256d vec_y7, vec_y8;
+    __m256d vec_res1, vec_res2;
+    __m256d vec_res3, vec_res4;
+    __m256d vec_res5, vec_res6;
+    __m256d vec_res7, vec_res8;
+    const __m256d  vec_a1 = _mm256_set1_pd(a);
+    const __m256d  vec_a2 = _mm256_set1_pd(a);
+    const __m256d  vec_a3 = _mm256_set1_pd(a);
+    const __m256d  vec_a4 = _mm256_set1_pd(a);
+    const __m256d  vec_a5 = _mm256_set1_pd(a);
+    const __m256d  vec_a6 = _mm256_set1_pd(a);
+    const __m256d  vec_a7 = _mm256_set1_pd(a);
+    const __m256d  vec_a8 = _mm256_set1_pd(a);
 
     // peel loop for alligned loads for a ! b should be handled too.
     auto peel = (unsigned long) x & 0x1f;
     if (peel != 0){
-        peel = ( 32-peel)*d_size_inv;
+        peel = ( 32-peel) *d_size_inv;
         for(; i < peel ;++i){
             z[i] = x[i] * a + y[i];
         }
     }
-
-    for (; i < n - 8; i += 8) {
-        vec_a1 = _mm256_load_pd(x + i);
-        vec_a2 = _mm256_load_pd(x + i + 4);
-        vec_c1 = _mm256_load_pd(y + i);
-        vec_c2 = _mm256_load_pd(y + i + 4);
+    for(; i < n-32; i +=32 ) {
+        vec_x1 = _mm256_load_pd(x + i);
+        vec_x2 = _mm256_load_pd(x + i + 4);
+        vec_x3 = _mm256_load_pd(x + i + 8);
+        vec_x4 = _mm256_load_pd(x + i + 12);
+        vec_x5 = _mm256_load_pd(x + i + 16);
+        vec_x6 = _mm256_load_pd(x + i + 20);
+        vec_x7 = _mm256_load_pd(x + i + 24);
+        vec_x8 = _mm256_load_pd(x + i + 28);
+        vec_y1 = _mm256_load_pd(y + i);
+        vec_y2 = _mm256_load_pd(y + i + 4);
+        vec_y3 = _mm256_load_pd(y + i + 8);
+        vec_y4 = _mm256_load_pd(y + i + 12);
+        vec_y5 = _mm256_load_pd(y + i + 16);
+        vec_y6 = _mm256_load_pd(y + i + 20);
+        vec_y7 = _mm256_load_pd(y + i + 24);
+        vec_y8 = _mm256_load_pd(y + i + 28);
 
         // not sure if we get aliasing issues here
-        vec_res = _mm256_fmadd_pd(vec_a1, vec_b1, vec_c1);
-        vec_res1 = _mm256_fmadd_pd(vec_a2, vec_b1, vec_c2);
-        _mm256_storeu_pd(z + i, vec_res);
-        _mm256_storeu_pd(z + i + 4, vec_res1);
+        vec_res1 = _mm256_fmadd_pd(vec_a1, vec_x1, vec_y1);
+        vec_res2 = _mm256_fmadd_pd(vec_a2, vec_x2, vec_y2);
+        vec_res3 = _mm256_fmadd_pd(vec_a3, vec_x3, vec_y3);
+        vec_res4 = _mm256_fmadd_pd(vec_a4, vec_x4, vec_y4);
+        vec_res5 = _mm256_fmadd_pd(vec_a5, vec_x5, vec_y5);
+        vec_res6 = _mm256_fmadd_pd(vec_a6, vec_x6, vec_y6);
+        vec_res7 = _mm256_fmadd_pd(vec_a7, vec_x7, vec_y7);
+        vec_res8 = _mm256_fmadd_pd(vec_a8, vec_x8, vec_y8);
+
+
+        _mm256_storeu_pd(z + i, vec_res1);
+        _mm256_storeu_pd(z + i + 4, vec_res2);
+        _mm256_storeu_pd(z + i + 8, vec_res3);
+        _mm256_storeu_pd(z + i + 12, vec_res4);
+        _mm256_storeu_pd(z + i + 16, vec_res5);
+        _mm256_storeu_pd(z + i + 20, vec_res6);
+        _mm256_storeu_pd(z + i + 24, vec_res7);
+        _mm256_storeu_pd(z + i + 28, vec_res8);
     }
     for(; i < n; ++i ) {
         z[i] = x[i] * a + y[i];
@@ -193,54 +348,128 @@ double axpymax(const unsigned int n, const double a, const double *x, double *y)
 }
 */
 double axpymax(const unsigned int n, const double a, const double *x, double *y) {
-   double max_abs_val = 0;
-   unsigned i = 0;
-   // we want 2 FMAs because of Skylake ports
-   // so we do 8 doubles per step
-   __m256d vec_a1, vec_a2, vec_res, vec_res1, vec_res2, vec_res3;
-   __m256d vec_b1 = _mm256_set1_pd(a);
-   __m256d vec_b2 = _mm256_set1_pd(a);
-   __m256d vec_max1 = _mm256_setzero_pd();
-   __m256d vec_max2 = _mm256_setzero_pd();
+    double max_abs_val = 0;
+    unsigned i = 0;
+    // we want 8 FMAs because of Skylake ports
+    // so we do 8 doubles per step
+    __m256d vec_x1, vec_x2;
+    __m256d vec_x3, vec_x4;
+    __m256d vec_x5, vec_x6;
+    __m256d vec_x7, vec_x8;
+    __m256d vec_y1, vec_y2;
+    __m256d vec_y3, vec_y4;
+    __m256d vec_y5, vec_y6;
+    __m256d vec_y7, vec_y8;
+    __m256d vec_res1, vec_res2;
+    __m256d vec_res3, vec_res4;
+    __m256d vec_res5, vec_res6;
+    __m256d vec_res7, vec_res8;
+    const __m256d  vec_a1 = _mm256_set1_pd(a);
+    const __m256d  vec_a2 = _mm256_set1_pd(a);
+    const __m256d  vec_a3 = _mm256_set1_pd(a);
+    const __m256d  vec_a4 = _mm256_set1_pd(a);
+    const __m256d  vec_a5 = _mm256_set1_pd(a);
+    const __m256d  vec_a6 = _mm256_set1_pd(a);
+    const __m256d  vec_a7 = _mm256_set1_pd(a);
+    const __m256d  vec_a8 = _mm256_set1_pd(a);
+    __m256d vec_max1 = _mm256_setzero_pd();
+    __m256d vec_max2 = _mm256_setzero_pd();
+    __m256d vec_max3 = _mm256_setzero_pd();
+    __m256d vec_max4 = _mm256_setzero_pd();
+    __m256d vec_max5 = _mm256_setzero_pd();
+    __m256d vec_max6 = _mm256_setzero_pd();
+    __m256d vec_max7 = _mm256_setzero_pd();
+    __m256d vec_max8 = _mm256_setzero_pd();
 
-   // peel loop for alligned loads for x
-   auto peel = (unsigned long) x & 0x1f;
-   if (peel != 0){
-       peel = ( 32-peel) *d_size_inv;
-       for(; i < peel ;++i){
-           y [i] += x[i] * a;
-           const double square_val = y[i]* y[i];
-           if (max_abs_val < square_val) max_abs_val = square_val;
-   }
-   }
-   for(; i < n-8; i +=8 ) {
-       vec_a1      = _mm256_load_pd(x+i);
-       vec_a2      = _mm256_load_pd(x+i+4);
-       vec_res     = _mm256_load_pd(y+i);
-       vec_res1    = _mm256_load_pd(y+i+4);
+    // peel loop for alligned loads for a ! b should be handled too.
+    auto peel = (unsigned long) x & 0x1f;
+    if (peel != 0){
+        peel = ( 32-peel) *d_size_inv;
+        for(; i < peel ;++i){
+            y [i] += x[i] * a;
+            const double square_val = y[i]* y[i];
+            if (max_abs_val < square_val) max_abs_val = square_val;
+        }
+    }
+    for(; i < n-32; i +=32 ) {
+        vec_x1      = _mm256_load_pd(x+i);
+        vec_x2      = _mm256_load_pd(x+i+4);
+        vec_x3      = _mm256_load_pd(x+i+8);
+        vec_x4      = _mm256_load_pd(x+i+12);
+        vec_x5      = _mm256_load_pd(x+i+16);
+        vec_x6      = _mm256_load_pd(x+i+20);
+        vec_x7      = _mm256_load_pd(x+i+24);
+        vec_x8      = _mm256_load_pd(x+i+28);
+        vec_y1      = _mm256_load_pd(y+i);
+        vec_y2      = _mm256_load_pd(y+i+4);
+        vec_y3      = _mm256_load_pd(y+i+8);
+        vec_y4      = _mm256_load_pd(y+i+12);
+        vec_y5      = _mm256_load_pd(y+i+16);
+        vec_y6      = _mm256_load_pd(y+i+20);
+        vec_y7      = _mm256_load_pd(y+i+24);
+        vec_y8      = _mm256_load_pd(y+i+28);
 
-       // not sure if we get aliasing issues here therefore we use vecres_2 and 3
-       vec_res2 = _mm256_fmadd_pd(vec_a1,vec_b1,vec_res);
-       vec_res3 = _mm256_fmadd_pd(vec_a2,vec_b2,vec_res1);
-       _mm256_storeu_pd(y+i,vec_res2);
-       _mm256_storeu_pd(y+i+4,vec_res3);
+        // not sure if we get aliasing issues here
+        vec_res1 = _mm256_fmadd_pd(vec_a1,vec_x1,vec_y1);
+        vec_res2 = _mm256_fmadd_pd(vec_a2,vec_x2,vec_y2);
+        vec_res3 = _mm256_fmadd_pd(vec_a3,vec_x3,vec_y3);
+        vec_res4 = _mm256_fmadd_pd(vec_a4,vec_x4,vec_y4);
+        vec_res5 = _mm256_fmadd_pd(vec_a5,vec_x5,vec_y5);
+        vec_res6 = _mm256_fmadd_pd(vec_a6,vec_x6,vec_y6);
+        vec_res7 = _mm256_fmadd_pd(vec_a7,vec_x7,vec_y7);
+        vec_res8 = _mm256_fmadd_pd(vec_a8,vec_x8,vec_y8);
 
-       // finding the max
-       vec_res2 = _mm256_mul_pd(vec_res2,vec_res2);
-       vec_res3 = _mm256_mul_pd(vec_res3,vec_res3);
 
-       vec_max1 = _mm256_max_pd(vec_res2,vec_max1);
-       vec_max2 = _mm256_max_pd(vec_res3,vec_max2);
-   }
+        _mm256_storeu_pd(y+i   ,vec_res1);
+        _mm256_storeu_pd(y+i+4 ,vec_res2);
+        _mm256_storeu_pd(y+i+8 ,vec_res3);
+        _mm256_storeu_pd(y+i+12,vec_res4);
+        _mm256_storeu_pd(y+i+16,vec_res5);
+        _mm256_storeu_pd(y+i+20,vec_res6);
+        _mm256_storeu_pd(y+i+24,vec_res7);
+        _mm256_storeu_pd(y+i+28,vec_res8);
+
+        vec_res1 = _mm256_mul_pd(vec_res1,vec_res1);
+        vec_res2 = _mm256_mul_pd(vec_res2,vec_res2);
+        vec_res3 = _mm256_mul_pd(vec_res3,vec_res3);
+        vec_res4 = _mm256_mul_pd(vec_res4,vec_res4);
+        vec_res5 = _mm256_mul_pd(vec_res5,vec_res5);
+        vec_res6 = _mm256_mul_pd(vec_res6,vec_res6);
+        vec_res7 = _mm256_mul_pd(vec_res7,vec_res7);
+        vec_res8 = _mm256_mul_pd(vec_res8,vec_res8);
+
+
+        vec_max1 = _mm256_max_pd(vec_res1,vec_max1);
+        vec_max2 = _mm256_max_pd(vec_res2,vec_max2);
+        vec_max3 = _mm256_max_pd(vec_res3,vec_max3);
+        vec_max4 = _mm256_max_pd(vec_res4,vec_max4);
+        vec_max5 = _mm256_max_pd(vec_res5,vec_max5);
+        vec_max6 = _mm256_max_pd(vec_res6,vec_max6);
+        vec_max7 = _mm256_max_pd(vec_res7,vec_max7);
+        vec_max8 = _mm256_max_pd(vec_res8,vec_max8);
+
+    }
    for(; i < n; ++i ) {
        y [i] += x[i] * a;
        const double square_val = y[i]*y[i];
        if (max_abs_val < square_val) max_abs_val = square_val;
    }
    // now find the largest value
-   vec_max1 = _mm256_max_pd(vec_max2,vec_max1);
+   vec_max1 = _mm256_max_pd(vec_max1,vec_max5);
+   vec_max2 = _mm256_max_pd(vec_max2,vec_max6);
+   vec_max3 = _mm256_max_pd(vec_max3,vec_max7);
+   vec_max4 = _mm256_max_pd(vec_max4,vec_max8);
+
+   vec_max1 = _mm256_max_pd(vec_max1,vec_max3);
+   vec_max2 = _mm256_max_pd(vec_max2,vec_max4);
+
+   vec_max1 = _mm256_max_pd(vec_max1,vec_max2);
+
+   // reuse max2 to compare same array vals
+   // Might be faster to store and compare the doubles directly
    vec_max2 = _mm256_permute_pd(vec_max1,0xb1);
    vec_max1 = _mm256_max_pd(vec_max2,vec_max1);
+   // sanity check: here element 0 and 1 aswell as 2 and 3 should be the same
 
     // maybe add allignement
     double sol0 [4];
@@ -269,13 +498,36 @@ double axpyzmax(const unsigned int n, const double a, const double *x, const dou
 double axpyzmax(const unsigned int n, const double a, const double *x, const double *y, double *z) {
     double max_abs_val = 0;
     unsigned i = 0;
-    // we want 2 FMAs because of Skylake ports
+    // we want 8 FMAs because of Skylake ports
     // so we do 8 doubles per step
-    __m256d vec_a1, vec_a2, vec_res, vec_res1, vec_res2, vec_res3;
-    __m256d vec_b1 = _mm256_set1_pd(a);
-    __m256d vec_b2 = _mm256_set1_pd(a);
+    __m256d vec_x1, vec_x2;
+    __m256d vec_x3, vec_x4;
+    __m256d vec_x5, vec_x6;
+    __m256d vec_x7, vec_x8;
+    __m256d vec_y1, vec_y2;
+    __m256d vec_y3, vec_y4;
+    __m256d vec_y5, vec_y6;
+    __m256d vec_y7, vec_y8;
+    __m256d vec_res1, vec_res2;
+    __m256d vec_res3, vec_res4;
+    __m256d vec_res5, vec_res6;
+    __m256d vec_res7, vec_res8;
+    const __m256d vec_a1 = _mm256_set1_pd(a);
+    const __m256d vec_a2 = _mm256_set1_pd(a);
+    const __m256d vec_a3 = _mm256_set1_pd(a);
+    const __m256d vec_a4 = _mm256_set1_pd(a);
+    const __m256d vec_a5 = _mm256_set1_pd(a);
+    const __m256d vec_a6 = _mm256_set1_pd(a);
+    const __m256d vec_a7 = _mm256_set1_pd(a);
+    const __m256d vec_a8 = _mm256_set1_pd(a);
     __m256d vec_max1 = _mm256_setzero_pd();
     __m256d vec_max2 = _mm256_setzero_pd();
+    __m256d vec_max3 = _mm256_setzero_pd();
+    __m256d vec_max4 = _mm256_setzero_pd();
+    __m256d vec_max5 = _mm256_setzero_pd();
+    __m256d vec_max6 = _mm256_setzero_pd();
+    __m256d vec_max7 = _mm256_setzero_pd();
+    __m256d vec_max8 = _mm256_setzero_pd();
 
     // peel loop for alligned loads for a ! b should be handled too.
     auto peel = (unsigned long) x & 0x1f;
@@ -283,42 +535,98 @@ double axpyzmax(const unsigned int n, const double a, const double *x, const dou
         peel = (32 - peel) * d_size_inv;
         for (; i < peel; ++i) {
             z[i] = y[i] + x[i] * a;
-            const double square_val = z[i]*z[i];
+            const double square_val = z[i] * z[i];
             if (max_abs_val < square_val) max_abs_val = square_val;
         }
     }
-    for (; i < n - 8; i += 8) {
-        vec_a1 = _mm256_load_pd(x + i);
-        vec_a2 = _mm256_load_pd(x + i + 4);
-        vec_res = _mm256_load_pd(y + i);
-        vec_res1 = _mm256_load_pd(y + i + 4);
+    for (; i < n - 32; i += 32) {
+        vec_x1 = _mm256_load_pd(x + i);
+        vec_x2 = _mm256_load_pd(x + i + 4);
+        vec_x3 = _mm256_load_pd(x + i + 8);
+        vec_x4 = _mm256_load_pd(x + i + 12);
+        vec_x5 = _mm256_load_pd(x + i + 16);
+        vec_x6 = _mm256_load_pd(x + i + 20);
+        vec_x7 = _mm256_load_pd(x + i + 24);
+        vec_x8 = _mm256_load_pd(x + i + 28);
 
-        // not sure if we get aliasing issues here therefore we use vecres_2 and 3
-        vec_res2 = _mm256_fmadd_pd(vec_a1, vec_b1, vec_res);
-        vec_res3 = _mm256_fmadd_pd(vec_a2, vec_b2, vec_res1);
-        _mm256_storeu_pd(z + i, vec_res2);
-        _mm256_storeu_pd(z + i + 4, vec_res3);
+        vec_y1 = _mm256_load_pd(y + i);
+        vec_y2 = _mm256_load_pd(y + i + 4);
+        vec_y3 = _mm256_load_pd(y + i + 8);
+        vec_y4 = _mm256_load_pd(y + i + 12);
+        vec_y5 = _mm256_load_pd(y + i + 16);
+        vec_y6 = _mm256_load_pd(y + i + 20);
+        vec_y7 = _mm256_load_pd(y + i + 24);
+        vec_y8 = _mm256_load_pd(y + i + 28);
 
-        // finding the max
-        // !Approach 1 !
+        // not sure if we get aliasing issues here
+        vec_res1 = _mm256_fmadd_pd(vec_a1, vec_x1, vec_y1);
+        vec_res2 = _mm256_fmadd_pd(vec_a2, vec_x2, vec_y2);
+        vec_res3 = _mm256_fmadd_pd(vec_a3, vec_x3, vec_y3);
+        vec_res4 = _mm256_fmadd_pd(vec_a4, vec_x4, vec_y4);
+        vec_res5 = _mm256_fmadd_pd(vec_a5, vec_x5, vec_y5);
+        vec_res6 = _mm256_fmadd_pd(vec_a6, vec_x6, vec_y6);
+        vec_res7 = _mm256_fmadd_pd(vec_a7, vec_x7, vec_y7);
+        vec_res8 = _mm256_fmadd_pd(vec_a8, vec_x8, vec_y8);
+
+
+        _mm256_storeu_pd(z + i, vec_res1);
+        _mm256_storeu_pd(z + i + 4, vec_res2);
+        _mm256_storeu_pd(z + i + 8, vec_res3);
+        _mm256_storeu_pd(z + i + 12, vec_res4);
+        _mm256_storeu_pd(z + i + 16, vec_res5);
+        _mm256_storeu_pd(z + i + 20, vec_res6);
+        _mm256_storeu_pd(z + i + 24, vec_res7);
+        _mm256_storeu_pd(z + i + 28, vec_res8);
+
+        vec_res1 = _mm256_mul_pd(vec_res1, vec_res1);
         vec_res2 = _mm256_mul_pd(vec_res2, vec_res2);
         vec_res3 = _mm256_mul_pd(vec_res3, vec_res3);
+        vec_res4 = _mm256_mul_pd(vec_res4, vec_res4);
+        vec_res5 = _mm256_mul_pd(vec_res5, vec_res5);
+        vec_res6 = _mm256_mul_pd(vec_res6, vec_res6);
+        vec_res7 = _mm256_mul_pd(vec_res7, vec_res7);
+        vec_res8 = _mm256_mul_pd(vec_res8, vec_res8);
 
-        vec_max1 = _mm256_max_pd(vec_res2, vec_max1);
-        vec_max2 = _mm256_max_pd(vec_res3, vec_max2);
+
+        vec_max1 = _mm256_max_pd(vec_res1, vec_max1);
+        vec_max2 = _mm256_max_pd(vec_res2, vec_max2);
+        vec_max3 = _mm256_max_pd(vec_res3, vec_max3);
+        vec_max4 = _mm256_max_pd(vec_res4, vec_max4);
+        vec_max5 = _mm256_max_pd(vec_res5, vec_max5);
+        vec_max6 = _mm256_max_pd(vec_res6, vec_max6);
+        vec_max7 = _mm256_max_pd(vec_res7, vec_max7);
+        vec_max8 = _mm256_max_pd(vec_res8, vec_max8);
+
     }
     for (; i < n; ++i) {
         z[i] = y[i] + x[i] * a;
-        const double square_val = z[i]*z[i];
+        const double square_val = z[i] * z[i];
         if (max_abs_val < square_val) max_abs_val = square_val;
     }
     // now find the largest value
-    vec_max1 = _mm256_max_pd(vec_max2, vec_max1);
+    vec_max1 = _mm256_max_pd(vec_max1, vec_max5);
+    vec_max2 = _mm256_max_pd(vec_max2, vec_max6);
+    vec_max3 = _mm256_max_pd(vec_max3, vec_max7);
+    vec_max4 = _mm256_max_pd(vec_max4, vec_max8);
+
+    vec_max1 = _mm256_max_pd(vec_max1, vec_max3);
+    vec_max2 = _mm256_max_pd(vec_max2, vec_max4);
+
+    vec_max1 = _mm256_max_pd(vec_max1, vec_max2);
+
+    // reuse max2 to compare same array vals
+    // Might be faster to store and compare the doubles directly
     vec_max2 = _mm256_permute_pd(vec_max1, 0xb1);
     vec_max1 = _mm256_max_pd(vec_max2, vec_max1);
+    // sanity check: here element 0 and 1 aswell as 2 and 3 should be the same
 
-    double sol0 [4];
-    _mm256_storeu_pd(sol0,vec_max1);
+    // maybe add allignement
+    double sol0[4];
+    _mm256_storeu_pd(sol0, vec_max1);
+
+    //potential optimisation :
+    //const __m256i mask = {1,0,1,0}; // maybe 256
+    //_mm256_maskstore_pd(sol0,0xff00ff00,vec_max1);
 
     return std::sqrt(std::max(std::max(sol0[0], sol0[2]), max_abs_val));
 }
@@ -338,11 +646,19 @@ double xmax(const int n, const double* x) {
 double xmax(const int n, const double* x) {
     double max_abs_val = 0;
     unsigned i = 0;
-    // we want 2 FMAs because of Skylake ports
-    // so we do 8 doubles per step
+    // we want 8 Mults because of Skylake ports
     __m256d vec_x1, vec_x2;
+    __m256d vec_x3, vec_x4;
+    __m256d vec_x5, vec_x6;
+    __m256d vec_x7, vec_x8;
     __m256d vec_max1 = _mm256_setzero_pd();
     __m256d vec_max2 = _mm256_setzero_pd();
+    __m256d vec_max3 = _mm256_setzero_pd();
+    __m256d vec_max4 = _mm256_setzero_pd();
+    __m256d vec_max5 = _mm256_setzero_pd();
+    __m256d vec_max6 = _mm256_setzero_pd();
+    __m256d vec_max7 = _mm256_setzero_pd();
+    __m256d vec_max8 = _mm256_setzero_pd();
 
     // peel loop for alligned loads for x
     unsigned peel = (unsigned long) x & 0x1f;
@@ -353,23 +669,51 @@ double xmax(const int n, const double* x) {
             if (max_abs_val < square_val) max_abs_val = square_val;
         }
     }
-    for (; i < n - 8; i += 8) {
+    for (; i < n - 32; i += 32) {
         vec_x1 = _mm256_load_pd(x + i);
         vec_x2 = _mm256_load_pd(x + i + 4);
+        vec_x3 = _mm256_load_pd(x + i + 8);
+        vec_x4 = _mm256_load_pd(x + i + 12);
+        vec_x5 = _mm256_load_pd(x + i + 16);
+        vec_x6 = _mm256_load_pd(x + i + 20);
+        vec_x7 = _mm256_load_pd(x + i + 24);
+        vec_x8 = _mm256_load_pd(x + i + 28);
 
-        // !Approach 1 !
         vec_x1 = _mm256_mul_pd(vec_x1, vec_x1);
         vec_x2 = _mm256_mul_pd(vec_x2, vec_x2);
+        vec_x3 = _mm256_mul_pd(vec_x3, vec_x3);
+        vec_x4 = _mm256_mul_pd(vec_x4, vec_x4);
+        vec_x5 = _mm256_mul_pd(vec_x5, vec_x5);
+        vec_x6 = _mm256_mul_pd(vec_x6, vec_x6);
+        vec_x7 = _mm256_mul_pd(vec_x7, vec_x7);
+        vec_x8 = _mm256_mul_pd(vec_x8, vec_x8);
 
-        vec_max1 = _mm256_max_pd(vec_x1, vec_max1);
-        vec_max2 = _mm256_max_pd(vec_x2, vec_max2);
+        vec_max1 = _mm256_max_pd(vec_x1,vec_max1);
+        vec_max2 = _mm256_max_pd(vec_x2,vec_max2);
+        vec_max3 = _mm256_max_pd(vec_x3,vec_max3);
+        vec_max4 = _mm256_max_pd(vec_x4,vec_max4);
+        vec_max5 = _mm256_max_pd(vec_x5,vec_max5);
+        vec_max6 = _mm256_max_pd(vec_x6,vec_max6);
+        vec_max7 = _mm256_max_pd(vec_x7,vec_max7);
+        vec_max8 = _mm256_max_pd(vec_x8,vec_max8);
     }
     for (; i < n; ++i) {
         const double square_val = x[i]*x[i];
         if (max_abs_val < square_val) max_abs_val = square_val;
     }
     // now find the largest value
-    vec_max1 = _mm256_max_pd(vec_max2, vec_max1);
+    vec_max1 = _mm256_max_pd(vec_max1,vec_max5);
+    vec_max2 = _mm256_max_pd(vec_max2,vec_max6);
+    vec_max3 = _mm256_max_pd(vec_max3,vec_max7);
+    vec_max4 = _mm256_max_pd(vec_max4,vec_max8);
+
+    vec_max1 = _mm256_max_pd(vec_max1,vec_max3);
+    vec_max2 = _mm256_max_pd(vec_max2,vec_max4);
+
+    vec_max1 = _mm256_max_pd(vec_max1,vec_max2);
+
+    // reuse max2 to compare same array vals
+    // Might be faster to store and compare the doubles directly
     vec_max2 = _mm256_permute_pd(vec_max1, 0xb1);
     vec_max1 = _mm256_max_pd(vec_max2, vec_max1);
 

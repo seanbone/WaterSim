@@ -84,6 +84,7 @@ file(GLOB SRC_FILES_CORE
         ${PROJECT_SOURCE_DIR}/src/SimConfig.cpp
         ${PROJECT_SOURCE_DIR}/src/WaterSim.cpp
         ${PROJECT_SOURCE_DIR}/src/flip-methods/*.cpp
+		${PROJECT_SOURCE_DIR}/src/ConjugateGradient.cpp
         )
 file(GLOB SRC_FILES_NC
         ${PROJECT_SOURCE_DIR}/src/NcReader.cpp
@@ -118,3 +119,4 @@ add_executable(viewmesh viewmesh.cpp)
 target_link_libraries(watersim-gui watersim-core igl::opengl_glfw igl::opengl_glfw_imgui igl::png)
 target_link_libraries(watersim-cli watersim-core)
 target_link_libraries(viewmesh igl::core igl::opengl_glfw igl::opengl_glfw_imgui igl::png)
+

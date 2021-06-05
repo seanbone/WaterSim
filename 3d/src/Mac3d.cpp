@@ -201,9 +201,11 @@ void Mac3d::initAdiag() {
 					}
 				}
 				A_diag_.push_back(Triplet_t(index, index, count));
+				A_diag_val.push_back(count);
 			}
 		}
 	}
+	// Notice that the elements are sorted by index
 }
 
 /************************************************************************************
@@ -329,7 +331,7 @@ bool Mac3d::is_solid(const unsigned i, const unsigned j, const unsigned k){
 	}
 }
 
-bool Mac3d::is_fluid(const unsigned i, const unsigned j, const unsigned k){
+bool Mac3d::is_fluid(const unsigned i, const unsigned j, const unsigned k) const{
 	if (i < N_ && j < M_ && k < L_)
 		return *(pfluid_ + N_*j + i + N_*M_*k);
 	else{ 
@@ -349,7 +351,7 @@ bool Mac3d::is_empty(const unsigned i, const unsigned j, const unsigned k){
 
 
 //6. Diagonal of A -----------------------------------------------------
-const std::vector< Mac3d::Triplet_t >& Mac3d::get_a_diag() {
+const std::vector< Mac3d::Triplet_t >& Mac3d::get_a_diag() const {
 	return A_diag_;
 }
 

@@ -82,6 +82,8 @@ class Mac3d{
 		//pointer to a std::vector which contians the triplets for
 		//the diagonal of the matrix A, used to solve the pressures
 		std::vector<Triplet_t> A_diag_;
+		// the same information stored in three vectors
+		std::vector<double> A_diag_val;
 		
 		//pointer to the weights for particle-to-grid respectively for u, v, w
 		double* pweights_u_;
@@ -193,7 +195,7 @@ class Mac3d{
 		 * Params:
 		 * - i, j, k indicate for which cell the physical property is asked.
 		 */
-		bool is_fluid(const unsigned i, const unsigned j, const unsigned k = 0);
+		bool is_fluid(const unsigned i, const unsigned j, const unsigned k = 0) const;
 		
 		/**Return if the cell with center (i,j,k) is empty (not solid && not fluid)
 		 * Params:
@@ -231,7 +233,7 @@ class Mac3d{
 		
 		/** Return a const-reference to the diagonal of the pressure's matrix A
 		 */
-		const std::vector< Triplet_t >& get_a_diag();
+		const std::vector< Triplet_t >& get_a_diag() const;
 		
 
 		//------------------------ SETTERS -----------------------------

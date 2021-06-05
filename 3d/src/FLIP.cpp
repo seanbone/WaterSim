@@ -1,12 +1,17 @@
 #include "FLIP.h"
 #include "tsc_x86.hpp"
+//#define WRITE_REFERENCE 340
 
 
 FLIP::FLIP(Particles& particles, Mac3d* MACGrid, const SimConfig& cfg)
 	: cfg_(cfg), particles_(particles), num_particles_(particles.get_num_particles()),
 	  fluid_density_(cfg.getDensity()), gravity_mag_(cfg.getGravity()), alpha_(cfg.getAlpha()),
-	  MACGrid_(MACGrid) {
+	  MACGrid_(MACGrid), cg_solver(100, *MACGrid_) {
 	
+    unsigned nx = MACGrid_->get_num_cells_x();
+    unsigned ny = MACGrid_->get_num_cells_y();
+    unsigned nz = MACGrid_->get_num_cells_z();
+    d_.resize(nx*ny*nz);
 #ifdef WRITE_REFERENCE
 	ncWriter_ = new NcWriter( "./ref.nc", 
 							  7, 

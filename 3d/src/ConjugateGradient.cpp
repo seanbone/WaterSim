@@ -3,6 +3,8 @@
 #include <cmath>
 #include <iostream>
 
+#define square(X)	((X) * (X))
+
 // ********* Kernels **********
 
 // variables for optimisation
@@ -788,22 +790,22 @@ void ICConjugateGradientSolver::applyPreconditioner(const double *r, double *z) 
 }
 
 void ICConjugateGradientSolver::computePreconDiag() {
-   for (unsigned k = 0; k < n_cells_z; k++) {
-       for (unsigned j = 0; j < n_cells_y; j++) {
-           for (unsigned i = 0; i < n_cells_x; i++) {
-               const unsigned cellidx = i + j*stride_y + k*stride_z;
-               if (not grid.pfluid_[cellidx]) {
-                   precon_diag[cellidx] = 0;
-                   continue;
-               }
-               double e = A_diag[cellidx];
-               if (i > 0 && grid.pfluid_[cellidx - stride_x]) e -= (precon_diag[cellidx - stride_x] * precon_diag[cellidx - stride_x]);
-               if (j > 0 && grid.pfluid_[cellidx - stride_y]) e -= (precon_diag[cellidx - stride_y] * precon_diag[cellidx - stride_y]);
-               if (k > 0 && grid.pfluid_[cellidx - stride_z]) e -= (precon_diag[cellidx - stride_z] * precon_diag[cellidx - stride_z]);
-               precon_diag[cellidx] = 1 / std::sqrt(e + 1e-30);
-           }
-       }
-   }
+	for (unsigned k = 0; k < n_cells_z; k++) {
+		for (unsigned j = 0; j < n_cells_y; j++) {
+			for (unsigned i = 0; i < n_cells_x; i++) {
+				const unsigned cellidx = i + j*stride_y + k*stride_z;
+				if (not grid.pfluid_[cellidx]) {
+					precon_diag[cellidx] = 0;
+					continue;
+				}
+				double e = A_diag[cellidx];
+				if (i > 0 && grid.pfluid_[cellidx - stride_x]) e -= square(precon_diag[cellidx - stride_x]);
+				if (j > 0 && grid.pfluid_[cellidx - stride_y]) e -= square(precon_diag[cellidx - stride_y]);
+				if (k > 0 && grid.pfluid_[cellidx - stride_z]) e -= square(precon_diag[cellidx - stride_z]);
+				precon_diag[cellidx] = 1 / std::sqrt(e + 1e-30);
+			}
+		}
+	}
 }
 
 // apply the matrix A: y <- A b

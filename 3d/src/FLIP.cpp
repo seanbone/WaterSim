@@ -11,7 +11,8 @@ FLIP::FLIP(Particles& particles, Mac3d* MACGrid, const SimConfig& cfg)
     unsigned nx = MACGrid_->get_num_cells_x();
     unsigned ny = MACGrid_->get_num_cells_y();
     unsigned nz = MACGrid_->get_num_cells_z();
-    d_.resize(nx*ny*nz);
+    d_ = new (std::align_val_t(32)) double [nx*ny*nz];
+
 #ifdef WRITE_REFERENCE
 	ncWriter_ = new NcWriter( "./ref.nc", 
 							  7, 
@@ -46,6 +47,7 @@ FLIP::FLIP(Particles& particles, Mac3d* MACGrid, const SimConfig& cfg)
 
 
 FLIP::~FLIP(){
+    delete [] d_;
 
 #ifdef WRITE_REFERENCE
 	delete ncWriter_;

@@ -81,6 +81,44 @@ def collect_all_timings(path, prefix, labels, substeps):
                         data[label][b][substep]["mean"] = float(vals[0])
                         data[label][b][substep]["median"] = float(vals[1])
                         data[label][b][substep]["stdev"] = float(vals[2])
+        
+    return data
+
+
+def collect_all_flops(path, prefix, labels, substeps):
+    """
+    Collect all flops data.
+    Example of access to return dictionary: data['v1.1']['benchmark-1-0']['FLIP']['mean']
+    """
+    data = {}
+    
+    for label in labels:
+        data[label] = {}
+        batch_path = os.path.join(path, f"{prefix}{label}")
+        benchmark_names = get_benchmark_names()
+
+        for b in benchmark_names:
+            filename = os.path.join(batch_path, b, "cost_analysis.txt")
+            print(f"Reading {filename}...")
+
+            filename = os.path.abspath(filename)
+            if not os.path.isfile(filename):
+                exit('Error: could not open file.')
+
+            with open(filename) as f:
+                lines = f.read().splitlines()
+
+            data[label][b] = {}
+            for line in lines:
+                for substep in substeps:
+                    if line.find(substep) > -1:
+                        data[label][b][substep] = {}
+                        vals = line.split()
+                        data[label][b][substep]['adds'] = float(vals[1])
+                        data[label][b][substep]['muls'] = float(vals[2])
+                        data[label][b][substep]['divs'] = float(vals[3])
+                        data[label][b][substep]['read'] = float(vals[4])
+        
     return data
 
 
@@ -119,7 +157,7 @@ def plot_histogram(benchmark, tags, substeps, all_data, output, show=False, titl
     plt.close(fig)
 
 
-def plot_perf(tag, substeps, all_data, output, show=False, title=None):
+def plot_perf(tag, substeps, all_data, all_flops, output, show=False, title=None):
     if title is None:
         title = f"Runtime plot for optimization stage '{tag}'"
 
@@ -130,7 +168,9 @@ def plot_perf(tag, substeps, all_data, output, show=False, title=None):
     for substep in substeps:
         tmp = []
         for benchmark in benchmarks:
-            tmp.append(all_data[tag][benchmark][substep]['mean'])
+            if substep != "compute_mesh": tmp.append((all_flops[tag][benchmark][substep]['adds'] + all_flops[tag][benchmark][substep]['muls']) / all_data[tag][benchmark][substep]['mean'])
+            else:                         tmp.append(0.)
+            # tmp.append(all_data[tag][benchmark][substep]['mean'])
         my_data[substep] = np.array(tmp)
 
     fig, ax = plt.subplots()
@@ -140,7 +180,7 @@ def plot_perf(tag, substeps, all_data, output, show=False, title=None):
     ax.set_prop_cycle(my_cycler)
 
 
-    ax.set_ylabel("Average runtime [cycles]")
+    ax.set_ylabel("Average performance [cycles]")
     ax.set_xlabel("Number of cells [-]")
     for substep in substeps:
         ax.plot(problem_dimensions, my_data[substep], label=substep)
@@ -196,7 +236,10 @@ if __name__ == "__main__":
         if d.find(prefix) == 0:
             all_tags.append(d.replace(prefix, "", 1))
 
-    all_data = collect_all_timings(path, prefix, all_tags, substeps)
+    print(all_tags, args.tag)
+
+    all_data  = collect_all_timings(path, prefix, all_tags, substeps)
+    all_flops = collect_all_flops(path, prefix, all_tags, substeps)
 
     benchmarks_hist_plots = None
     if args.all:
@@ -216,4 +259,4 @@ if __name__ == "__main__":
 
     if benchmark_perf_plots is not None:
         for tag in benchmark_perf_plots:
-            plot_perf(tag, substeps, all_data, output, show)
+            plot_perf(tag, substeps, all_data, all_flops, output, show)

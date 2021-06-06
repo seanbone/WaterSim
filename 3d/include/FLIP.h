@@ -12,6 +12,7 @@
 #include <chrono>
 #include <vector>
 #include "ConjugateGradient.hpp"
+#include <immintrin.h>
 
 #ifdef WRITE_REFERENCE
 #include "NcWriter.h"
@@ -134,7 +135,7 @@ private:
 	SparseMat_t A_;
 	
 	// RHS of pressure LSE
-	std::vector<double> d_;
+	double* d_;
 
 	// Pressure vector
 	std::vector<double> p;

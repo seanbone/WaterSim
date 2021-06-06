@@ -17,7 +17,7 @@ void FLIP::apply_pressure_correction(const double dt) {
 
     // Solve for p: Ap = d (MICCG(0))
 	// work directly on grid pressure array
-	cg_solver.solve(d_.data(), MACGrid_->ppressure_);
+	cg_solver.solve(d_, MACGrid_->ppressure_);
 
     // Apply pressure gradients to velocity field
     //     -> see SIGGRAPH §4
@@ -39,7 +39,7 @@ void FLIP::compute_pressure_rhs(const double dt) {
     auto& g = MACGrid_;
 
     // Set d_ to zero
-	std::fill(d_.data(), d_.data()+nx*ny*nz, 0);
+	std::fill(d_, d_+nx*ny*nz, 0);
 
     // Index of the current grid-cell [0, nx*ny*nz[ (in the matrix)
     unsigned cellidx = 0;

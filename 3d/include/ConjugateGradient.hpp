@@ -63,6 +63,7 @@ class ICConjugateGradientSolver {
 	const double thresh = 1e-9;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 	// unsure where rho comes from
 =======
         // not sure where to put this
@@ -70,6 +71,8 @@ class ICConjugateGradientSolver {
         inline void sca_product(const double* a, double b, const double* c,  const unsigned n, double *res);
 >>>>>>> 1ae03e7 (added some peel loops fr alligned loads)
 
+=======
+>>>>>>> 36162c2 (merged kernel notation with avx)
 	public:
 	ICConjugateGradientSolver();
 	~ICConjugateGradientSolver();
@@ -78,6 +81,7 @@ class ICConjugateGradientSolver {
 	void computePreconDiag();
 	void applyPreconditioner(const double *r, double *z) const;
 	void applyA(const double *s, double *z) const;
+<<<<<<< HEAD
 
 	// not sure where to put this
 
@@ -246,6 +250,14 @@ inline void cg::ICConjugateGradientSolver::sca_product(const double *a, double b
         res[i] = a[i] * b + c[i];
     }
 }
+=======
+	
+    void solve(const double* rhs, double* p);
+};
+
+
+
+>>>>>>> 36162c2 (merged kernel notation with avx)
 
 
 >>>>>>> 1ae03e7 (added some peel loops fr alligned loads)

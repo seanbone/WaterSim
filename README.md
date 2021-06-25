@@ -138,16 +138,6 @@ Here is an example `config.json` file:
 }
 ```
 
-## Meteor splash
-
-To produce the effect of a meteorite hitting the water, we apply radial forces within a fixed distance of a moving point, effectively simulating an object in motion. This is implemented in `FLIP::explode`, which is called from `FLIP::step_FLIP`:
-
-    explode(dt, step, 15, 0, 15, 2, 800);
-
-The first two parameters are the timestep and current step number. The following three arguments are the coordinated (in cells) of the point the "meteorite" is directed at. The last two parameters are the radius (in cells) of the meteorite and the force it applies.
-
-Note that this only takes effect if `applyMeteorForce` is `true` in the configuration.
-
 ## Exporting meshes
 
 At the end of each simulation step, if the `Export meshes` option is checked, the level-set function will be evaluated and `igl::copyleft::marching_cubes` is used to generate a mesh for the current frame.

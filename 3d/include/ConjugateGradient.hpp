@@ -48,13 +48,10 @@ class ICConjugateGradientSolver {
 	// diagonal of preconditioner matrix
 	double *precon_diag;
 
-<<<<<<< HEAD
 	// diagonal of matrix A
 	double* A_diag;
-=======
-	    // variables for optimisation
-	    const double d_size_inv = 1/sizeof(double);
->>>>>>> 1ae03e7 (added some peel loops fr alligned loads)
+	 // variables for optimisation
+	const double d_size_inv = 1/sizeof(double);
 
 	// current step and max steps
 	unsigned step, max_steps;
@@ -62,17 +59,10 @@ class ICConjugateGradientSolver {
 	// threshhold
 	const double thresh = 1e-9;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-	// unsure where rho comes from
-=======
         // not sure where to put this
         //res[i] = a[i] * b + c[i]
         inline void sca_product(const double* a, double b, const double* c,  const unsigned n, double *res);
->>>>>>> 1ae03e7 (added some peel loops fr alligned loads)
 
-=======
->>>>>>> 36162c2 (merged kernel notation with avx)
 	public:
 	ICConjugateGradientSolver();
 	~ICConjugateGradientSolver();
@@ -81,11 +71,9 @@ class ICConjugateGradientSolver {
 	void computePreconDiag();
 	void applyPreconditioner(const double *r, double *z) const;
 	void applyA(const double *s, double *z) const;
-<<<<<<< HEAD
 
 	// not sure where to put this
 
-<<<<<<< HEAD
 	static void Mat_mult(SparseMat *M, const double *a, double *res);
 
 	void solve(const double* rhs, double* p);
@@ -112,7 +100,6 @@ inline void ICConjugateGradientSolver::Mat_mult(SparseMat *M, const double *a, d
 	}
 }
 
-=======
         void solve(const double* rhs, double* p);
 	};
 }
@@ -250,16 +237,13 @@ inline void cg::ICConjugateGradientSolver::sca_product(const double *a, double b
         res[i] = a[i] * b + c[i];
     }
 }
-=======
-	
+
     void solve(const double* rhs, double* p);
 };
 
 
 
->>>>>>> 36162c2 (merged kernel notation with avx)
 
 
->>>>>>> 1ae03e7 (added some peel loops fr alligned loads)
 
 #endif

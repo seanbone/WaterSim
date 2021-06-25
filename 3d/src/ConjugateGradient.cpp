@@ -306,9 +306,10 @@ void ICConjugateGradientSolver::applyA(const double *b, double *y) const{
 			for (unsigned i = 0; i < n_cells_x; i++) {
 				const unsigned cellidx = i + j*stride_y + k*stride_z;
 				double diag_val = grid.A_diag_val[cellidx];
+				const double b_cell = b[cellidx];
 
 				if (i == 0 && j == 0 && k == 0) y[cellidx] = 0;
-				y[cellidx] += diag_val * b[cellidx];
+				y[cellidx] += diag_val * b_cell;
 
 				// avoid filling y with zeroes beforehand
 				if (j == 0 && k == 0 && i+1 < n_cells_x)  y[cellidx+stride_x] = 0;
@@ -319,19 +320,19 @@ void ICConjugateGradientSolver::applyA(const double *b, double *y) const{
 					// x-adjacent cells
 					if (i+1 < n_cells_x && grid.pfluid_[cellidx+stride_x]){
 						y[cellidx] 			-= b[cellidx+stride_x];
-						y[cellidx+stride_x] -= b[cellidx];
+						y[cellidx+stride_x] -= b_cell;
 					}
 
 					// y-adjacent cells
 					if (j+1 < n_cells_y && grid.pfluid_[cellidx+stride_y]){
 						y[cellidx] 			-= b[cellidx+stride_y];
-						y[cellidx+stride_y] -= b[cellidx];
+						y[cellidx+stride_y] -= b_cell;
 					}
 
 					// z-adjacent cells
 					if (k+1 < n_cells_z && grid.pfluid_[cellidx+stride_z]){
 						y[cellidx] 			-= b[cellidx+stride_z];
-						y[cellidx+stride_z] -= b[cellidx];
+						y[cellidx+stride_z] -= b_cell;
 					}
 				}
 			}

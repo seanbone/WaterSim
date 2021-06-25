@@ -4,6 +4,7 @@
 
 #include "FLIP.h"
 #include "tsc_x86.hpp"
+#include <immintrin.h>
 
 
 void FLIP::particle_to_grid() {
@@ -91,14 +92,53 @@ void FLIP::particle_to_grid() {
 	double z_diff;
 
 	// Temporary variables to store weights and remove aliasing
-	double u_weight;
-	double v_weight;
-	double w_weight;
+	double u_weight_1;
+	double u_weight_2;
+	double u_weight_3;
+	double u_weight_4;
+	double v_weight_1;
+	double v_weight_2;
+	double v_weight_3;
+	double v_weight_4;
+	double w_weight_1;
+	double w_weight_2;
+	double w_weight_3;
+	double w_weight_4;
 
 	// Placeholders for the global indices of u, v and w
 	Mac3d::globalCellIdx_t u_idx;
 	Mac3d::globalCellIdx_t v_idx;
 	Mac3d::globalCellIdx_t w_idx;
+
+	Mac3d::globalCellIdx_t u_size  = ny*nz*(nx+1);
+	Mac3d::globalCellIdx_t v_size  = nx*nz*(ny+1);
+	Mac3d::globalCellIdx_t w_size  = nx*ny*(nz+1);
+	Mac3d::globalCellIdx_t uu_size = u_size - 7;
+	Mac3d::globalCellIdx_t vv_size = v_size - 7;
+	Mac3d::globalCellIdx_t ww_size = w_size - 7;
+	Mac3d::globalCellIdx_t u_gbi;
+	Mac3d::globalCellIdx_t v_gbi;
+	Mac3d::globalCellIdx_t w_gbi;
+
+	__m256d u_weight1;
+	__m256d u_weight2;
+	__m256d v_weight1;
+	__m256d v_weight2;
+	__m256d w_weight1;
+	__m256d w_weight2;
+	__m256d u1;
+	__m256d u2;
+	__m256d v1;
+	__m256d v2;
+	__m256d w1;
+	__m256d w2;
+	__m256d neq_zero1;
+	__m256d neq_zero2;
+	__m256d zeros = _mm256_setzero_pd();
+	__m256d ones  = _mm256_set1_pd(1.);
+
+	int neq_zero_int1;
+	int neq_zero_int2;
 
 	// Indices of the cell containing the current particle
 	int cell_idx_x;
@@ -150,34 +190,34 @@ void FLIP::particle_to_grid() {
 						// Left Face
 						if( x_diff >= 0. ){
 
-							u_weight = coeff * x_diff * x_diff * x_diff;
+							u_weight_1 = coeff * x_diff * x_diff * x_diff;
 
 							u_idx = i + (nx+1) * (j + ny*k);
 
-							MACGrid_->pu_[u_idx]         += u_weight * u_particle;
-							MACGrid_->pweights_u_[u_idx] += u_weight;
+							MACGrid_->pu_[u_idx]         += u_weight_1 * u_particle;
+							MACGrid_->pweights_u_[u_idx] += u_weight_1;
 						}
 						
 						// Lower Face
 						if( y_diff >= 0. ){
 
-							v_weight = coeff * y_diff * y_diff * y_diff;
+							v_weight_1 = coeff * y_diff * y_diff * y_diff;
 
 							v_idx = i + nx * (j + (ny+1) * k);
 
-							MACGrid_->pv_[v_idx]         += v_weight * v_particle;
-							MACGrid_->pweights_v_[v_idx] += v_weight;
+							MACGrid_->pv_[v_idx]         += v_weight_1 * v_particle;
+							MACGrid_->pweights_v_[v_idx] += v_weight_1;
 						}
 
 						// Farthest Face (the closest to the origin)
 						if( z_diff >= 0. ){
 
-							w_weight = coeff * z_diff * z_diff * z_diff;
+							w_weight_1 = coeff * z_diff * z_diff * z_diff;
 
 							w_idx = i + nx * (j + ny*k);
 
-							MACGrid_->pw_[w_idx]         += w_weight * w_particle;
-							MACGrid_->pweights_w_[w_idx] += w_weight;
+							MACGrid_->pw_[w_idx]         += w_weight_1 * w_particle;
+							MACGrid_->pweights_w_[w_idx] += w_weight_1;
 						}
 					}
 				}
@@ -207,12 +247,12 @@ void FLIP::particle_to_grid() {
 
 								if( x_diff >= 0. ){
 
-									u_weight = coeff * x_diff * x_diff * x_diff;
+									u_weight_1 = coeff * x_diff * x_diff * x_diff;
 
 									u_idx = i + (nx+1) * (j + ny*k);
 
-									MACGrid_->pu_[u_idx]         += u_weight * u_particle;
-									MACGrid_->pweights_u_[u_idx] += u_weight;
+									MACGrid_->pu_[u_idx]         += u_weight_1 * u_particle;
+									MACGrid_->pweights_u_[u_idx] += u_weight_1;
 								}
 							}
 							
@@ -223,12 +263,12 @@ void FLIP::particle_to_grid() {
 
 								if( y_diff >= 0. ){
 
-									v_weight = coeff * y_diff * y_diff * y_diff;
+									v_weight_1 = coeff * y_diff * y_diff * y_diff;
 
 									v_idx = i + nx * (j + (ny+1)*k);
 
-									MACGrid_->pv_[v_idx]         += v_weight * v_particle;
-									MACGrid_->pweights_v_[v_idx] += v_weight;
+									MACGrid_->pv_[v_idx]         += v_weight_1 * v_particle;
+									MACGrid_->pweights_v_[v_idx] += v_weight_1;
 								}
 							}
 
@@ -239,12 +279,12 @@ void FLIP::particle_to_grid() {
 
 								if( z_diff >= 0. ){
 
-									w_weight = coeff * z_diff * z_diff * z_diff;
+									w_weight_1 = coeff * z_diff * z_diff * z_diff;
 
 									w_idx = i + nx * (j + ny*k);
 
-									MACGrid_->pw_[w_idx]         += w_weight * w_particle;
-									MACGrid_->pweights_w_[w_idx] += w_weight;
+									MACGrid_->pw_[w_idx]         += w_weight_1 * w_particle;
+									MACGrid_->pweights_w_[w_idx] += w_weight_1;
 								}
 							}
 						}
@@ -255,85 +295,189 @@ void FLIP::particle_to_grid() {
 		}
 	}
 	
+	for( u_gbi = 0; u_gbi < uu_size; u_gbi += 8 ){
+
+		u_weight1 = _mm256_load_pd(MACGrid_->pweights_u_+u_gbi);
+		u_weight2 = _mm256_load_pd(MACGrid_->pweights_u_+u_gbi+4);
+		u1        = _mm256_load_pd(MACGrid_->pu_+u_gbi);
+		u2        = _mm256_load_pd(MACGrid_->pu_+u_gbi+4);
+
+		neq_zero1     = _mm256_cmp_pd(u_weight1, zeros, _CMP_NEQ_OQ);
+		neq_zero2     = _mm256_cmp_pd(u_weight2, zeros, _CMP_NEQ_OQ);
+		neq_zero_int1 = _mm256_movemask_pd(neq_zero1);
+		neq_zero_int2 = _mm256_movemask_pd(neq_zero2);
+
+		u1 = _mm256_div_pd(u1, _mm256_blendv_pd(ones, u_weight1, neq_zero1));
+		u2 = _mm256_div_pd(u2, _mm256_blendv_pd(ones, u_weight2, neq_zero2));
+
+		visited_u[u_gbi  ] =  neq_zero_int1       & 0b1;
+		visited_u[u_gbi+1] = (neq_zero_int1 >> 1) & 0b1;
+		visited_u[u_gbi+2] = (neq_zero_int1 >> 2) & 0b1;
+		visited_u[u_gbi+3] = (neq_zero_int1 >> 3) & 0b1;
+		visited_u[u_gbi+4] = (neq_zero_int2     ) & 0b1;
+		visited_u[u_gbi+5] = (neq_zero_int2 >> 1) & 0b1;
+		visited_u[u_gbi+6] = (neq_zero_int2 >> 2) & 0b1;
+		visited_u[u_gbi+7] = (neq_zero_int2 >> 3) & 0b1;
+
+		_mm256_store_pd(MACGrid_->pu_+u_gbi  , u1);
+		_mm256_store_pd(MACGrid_->pu_+u_gbi+4, u2);
+	}
+	for( ; u_gbi < u_size; ++u_gbi ){
+
+		u_weight_1 = MACGrid_->pweights_u_[u_gbi];
+
+		if( u_weight_1 != 0. ) { MACGrid_->pu_[u_gbi] /= u_weight_1; visited_u[u_gbi] = true; }
+	}
+
+	for( v_gbi = 0; v_gbi < vv_size; v_gbi += 8 ){
+
+		v_weight1 = _mm256_load_pd(MACGrid_->pweights_v_+v_gbi);
+		v_weight2 = _mm256_load_pd(MACGrid_->pweights_v_+v_gbi+4);
+		v1        = _mm256_load_pd(MACGrid_->pv_+v_gbi);
+		v2        = _mm256_load_pd(MACGrid_->pv_+v_gbi+4);
+
+		neq_zero1     = _mm256_cmp_pd(v_weight1, zeros, _CMP_NEQ_OQ);
+		neq_zero2     = _mm256_cmp_pd(v_weight2, zeros, _CMP_NEQ_OQ);
+		neq_zero_int1 = _mm256_movemask_pd(neq_zero1);
+		neq_zero_int2 = _mm256_movemask_pd(neq_zero2);
+
+		v1 = _mm256_div_pd(v1, _mm256_blendv_pd(ones, v_weight1, neq_zero1));
+		v2 = _mm256_div_pd(v2, _mm256_blendv_pd(ones, v_weight2, neq_zero2));
+
+		visited_v[v_gbi  ] =  neq_zero_int1       & 0b1;
+		visited_v[v_gbi+1] = (neq_zero_int1 >> 1) & 0b1;
+		visited_v[v_gbi+2] = (neq_zero_int1 >> 2) & 0b1;
+		visited_v[v_gbi+3] = (neq_zero_int1 >> 3) & 0b1;
+		visited_v[v_gbi+4] =  neq_zero_int2       & 0b1;
+		visited_v[v_gbi+5] = (neq_zero_int2 >> 1) & 0b1;
+		visited_v[v_gbi+6] = (neq_zero_int2 >> 2) & 0b1;
+		visited_v[v_gbi+7] = (neq_zero_int2 >> 3) & 0b1;
+
+		_mm256_store_pd(MACGrid_->pv_+v_gbi  , v1);
+		_mm256_store_pd(MACGrid_->pv_+v_gbi+4, v2);
+	}
+	for( ; v_gbi < v_size; ++v_gbi ){
+
+		v_weight_1 = MACGrid_->pweights_v_[v_gbi];
+
+		if( v_weight_1 != 0. ) { MACGrid_->pv_[v_gbi] /= v_weight_1; visited_v[v_gbi] = true; }
+	}
+
+	for( w_gbi = 0; w_gbi < ww_size; w_gbi += 8 ){
+
+		w_weight1 = _mm256_load_pd(MACGrid_->pweights_w_+w_gbi);
+		w_weight2 = _mm256_load_pd(MACGrid_->pweights_w_+w_gbi+4);
+		w1        = _mm256_load_pd(MACGrid_->pw_+w_gbi);
+		w2        = _mm256_load_pd(MACGrid_->pw_+w_gbi+4);
+
+		neq_zero1     = _mm256_cmp_pd(w_weight1, zeros, _CMP_NEQ_OQ);
+		neq_zero2     = _mm256_cmp_pd(w_weight2, zeros, _CMP_NEQ_OQ);
+		neq_zero_int1 = _mm256_movemask_pd(neq_zero1);
+		neq_zero_int2 = _mm256_movemask_pd(neq_zero2);
+
+		w1 = _mm256_div_pd(w1, _mm256_blendv_pd(ones, w_weight1, neq_zero1));
+		w2 = _mm256_div_pd(w2, _mm256_blendv_pd(ones, w_weight2, neq_zero2));
+
+		visited_w[w_gbi  ] =  neq_zero_int1       & 0b1;
+		visited_w[w_gbi+1] = (neq_zero_int1 >> 1) & 0b1;
+		visited_w[w_gbi+2] = (neq_zero_int1 >> 2) & 0b1;
+		visited_w[w_gbi+3] = (neq_zero_int1 >> 3) & 0b1;
+		visited_w[w_gbi+4] =  neq_zero_int2       & 0b1; 
+		visited_w[w_gbi+5] = (neq_zero_int2 >> 1) & 0b1;
+		visited_w[w_gbi+6] = (neq_zero_int2 >> 2) & 0b1;
+		visited_w[w_gbi+7] = (neq_zero_int2 >> 3) & 0b1;
+
+		std::cout << 0x01 << " " << visited_w[w_gbi] << " " << visited_w[w_gbi+1] << " " << visited_w[w_gbi+2] << " " << visited_w[w_gbi+3] << std::endl;
+
+		_mm256_store_pd(MACGrid_->pw_+w_gbi  , w1);
+		_mm256_store_pd(MACGrid_->pw_+w_gbi+4, w2);
+	}
+	for( ; w_gbi < w_size; ++w_gbi ){
+
+		w_weight_1 = MACGrid_->pweights_w_[w_gbi];
+
+		if( w_weight_1 != 0. ) { MACGrid_->pw_[w_gbi] /= w_weight_1; visited_w[w_gbi] = true; }
+	}
+
 	// Normalize the accumulated velocities with the accumulated weights and 
 	// set the flags for the visited faces
-	for( Mac3d::cellIdx_t k = 0; k < nz; ++k ){
-		for( Mac3d::cellIdx_t j = 0; j < ny; ++j ){
-			for( Mac3d::cellIdx_t i = 0; i < nx; ++i ){
+	// for( Mac3d::cellIdx_t k = 0; k < nz; ++k ){
+	// 	for( Mac3d::cellIdx_t j = 0; j < ny; ++j ){
+	// 		for( Mac3d::cellIdx_t i = 0; i < nx; ++i ){
 				
-				u_idx = i + (nx+1) * (j +  ny    * k);
-				v_idx = i +  nx    * (j + (ny+1) * k);
-				w_idx = i +  nx    * (j +  ny    * k);
+	// 			u_idx = i + (nx+1) * (j +  ny    * k);
+	// 			v_idx = i +  nx    * (j + (ny+1) * k);
+	// 			w_idx = i +  nx    * (j +  ny    * k);
 
-				u_weight = MACGrid_->pweights_u_[u_idx];
-				v_weight = MACGrid_->pweights_v_[v_idx];
-				w_weight = MACGrid_->pweights_w_[w_idx];
+	// 			u_weight = MACGrid_->pweights_u_[u_idx];
+	// 			v_weight = MACGrid_->pweights_v_[v_idx];
+	// 			w_weight = MACGrid_->pweights_w_[w_idx];
 				
-				if( u_weight != 0. ){
+	// 			if( u_weight != 0. ){
 					
-					MACGrid_->pu_[u_idx] /= u_weight;
-					visited_u[u_idx] = true;
-				}
+	// 				MACGrid_->pu_[u_idx] /= u_weight;
+	// 				visited_u[u_idx] = true;
+	// 			}
 
-				if( v_weight != 0. ){
+	// 			if( v_weight != 0. ){
 					
-					MACGrid_->pv_[v_idx] /= v_weight;
-					visited_v[v_idx] = true;
-				}
+	// 				MACGrid_->pv_[v_idx] /= v_weight;
+	// 				visited_v[v_idx] = true;
+	// 			}
 
-				if( w_weight != 0. ){
+	// 			if( w_weight != 0. ){
 					
-					MACGrid_->pw_[w_idx] /= w_weight;
-					visited_w[w_idx] = true;
-				}
-			}	
-		}
-	}
+	// 				MACGrid_->pw_[w_idx] /= w_weight;
+	// 				visited_w[w_idx] = true;
+	// 			}
+	// 		}	
+	// 	}
+	// }
 
-	for( Mac3d::cellIdx_t k = 0; k < nz; ++k ){
-		for( Mac3d::cellIdx_t j = 0; j < ny; ++j ){
+	// for( Mac3d::cellIdx_t k = 0; k < nz; ++k ){
+	// 	for( Mac3d::cellIdx_t j = 0; j < ny; ++j ){
 			
-			u_idx = nx + (nx+1) * (j + ny*k);
+	// 		u_idx = nx + (nx+1) * (j + ny*k);
 
-			u_weight = MACGrid_->pweights_u_[u_idx];
+	// 		u_weight = MACGrid_->pweights_u_[u_idx];
 
-			if ( u_weight != 0. ){
+	// 		if ( u_weight != 0. ){
 				
-				MACGrid_->pu_[u_idx] /= u_weight;
-				visited_u[u_idx] = true;
-			}
-		}
-	}
+	// 			MACGrid_->pu_[u_idx] /= u_weight;
+	// 			visited_u[u_idx] = true;
+	// 		}
+	// 	}
+	// }
 
-	for( Mac3d::cellIdx_t k = 0; k < nz; ++k ){
-		for( Mac3d::cellIdx_t i = 0; i < nx; ++i ){
+	// for( Mac3d::cellIdx_t k = 0; k < nz; ++k ){
+	// 	for( Mac3d::cellIdx_t i = 0; i < nx; ++i ){
 			
-			v_idx = i + nx * (ny * (k+1) + k);
+	// 		v_idx = i + nx * (ny * (k+1) + k);
 
-			v_weight = MACGrid_->pweights_v_[v_idx];
+	// 		v_weight = MACGrid_->pweights_v_[v_idx];
 
-			if ( v_weight != 0. ){
+	// 		if ( v_weight != 0. ){
 				
-				MACGrid_->pv_[v_idx] /= v_weight;
-				visited_v[v_idx] = true;
-			}
-		}
-	}
+	// 			MACGrid_->pv_[v_idx] /= v_weight;
+	// 			visited_v[v_idx] = true;
+	// 		}
+	// 	}
+	// }
 
-	for( Mac3d::cellIdx_t j = 0; j < ny; ++j ){
-		for( Mac3d::cellIdx_t i = 0; i < nx; ++i ){
+	// for( Mac3d::cellIdx_t j = 0; j < ny; ++j ){
+	// 	for( Mac3d::cellIdx_t i = 0; i < nx; ++i ){
 			
-			w_idx = i + nx * (j + ny * nz);
+	// 		w_idx = i + nx * (j + ny * nz);
 
-			w_weight = MACGrid_->pweights_w_[w_idx];
+	// 		w_weight = MACGrid_->pweights_w_[w_idx];
 
-			if ( w_weight != 0. ){
+	// 		if ( w_weight != 0. ){
 				
-				MACGrid_->pw_[w_idx] /= w_weight;
-				visited_w[w_idx] = true;
-			}
-		}
-	}
+	// 			MACGrid_->pw_[w_idx] /= w_weight;
+	// 			visited_w[w_idx] = true;
+	// 		}
+	// 	}
+	// }
 
 	// Iterate over all horizontal grid-velocities and extrapolate into
 	// the air cells (not visited) the average velocities of the

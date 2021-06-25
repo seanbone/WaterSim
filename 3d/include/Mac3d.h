@@ -8,6 +8,8 @@
 #include <vector>		//used for std::vector
 #include <algorithm>	//std::fill
 #include <cassert>		//assertions
+#include <cstdlib>
+#include <stdlib.h>
 
 class Mac3d{
 	public:
@@ -109,17 +111,17 @@ class Mac3d{
 		 */
 		~Mac3d(){
 			delete[] ppressure_;
-			delete[] pu_;
-			delete[] pv_;
-			delete[] pw_;
+			free(pu_);
+			free(pv_);
+			free(pw_);
 			delete[] pu_star_;
 			delete[] pv_star_;
 			delete[] pw_star_;
 			delete[] psolid_;
 			delete[] pfluid_;
-			delete[] pweights_u_;
-			delete[] pweights_v_;
-			delete[] pweights_w_;
+			free(pweights_u_);
+			free(pweights_v_);
+			free(pweights_w_);
 		}
 
 		/**Initialize the arrays of the class to zero, in particular:

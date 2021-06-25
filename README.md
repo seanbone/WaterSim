@@ -1,7 +1,7 @@
 # flip_asl21: Optimization of a FLIP algorithm
 
-![Original](https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team32/-/raw/ad459c11b081bf09a87802cb96c4803e54b58cf1/docs/dam-break-low-res.png?inline=false)
-![Optimized, same runtime](https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team32/-/raw/ad459c11b081bf09a87802cb96c4803e54b58cf1/docs/dam-break-high-res.png?inline=false)
+<img height="250" src="https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team32/-/raw/ad459c11b081bf09a87802cb96c4803e54b58cf1/docs/dam-break-low-res.png"></img>
+<img height="250" src="https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team32/-/raw/ad459c11b081bf09a87802cb96c4803e54b58cf1/docs/dam-break-high-res.png"></img>
 
 Fluid simulation via FLIP (Fluid Implicit Particle) Method.
 
@@ -13,6 +13,8 @@ Optimizations by: Christoph Amevor, Felix Illes, Mikael Stellio, Sean Bone.
 
 This is a 3D FLIP solver originally implemented as part of the course Physically-Based Simulation for Computer Graphics (ETHZ autumn semester 2018), the goal of which was to create a video of a meteorite crashing into the sea.
 The project was revisited with a new team as part of the course Advanced Systems Lab (ETHZ spring semester 2021) with the objective of improving single-core numerical performance.
+
+Images: Visualization of speedup of the optimized version (bottom) over the original implementation (top) by comparison of simulations of different sizes requiring an equal amount of run time.
 
 # Cloning with submodules
 

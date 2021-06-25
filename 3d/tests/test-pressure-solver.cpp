@@ -35,9 +35,10 @@ void compute_pressure_matrix(Mac3d* MACGrid_, Eigen::SparseMatrix<double>& A_) {
         for (unsigned j = 0; j < ny; ++j){
             for (unsigned i = 0; i < nx; ++i, ++cellidx){
 
+                unsigned index = i + j*nx + nx*ny*k;
+
                 // Copy diagonal entry
-                auto& diag_e = MACGrid_->get_a_diag()[i + j*nx + nx*ny*k];
-                triplets.push_back(diag_e);
+                triplets.push_back(Mac3d::Triplet_t(index, index, MACGrid_->A_diag_val[index]));
 
                 // Compute off-diagonal entries
                 if (MACGrid_->is_fluid(i, j, k)){

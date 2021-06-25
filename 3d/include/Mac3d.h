@@ -111,17 +111,17 @@ class Mac3d{
 		 */
 		~Mac3d(){
 			delete[] ppressure_;
-			free(pu_);
-			free(pv_);
-			free(pw_);
+			delete[] pu_;
+			delete[] pv_;
+			delete[] pw_;
 			delete[] pu_star_;
 			delete[] pv_star_;
 			delete[] pw_star_;
 			delete[] psolid_;
 			delete[] pfluid_;
-			free(pweights_u_);
-			free(pweights_v_);
-			free(pweights_w_);
+			delete[] pweights_u_;
+			delete[] pweights_v_;
+			delete[] pweights_w_;
 		}
 
 		/**Initialize the arrays of the class to zero, in particular:

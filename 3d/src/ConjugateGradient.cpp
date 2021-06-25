@@ -746,8 +746,7 @@ ICConjugateGradientSolver::ICConjugateGradientSolver(unsigned max_steps, const M
    for (unsigned k = 0; k < n_cells_z; k++) {
        for (unsigned j = 0; j < n_cells_y; j++) {
            for (unsigned i = 0; i < n_cells_x; i++, cellidx++) {
-               auto& diag_e = grid.A_diag_[i + j*stride_y + k*stride_z];
-               A_diag[cellidx] = diag_e.value();
+               A_diag[cellidx] = grid.A_diag_val[i + j*stride_y + k*stride_z];
            }
        }
    }

@@ -20,24 +20,19 @@ void Mac3d::initArrays() {
 	ppressure_ = new (std::align_val_t(chunk_size)) double[N_*M_*L_];
 	std::fill(ppressure_, ppressure_+N_*M_*L_, 0.);
 
-	//pu_ = new (std::align_val_t(chunk_size)) double[(N_+1)*M_*L_];
-	//const unsigned chunk_size = 32;
-
-	pu_ = (double*) aligned_alloc(chunk_size, sizeof(double)*(N_+1)*M_*L_);
+	pu_ = new (std::align_val_t(chunk_size)) double[(N_+1)*M_*L_];
 	std::fill(pu_, pu_+(N_+1)*M_*L_, 0.);
 
 	pu_star_ = new (std::align_val_t(chunk_size)) double[(N_+1)*M_*L_];
 	std::fill(pu_star_, pu_star_+(N_+1)*M_*L_, 0.);
 
 	pv_ = new (std::align_val_t(chunk_size))double[N_*(M_+1)*L_];
-	//pv_ = (double*) aligned_alloc(chunk_size, sizeof(double)*N_*(M_+1)*L_);
 	std::fill(pv_, pv_+N_*(M_+1)*L_, 0.);
 
 	pv_star_ = new (std::align_val_t(chunk_size))double[N_*(M_+1)*L_];
 	std::fill(pv_star_, pv_star_+N_*(M_+1)*L_, 0.);
 	
 	pw_ = new (std::align_val_t(chunk_size))double[N_*M_*(L_+1)];
-	//pw_ = (double*) aligned_alloc(chunk_size, sizeof(double)*N_*M_*(L_+1));
 	std::fill(pw_, pw_+N_*M_*(L_+1), 0.);
 
 	pw_star_ = new (std::align_val_t(chunk_size))double[N_*M_*(L_+1)];
@@ -56,30 +51,11 @@ void Mac3d::initArrays() {
 	std::fill(pweights_v_, pweights_v_+N_*(M_+1)*L_, 0.);
 	
 	pweights_w_ = new(std::align_val_t(chunk_size)) double[N_*M_*(L_+1)];
-	// pweights_u_ = new double[(N_+1)*M_*L_];
-	// std::fill(pweights_u_, pweights_u_+(N_+1)*M_*L_, 0.);
-
-	// pweights_v_ = new double[N_*(M_+1)*L_];
-	// std::fill(pweights_v_, pweights_v_+N_*(M_+1)*L_, 0.);
-	
-	// pweights_w_ = new double[N_*M_*(L_+1)];
-	// std::fill(pweights_w_, pweights_w_+N_*M_*(L_+1), 0.);
-	//
-	/*
-	pweights_u_ = (double*) aligned_alloc(chunk_size, sizeof(double)*(N_+1)*M_*L_);
-	std::fill(pweights_u_, pweights_u_+(N_+1)*M_*L_, 0.);
-
-	pweights_v_ = (double*) aligned_alloc(chunk_size, sizeof(double)*N_*(M_+1)*L_);
-	std::fill(pweights_v_, pweights_v_+N_*(M_+1)*L_, 0.);
-	
-	pweights_w_ = (double*) aligned_alloc(chunk_size, sizeof(double)*N_*M_*(L_+1));
-	*/
 	std::fill(pweights_w_, pweights_w_+N_*M_*(L_+1), 0.);
 
 }
 
 void Mac3d::initAdiag() {
-	A_diag_.clear();
 
 	for(unsigned k = 0; k < L_; ++k){
 		for(unsigned j = 0; j < M_; ++j){
@@ -225,7 +201,6 @@ void Mac3d::initAdiag() {
 						}
 					}
 				}
-				A_diag_.push_back(Triplet_t(index, index, count));
 				A_diag_val.push_back(count);
 			}
 		}

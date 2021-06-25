@@ -387,8 +387,6 @@ void FLIP::particle_to_grid() {
 		visited_w[w_gbi+6] = (neq_zero_int2 >> 2) & 0b1;
 		visited_w[w_gbi+7] = (neq_zero_int2 >> 3) & 0b1;
 
-		std::cout << 0x01 << " " << visited_w[w_gbi] << " " << visited_w[w_gbi+1] << " " << visited_w[w_gbi+2] << " " << visited_w[w_gbi+3] << std::endl;
-
 		_mm256_store_pd(MACGrid_->pw_+w_gbi  , w1);
 		_mm256_store_pd(MACGrid_->pw_+w_gbi+4, w2);
 	}

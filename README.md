@@ -1,7 +1,7 @@
 # flip_asl21: Optimization of a FLIP algorithm
 
 <img height="250" src="https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team32/-/raw/ad459c11b081bf09a87802cb96c4803e54b58cf1/docs/dam-break-low-res.png"></img>
-<img height="250" src="https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team32/-/raw/ad459c11b081bf09a87802cb96c4803e54b58cf1/docs/dam-break-high-res.png"></img>
+<img height="250" src="https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team32/-/raw/master/docs/dam-break-high-res.png"></img>
 
 Fluid simulation via FLIP (Fluid Implicit Particle) Method.
 

@@ -21,7 +21,7 @@ void Mac3d::initArrays() {
 	std::fill(ppressure_, ppressure_+N_*M_*L_, 0.);
 
 	//pu_ = new (std::align_val_t(chunk_size)) double[(N_+1)*M_*L_];
-	const unsigned chunk_size = 32;
+	//const unsigned chunk_size = 32;
 
 	pu_ = (double*) aligned_alloc(chunk_size, sizeof(double)*(N_+1)*M_*L_);
 	std::fill(pu_, pu_+(N_+1)*M_*L_, 0.);

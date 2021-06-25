@@ -84,7 +84,7 @@ void MeshExporter::level_set_easy(){
 void MeshExporter::level_set(){
 	tsc::TSCTimer& tsctimer = tsc::TSCTimer::get_timer("timings.json");
 	//Grid properties
-	//Initialization of plevel_set_array, x_avrg_num and den
+	//Initialization of plevel_set_aArray, x_avrg_num and den
 	std::fill(x_avrg_num_array, x_avrg_num_array+3*N*M*L, 0);
 	std::fill(den, den+N*M*L, 0);
 

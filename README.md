@@ -1,7 +1,7 @@
 # WaterSim: optimised implementation of a FLIP algorithm
 
-<img height="250" src="https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team32/-/raw/ad459c11b081bf09a87802cb96c4803e54b58cf1/docs/dam-break-low-res.png"></img>
-<img height="250" src="https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team32/-/raw/master/docs/dam-break-high-res.png"></img>
+![Low-resolution simulation](docs/dam-break-low-res.png)
+![High-resolution simulation](docs/dam-break-high-res.png)
 
 Fluid simulation via FLIP (Fluid Implicit Particle) Method.
 
@@ -12,7 +12,7 @@ Original authors: Silvia Nauer, Mikael Stellio, Sean Bone.
 
 Optimizations by: Christoph Amevor, Felix Illes, Mikael Stellio, Sean Bone.
 
-Images: Visualization of speedup of the optimized version (bottom) over the original implementation (top) by comparison of simulations of different sizes requiring an equal amount of run time.
+Images: comparison of the visual improvements gained by optimising the algorithm. The bottom simulation has higher resolution, but took about the same time to compute as the top one, which was simulated with the unoptimised code.
 
 # Cloning with submodules
 
@@ -183,3 +183,12 @@ If/when we get back to this project, there's some things we'd like to implement 
  - Some kind of open-boundary conditions, allowing waves and splashes to disappear out of the simulation instead of being forced to remain in the box
  - Particle sources/sinks
  - Grid-aligned stationary solids
+
+
+# References
+
+See the `docs` folder for some useful PDFs.
+
+- C. Amevor, S. Bone, F. Illes, M. Stellio, "Optimisation of a FLIP algorithm", report for the Advanced Systems Lab lecture at ETH Zürich, spring semester 2021.
+- R. Bridson, "FLUID SIMULATION", SIGGRAPH 2007 Course Notes. [Available online](https://www.cs.ubc.ca/~rbridson/fluidsimulation/fluids_notes.pdf).
+- D. Englesson, J. Kilby, J. Ek, "Fluid Simulation Using Implicit Particles", report for the Advanced Game Programming lecture at Linköpings universitet, December 2011. [Available online](http://danenglesson.com/flipfluid.html).

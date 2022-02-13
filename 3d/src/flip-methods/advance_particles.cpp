@@ -139,22 +139,22 @@ void FLIP::advance_particles(const double dt) {
 
 		// Get the indices of the grid-cells containing the particle at
 		// the current time and in the future
-		particles_.get_cell_index(n, curr_cell_idx_x, curr_cell_idx_y, curr_cell_idx_z);
-		MACGrid_->index_from_coord(x_next, y_next, z_next, next_cell_idx_x, next_cell_idx_y, next_cell_idx_z);
+		//particles_.get_cell_index(n, curr_cell_idx_x, curr_cell_idx_y, curr_cell_idx_z);
+		//MACGrid_->index_from_coord(x_next, y_next, z_next, next_cell_idx_x, next_cell_idx_y, next_cell_idx_z);
 
-		// Shift a particle if it would exit the system
-		// (should not happen)
-		if( MACGrid_->psolid_[next_cell_idx_x + nx*next_cell_idx_y + nx*ny*next_cell_idx_z] ) {
+		//// Shift a particle if it would exit the system
+		//// (should not happen)
+		//if( MACGrid_->psolid_[next_cell_idx_x + nx*next_cell_idx_y + nx*ny*next_cell_idx_z] ) {
 
-			if     ( curr_cell_idx_x > next_cell_idx_x ) x_next = (curr_cell_idx_x - 0.25) * MACGrid_->cell_sizex_;
-			else if( curr_cell_idx_x < next_cell_idx_x ) x_next = (curr_cell_idx_x + 0.25) * MACGrid_->cell_sizex_;
+		//	if     ( curr_cell_idx_x > next_cell_idx_x ) x_next = (curr_cell_idx_x - 0.25) * MACGrid_->cell_sizex_;
+		//	else if( curr_cell_idx_x < next_cell_idx_x ) x_next = (curr_cell_idx_x + 0.25) * MACGrid_->cell_sizex_;
 
-			if     ( curr_cell_idx_y > next_cell_idx_y ) y_next = (curr_cell_idx_y - 0.25) * MACGrid_->cell_sizey_;
-			else if( curr_cell_idx_y < next_cell_idx_y ) y_next = (curr_cell_idx_y + 0.25) * MACGrid_->cell_sizey_;
+		//	if     ( curr_cell_idx_y > next_cell_idx_y ) y_next = (curr_cell_idx_y - 0.25) * MACGrid_->cell_sizey_;
+		//	else if( curr_cell_idx_y < next_cell_idx_y ) y_next = (curr_cell_idx_y + 0.25) * MACGrid_->cell_sizey_;
 
-			if     ( curr_cell_idx_z > next_cell_idx_z ) z_next = (curr_cell_idx_z - 0.25) * MACGrid_->cell_sizez_;
-			else if( curr_cell_idx_z < next_cell_idx_z ) z_next = (curr_cell_idx_z + 0.25) * MACGrid_->cell_sizez_;
-		}
+		//	if     ( curr_cell_idx_z > next_cell_idx_z ) z_next = (curr_cell_idx_z - 0.25) * MACGrid_->cell_sizez_;
+		//	else if( curr_cell_idx_z < next_cell_idx_z ) z_next = (curr_cell_idx_z + 0.25) * MACGrid_->cell_sizez_;
+		//}
 
 		// Update the position of the current particle
 		particles_.x[n] = x_next;

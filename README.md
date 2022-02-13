@@ -16,10 +16,9 @@ Images: comparison of the visual improvements gained by optimising the algorithm
 
 # Cloning with submodules
 
-This Git repository has a submodule for libigl. To clone it correctly use either of the following:
+This Git repository has a submodule for libigl. To clone it correctly use the following command:
 
-    git clone --recurse-submodules git@gitlab.inf.ethz.ch:COURSE-ASL/asl21/team32.git
-    git clone --recurse-submodules https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team32.git
+    git clone --recurse-submodules git@github.com:SeanBone/WaterSim.git
 
 For more details on the dependencies for `libigl`, check out the [`libigl` documentation](https://libigl.github.io/tutorial/).
 

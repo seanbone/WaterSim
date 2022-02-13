@@ -3,7 +3,7 @@
 All benchmarks have fixed random seed for deterministic execution.
 All benchmarks have "show wireframe" enabled to force computation of mesh at each step, but "Export mesh" disabled.
 
-Note: I'm reporting indicative RAM usage and runtime for each benchmark. Of course these numbers are purely indicative and subject to change as we optimize and depend on the machine running the benchmarks.
+Note: I'm reporting indicative RAM usage and runtime for each benchmark. These measurements were taken before extensive optimisations at tag `v1.1`. Of course these numbers are purely indicative and subject to change as we optimize and depend on the machine running the benchmarks.
 
 - **Case 1:** cube of fluid at the center of the domain.
   - `benchmark-1-0`: 10x10x10 grid; 512 particles; 1000 time steps (~1.6MB RAM, <1min). 
@@ -35,7 +35,12 @@ To remove all benchmark data, use `make clean`.
 
 ## Benchmarking checkpoints
 
-Below is a list of git tags which represent "checkpoints" in development.
-The idea is to perform a full benchmark at each checkpoint at the end of the optimization project.
+Below is a list of git tags which represent "benchmarking checkpoints" in development.
+These were used to perform full benchmarks in order to measure performance improvements. See ASL-FLIP report for details.
 
 - `v1.1`: baseline benchmark. No optimizations performed, only restructuring and instrumentation.
+- `v1.2`: Optimizations to level-set computation.
+- `v1.3`: New and improved Particles data structure.
+- `v1.4`: Complete rewrite of interpolation methods.
+- `v1.5`: Optimized particle-to-grid, forces and BCs.
+- `v1.6`: Custom Conjugate Gradient solver.

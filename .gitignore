@@ -7,3 +7,4 @@ compile_commands.json
 **/config.json
 .vscode
 **/.vim-build/*
+**/.cache/*

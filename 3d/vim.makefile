@@ -17,7 +17,7 @@ _vim_build: watersim-gui
 
 _vim_test: watersim-tests
 
-_vim_clean: clean
+_vim_clean:
 	rm -rf $(build-directory)
 
 $(build-directory)/Makefile:

@@ -294,7 +294,11 @@ void FLIP::particle_to_grid() {
 
 		}
 	}
+
+
 	
+	// Normalize the accumulated velocities with the accumulated weights and 
+	// set the flags for the visited faces
 	for( u_gbi = 0; u_gbi < uu_size; u_gbi += 8 ){
 
 		u_weight1 = _mm256_load_pd(MACGrid_->pweights_u_+u_gbi);
@@ -397,8 +401,6 @@ void FLIP::particle_to_grid() {
 		if( w_weight_1 != 0. ) { MACGrid_->pw_[w_gbi] /= w_weight_1; visited_w[w_gbi] = true; }
 	}
 
-	// Normalize the accumulated velocities with the accumulated weights and 
-	// set the flags for the visited faces
 	// for( Mac3d::cellIdx_t k = 0; k < nz; ++k ){
 	// 	for( Mac3d::cellIdx_t j = 0; j < ny; ++j ){
 	// 		for( Mac3d::cellIdx_t i = 0; i < nx; ++i ){
@@ -462,8 +464,7 @@ void FLIP::particle_to_grid() {
 	// 	}
 	// }
 
-	// for( Mac3d::cellIdx_t j = 0; j < ny; ++j ){
-	// 	for( Mac3d::cellIdx_t i = 0; i < nx; ++i ){
+	// for( Mac3d::cellIdx_t j = 0; j < ny; ++j ){ for( Mac3d::cellIdx_t i = 0; i < nx; ++i ){
 			
 	// 		w_idx = i + nx * (j + ny * nz);
 

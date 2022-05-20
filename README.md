@@ -24,10 +24,10 @@ For more details on the dependencies for `libigl`, check out the [`libigl` docum
 
 ### Note for linux users
 
-Many linux distributions do not include `gcc` and the basic development tools in their default installation. On Ubuntu, you need to install the following packages:
+On Ubuntu, install the following dependencies:
 
 ```
-sudo apt-get install cmake make build-essential libx11-dev mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev libxrandr-dev libxi-dev libxmu-dev libblas-dev libxinerama-dev libxcursor-dev
+sudo apt-get install cmake build-essential libnetcdf-c++4-dev libx11-dev mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev libxrandr-dev libxi-dev libxmu-dev libblas-dev libxinerama-dev libxcursor-dev
 ```
 
 If you are using linux with a virtual machine on Windows, it is *recommended* to use **Visual Studio** instead.
